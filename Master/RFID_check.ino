@@ -31,7 +31,7 @@ void checkRFID() {
     }
     Serial.print(" suma= ");
     Serial.println(ficha2);
-    if (ficha2 == underBeacon) underDoor = true;
+    if (ficha2 == underBeacon) underOpen = true;
   }
 
   cpz3->check();
@@ -48,7 +48,7 @@ void checkRFID() {
     }
     Serial.print(" suma= ");
     Serial.println(ficha3);
-    if (ficha3 == gateBeacon) gateDoor = true;
+    if (ficha3 == gateBeacon) gateOpen = true;
   }
 
 }
