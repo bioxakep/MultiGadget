@@ -1,7 +1,5 @@
-void checkRFID() {
-  
+boolean getStartRFID() {
   cpz1->check();
-
   if(cpz1->isBeaconConnecting())
   {
     byte addr[6];
@@ -12,11 +10,14 @@ void checkRFID() {
     {                               
       ficha1 = ficha1 + addr[i];    // Serial.print(addr[i], HEX);
     }
-    Serial.print(" suma= ");
+    Serial.print(" sum = ");
     Serial.println(ficha1);
-    if (ficha1 == startBeacon) startCard = true;
+    if (ficha1 == startBeacon) return true;
+    else return false;
   }
+}
 
+boolean getUnderRFID() {
   cpz2->check();
 
   if(cpz2->isBeaconConnecting())
@@ -29,11 +30,13 @@ void checkRFID() {
     {                               
       ficha2 = ficha2 + addr[i];    // Serial.print(addr[i], HEX);
     }
-    Serial.print(" suma= ");
+    Serial.print(" sum = ");
     Serial.println(ficha2);
-    if (ficha2 == underBeacon) underOpen = true;
+    if (ficha2 == underBeacon) return true;
+    else return false;
   }
-
+}
+boolean getGateRFID() {
   cpz3->check();
 
   if(cpz3->isBeaconConnecting())
@@ -46,9 +49,10 @@ void checkRFID() {
     {                               
       ficha3 = ficha3 + addr[i];    // Serial.print(addr[i], HEX);
     }
-    Serial.print(" suma= ");
+    Serial.print(" sum = ");
     Serial.println(ficha3);
-    if (ficha3 == gateBeacon) gateOpen = true;
+    if (ficha3 == gateBeacon) return true;
+    else return false;
   }
-
+}
 }
