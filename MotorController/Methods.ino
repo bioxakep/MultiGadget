@@ -4,11 +4,6 @@ void gateUp()
   digitalWrite(gateUP, LOW);
 }
 
-void gateDown()
-{
-
-}
-
 void cloudUp()
 {
   while (digitalRead(cloudTOP)) digitalWrite(cloudUP, HIGH);
@@ -100,4 +95,29 @@ void poseiVaultOpen()
   digitalWrite(poseiLock, LOW);     // water drained, open the top cover
   digitalWrite(poseiValv, LOW);
 }
+
+void checkInputs()
+{
+  Serial.print("remote1   = ");
+  Serial.println(digitalRead(remote1) ? "HIGH" : "LOW");
+  Serial.print("remote2   = ");
+  Serial.println(digitalRead(remote2) ? "HIGH" : "LOW");
+  Serial.print("remote3   = ");
+  Serial.println(digitalRead(remote3) ? "HIGH" : "LOW");
+  Serial.print("remote4   = ");
+  Serial.println(digitalRead(remote4) ? "HIGH" : "LOW");
+  Serial.print("\ngateTOP   = ");
+  Serial.println(digitalRead(gateTOP) ? "HIGH" : "LOW");
+  Serial.print("columnTOP = ");
+  Serial.println(digitalRead(columnTOP) ? "HIGH" : "LOW");
+  Serial.print("columnBOT = ");
+  Serial.println(digitalRead(columnBOT) ? "HIGH" : "LOW");
+  Serial.print("grapeTOP  = ");
+  Serial.println(digitalRead(grapeTOP) ? "HIGH" : "LOW");
+  Serial.print("grapeBOT  = ");
+  Serial.println(digitalRead(grapeBOT) ? "HIGH" : "LOW");
+  Serial.print("cloudTOP  = ");
+  Serial.println(digitalRead(cloudTOP) ? "HIGH" : "LOW");
+}
+
 

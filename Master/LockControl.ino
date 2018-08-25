@@ -64,6 +64,7 @@ void closeLocks() {
   digitalWrite(gorgoHD,  LOW);
   digitalWrite(minotHD,  LOW);
   digitalWrite(zodiaHD,  LOW);
+  digitalWrite(poseiHD,  LOW);
 }
 
 void openOpened()  {

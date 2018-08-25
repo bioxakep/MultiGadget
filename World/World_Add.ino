@@ -40,7 +40,6 @@ void loop() {
     if(input == 1111){//if on code is received
       digitalWrite(led   , HIGH);//turn LED on
       digitalWrite(output, HIGH);
-      
     }
     if(input == 0000){//if off code is received
       digitalWrite(led   , LOW);//turn LED off

@@ -29,6 +29,9 @@ int cloudDN   = 25;
 int cloudTOP  = 4;
 int cloudOOO  = 3;
 
+int curtainUP   = 47;
+int curtainDN   = 45;
+
 int mainDoor  = A1;
 int underDoor = A7;
 
@@ -36,7 +39,7 @@ int poseiPump = A4;
 int poseiValv = A5;
 int poseiLock = A6;
 
-int command = 0;
+byte command = 0;
 int thisI2CAddr = 21;
 //int courtainUP = not implemented yet
 //int courtainDN = not implemented yet
@@ -44,7 +47,7 @@ int thisI2CAddr = 21;
 void setup() {
   Serial.begin(9600);
   Wire.begin(thisI2CAddr);
-
+  Wire.onReceive(receiveEvent);
   pinMode(remote1, INPUT_PULLUP);
   pinMode(remote2, INPUT_PULLUP);
   pinMode(remote3, INPUT_PULLUP);
@@ -58,6 +61,9 @@ void setup() {
   pinMode(grapeUP,  OUTPUT);
   pinMode(grapeDN,  OUTPUT);
 
+  pinMode(curtainUP,  OUTPUT);
+  pinMode(curtainDN,  OUTPUT);
+  
   pinMode(cloudUP,  OUTPUT);
   pinMode(cloudDN,  OUTPUT);
 
@@ -107,115 +113,88 @@ void loop() {
 
   // receives command from master via i2c
 
-  if (digitalRead(remote1) == LOW) { // manual  control by radio remote control
+  if (!digitalRead(remote1)) { // manual  control by radio remote control
     Serial.println("\nRemote control (1)");
     command = 0x02;
+    //cloudUp();
   }
-  if (digitalRead(remote2) == LOW) { // manual  control by radio remote control
+  if (!digitalRead(remote2)) { // manual  control by radio remote control
     Serial.println("\nRemote control (2)");
     command = 0x04;
+    //grapeDown();
   }
 
 
   if (command == 0x01) { // gate UP  - top sensor available
-    Serial.println("\nOpen the gate start...");
-    gateUp();
-    command = 0;
-    Serial.println("\nOpen the gate done");
-  }
-
-  if (command == 0x02) { // cloud up  - top sensor available
-    Serial.println("\nCloud UP start...");
+    Serial.print("\nOpen the gate start...");
     cloudUp();
-    command = 0;
-    Serial.println("\nCloud UP done");
+    grapeUp();
+    columnUp();
+    Serial.println("Done.");
   }
 
   if (command == 0x03) { // cloud down  - no sensor available
-    Serial.println("\nCloud DOWN start...");
-    cloudDown();
-    command = 0;
-    motor = 0;
-    Serial.println("\nCloud DOWN done");
+    Serial.print("\ncurtainUP start...");
+    digitalWrite(ncurtainUP, HIGH);
+    delay(200);
+    digitalWrite(ncurtainUP, LOW);
+    Serial.println("Done.");
   }
 
   if (command == 0x04) { // grape down  - down sensor available
-    Serial.println("\nGrape DOWN start...");
-    grapeDown();
-    command = 0;
-    motor = 0;
-    Serial.println("\nGrape DOWN done");
+    Serial.print("\nGate UP start...");
+    gateUp();
+    Serial.println("Done.");
   }
-
+  /*
   if (command == 0x05) { // grape up  - top sensor available
-    Serial.println("\nGrape UP start...");
+    Serial.print("\nGrape UP start...");
     grapeUp();
-    command = 0;
-    motor = 0;
-    Serial.println("\nGrape UP done");
+    
+    Serial.println("Done.");
   }
 
   if (command == 0x06) { // column down  - down sensor available
     Serial.println("\nColumn DOWN start...");
     columnDown();
-    command = 0;
-    motor = 0;
+    
     Serial.println("\nColumn DOWN done");
   }
 
   if (command == 0x07) { // column up  - top sensor available
     Serial.println("\nColumn UP start...");
     columnUp();
-    command = 0;
-    motor = 0;
+    
     Serial.println("\nColumn UP done");
   }
 
   if (command == 0x08) { // open underground door
     Serial.println("\nunderground Door OPEN");
     digitalWrite(underDoor, LOW);
-    command = 0;
   }
 
   if (command == 0x09) { // open main door
     Serial.println("\nmain Door OPEN");
     digitalWrite(mainDoor, LOW);
-    command = 0;
   }
 
   if (command == 0xFF) { // poseidon - lets open poseidon vault
     Serial.println("\nPoseidon vault OPENING...");
     poseiVaultOpen();
     Serial.println("\nPoseidon vault OPEN");
-    command = 0;
+    
   }
+  */
+  command = 0;
+  motor = 0;
 }
 
-
-
-
-void checkInputs()
+void receiveEvent(int howMany) 
 {
-  Serial.print("remote1   = ");
-  Serial.println(digitalRead(remote1) ? "HIGH" : "LOW");
-  Serial.print("remote2   = ");
-  Serial.println(digitalRead(remote2) ? "HIGH" : "LOW");
-  Serial.print("remote3   = ");
-  Serial.println(digitalRead(remote3) ? "HIGH" : "LOW");
-  Serial.print("remote4   = ");
-  Serial.println(digitalRead(remote4) ? "HIGH" : "LOW");
-  Serial.print("\ngateTOP   = ");
-  Serial.println(digitalRead(gateTOP) ? "HIGH" : "LOW");
-  Serial.print("columnTOP = ");
-  Serial.println(digitalRead(columnTOP) ? "HIGH" : "LOW");
-  Serial.print("columnBOT = ");
-  Serial.println(digitalRead(columnBOT) ? "HIGH" : "LOW");
-  Serial.print("grapeTOP  = ");
-  Serial.println(digitalRead(grapeTOP) ? "HIGH" : "LOW");
-  Serial.print("grapeBOT  = ");
-  Serial.println(digitalRead(grapeBOT) ? "HIGH" : "LOW");
-  Serial.print("cloudTOP  = ");
-  Serial.println(digitalRead(cloudTOP) ? "HIGH" : "LOW");
-
+  if (Wire.available()) // пройтись по всем до последнего
+  { 
+    byte c = Wire.read();    // принять байт как символ
+    if(c > 0x00 && c < 0x20) command = c;
+  }
 }
 

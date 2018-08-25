@@ -36,14 +36,16 @@ boolean getOperSkips()
 boolean checkDevices() // Проверяем прошел ли игрок какой-нибудь гаджет
 {
   boolean changed = false;
+  byte chSum = 0;
   for (int d = 0; d < devCount; d++)
   {
-    if (currGStates[d] < newGStates[d])
+    if (newGStates[d] == 2)
     {
-      changed = true;
-      curGStates[d] = newGStates[d];
-      newGStates[d] = 0;
+      if(curGStates[d] == 0) changed = true;
+      curGStates[d] = 2;
+      chSum += 1;
     }
   }
+  curGStates[16] = chSum;
   return changed;
 }

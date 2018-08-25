@@ -39,11 +39,25 @@ int cryst3    = 25;
 int flowerR   = 53;
 int flowerB   = 51;
 
+byte command = 0;
 int thisI2CAddr = 20;
 
-void setup() {
+boolean windState = false;
+boolean randomWind = false;
+int minWindPause = 100;
+int maxWindPause = 900;
+int minWindTime = 1500;
+int maxWindTime = 3000;
+unsigned long windTime = 0;
+unsigned long windDelay = 0;
+unsigned long startWind = 0;
+unsigned long stopWind = 0;
+
+void setup() 
+{
   Serial.begin(9600);
   Wire.begin(thisI2CAddr);
+  Wire.onReceive(receiveEvent);
   
   pinMode(oknoA_R, OUTPUT);
   pinMode(oknoA_G, OUTPUT);
@@ -87,10 +101,25 @@ void setup() {
   Serial.println("Crystal 1  = " + String(digitalRead(cryst1)));
   Serial.println("Crystal 2  = " + String(digitalRead(cryst2)));
   Serial.println("Crystal 3  = " + String(digitalRead(cryst3)));
-
+  randomSeed(A0);
 }
 
 void loop() {
+  if(command > 0) Serial.println("Command = " + String(command));
+
+  if(command == 0x01) lightOff(); // Выключить весь свет
+  else if(command == 0x02) randomWind = true;
+  else if(command == 0x03) // Baloon passed
+  {
+    randomWind = false;
+    windState = false;
+    digitalWrite(wind, windState);
+  }
+  
+  command = 0;
+
+
+  if(randomWind) randWind();
   // wait for command from master via i2c (most commands to control oknoX cames from World (thru Master I think)
 
   //if command == windRandom > turn on wind randomly until command windStop is recieved from master
@@ -130,3 +159,13 @@ void loop() {
   //if (!digitalRead(cryst1) && !digitalRead(cryst2) && !digitalRead(cryst3)) send command crystDone to master (GAME OVER)
 
 }
+
+void receiveEvent(int howMany) 
+{
+  if (Wire.available()) // пройтись по всем до последнего
+  { 
+    byte c = Wire.read();    // принять байт как символ
+    if(c > 0x00 && c < 0x20) command = c;
+  }
+}
+
