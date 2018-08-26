@@ -21,7 +21,7 @@ boolean getOperSkips()
       for (int i = 0; i < devCount - 1; i++) 
       {
         input[i] = rs485.read();
-        chksum += input[i]; // Подсчитываем значение контрольной суммы
+        if(input[i] > 0) chksum++; // Подсчитываем значение контрольной суммы
       }
       byte truechksum = rs485.read(); // Считываем значение контрольной суммы, должна совпасть с подсчитанной.
       for (int i = 0; i < devCount; i++) 
