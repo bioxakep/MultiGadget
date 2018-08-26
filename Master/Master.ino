@@ -30,6 +30,10 @@ int startBeacon = 499;
 int underBeacon = 328;
 int gateBeacon  = 230;
 
+byte tridentWait = true;
+byte windRFWait = true;
+byte rainRFWait = true;
+
 //address i2c
 int lightConAddr = 20;
 int motorConAddr = 21;
@@ -130,32 +134,33 @@ int zodiaHD  = A10;
 //int worldIN   = 12; free
 //int worldOUT  = 11; free
 
-int level = 10;
+byte level = 10;
+byte demediolevel = 0;
 
-bool balloPASS  = false;
-bool pressPASS  = false;
-//bool gateOpen   = false; need?
-bool startCard  = false;
-bool underOpen  = false;
-bool molniiDone = false;
-bool shieldDone = false;
-bool afinaHD1open = false;
-bool sealsDone  = false;
+boolean balloPASS  = false;
+boolean pressPASS  = false;
+//boolean gateOpen   = false; need?
+boolean startCard  = false;
+boolean underOpen  = false;
+boolean molniiDone = false;
+boolean shieldDone = false;
+boolean afinaHD1open = false;
+boolean sealsDone  = false;
 
-bool seal1  = false;
-bool seal2  = false;
-bool seal3  = false;
+boolean seal1  = false;
+boolean seal2  = false;
+boolean seal3  = false;
 
-bool crist1 = false;
-bool crist2 = false;
-bool crist3 = false;
-bool cristaDone = false;
+boolean crist1 = false;
+boolean crist2 = false;
+boolean crist3 = false;
+boolean cristaDone = false;
 
-bool zodiaState = false;
-bool minotState = false;
-bool gorgoState = false;
+boolean zodiaState = false;
+boolean minotState = false;
+boolean gorgoState = false;
 
-bool flowerFirst = false;
+boolean flowerFirst = false;
 
 void setup() {
   Serial.begin (9600);
@@ -328,7 +333,7 @@ void loop() {
       if (getGateRFID() || operGStates[gate])
       {
         passGStates[gate] = true;
-        sendToSlave(motorConAddr, 0x04); // send signal to motor_controller >openGate 
+        sendToSlave(motorConAddr, 0x04); // send signal to motor_controller >openGate
         send250ms(gheraOUT);  // ghera start speaking, 'molnii' level
         level = 50;
       }
@@ -344,16 +349,23 @@ void loop() {
       delay(10);
       if (Wire.available() >= respSize)
       {
-        byte tridentState = Wire.read();
+        byte trident = Wire.read();
+        if (trident) tridentState = true;
         delay(10);
-        byte windRFState = Wire.read();
+        byte wind = Wire.read();
+        if (wind) windRFState = true;
         delay(10);
-        byte rainRFState = Wire.read();
+        byte rain = Wire.read();
+        if (rain && rainRFWait) 
+        {
+          sendToSlave(motorConAddr, 0x06); // send signal to motor_controller > grapeUp..
+          rainRFWait = false;
+        }
       }
     }
     // --------------------
     // ---------molnii--------------
-    if (!molniiDone)
+    if (!passGStates[molniya])
     {
       if ((!digitalRead(poseiIN) || operGStates[poseidon]) && !passGStates[poseidon])
       { // signal from poseidon
@@ -364,27 +376,44 @@ void loop() {
         sendToSlave(motorConAddr, 0x05); // send signal to motor_controller
         digitalWrite(poseiHD, LOW); // Открываем тайник Посейдона, даем игрокам трезубец
       }
-      if ((!digitalRead(demetIN) || operGStates[demetra]) && !passGStates[demetra])
-      { // signal from demetra    ?????????????????????????????
-        passGStates[demetra] = true;
-        if (operGStates[demetra]) send250ms(demetOUT);
-        digitalWrite(demetHD , LOW); // open demetra HD
-        // shoud be skippable from master console
+      if (demediolevel == 0)
+      {
+        if ((!digitalRead(demetIN) || operGStates[demetra]) && !passGStates[demetra])
+        { // signal from demetra    ?????????????????????????????
+          passGStates[demetra] = true;
+          rainStage = true;
+          if (operGStates[demetra]) send250ms(demetOUT);
+          digitalWrite(demetHD , LOW); // open demetra HD
+          // shoud be skippable from master console
+          demediolevel++;
+        }
+      }
+      else if (demediolevel == 1)
+      {
+        if ((!digitalRead(vineIN) || operGStates[vine]) && !passGStates[vine])
+        {
+          send250ms(dioniOUT);
+          passGStates[vine] = true;
+          demediolevel++;
+        }
+      }
+      else if (demediolevel == 2)
+      {
+        if ((!digitalRead(dioniIN) || operGStates[dionis]) && !passGStates[dionis])
+        { // if players gives dionis empty bottle
+          // he will tell them that he dont like empty bottles
+          // if signal from full bottle is received >
+          // dioniHD1 opens > players gets second part molnii
+          passGStates[dionis] = true;
+          digitalWrite(dioniHD1, LOW); // open first dionis vault
+          // shoud be skippable from master console
+          demediolevel++;
+        }
       }
       // demetra gives players the water > they should put it int the World
       // that will activate Grape grow , if players take grape an put it in the  - vineMkr
       // players will get vine wich they can use to fill bottle for dionis
       // world send signal (i2c) to motor_controller to grape grow
-
-      if ((!digitalRead(dioniIN) || operGStates[dionis]) && !passGStates[dionis])
-      { // if players gives dionis empty bottle
-        // he will tell them that he dont like empty bottles
-        // if signal from full bottle is received >
-        // dioniHD1 opens > players gets second part molnii
-        passGStates[dionis] = true;
-        digitalWrite(dioniHD1, LOW); // open first dionis vault
-        // shoud be skippable from master console
-      }
 
       if ((!digitalRead(hercuIN) || operGStates[hercul]) && !passGStates[hercul])
       { // hercu > players gets third part of molnii
@@ -399,11 +428,11 @@ void loop() {
         // shoud be triggerable from master console
       }
 
-      if (!digitalRead(molniIN) || operGStates[molniya]) && !passGStates[molniya])
+      if (!digitalRead(molniIN) || operGStates[molniya])
       {
         //if all molnii are done >   // gheraLevel = 2 >  speaks > opend HD2 (shields)
         send250ms(gheraOUT);  // moves ghera to 'shields' level
-        molniiDone = true;
+        passGStates[molniya] = true;
         // may add some extra storm effects thru light_controller
         // shoud be triggerable from master console
       }
@@ -415,7 +444,9 @@ void loop() {
       if (!digitalRead(afinaIN) && !afinaHD1open)
       { // afina first signal opens afinaHD1
         digitalWrite(afinaHD1, LOW); // here afina gives players a key to open next vault
-        while (!digitalRead(afinaIN)) {;}
+        while (!digitalRead(afinaIN)) {
+          ;
+        }
         delay(300);
         afinaHD1open = true;
       }

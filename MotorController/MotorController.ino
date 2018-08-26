@@ -125,7 +125,8 @@ void loop() {
   }
 
 
-  if (command == 0x01) { // gate UP  - top sensor available
+  if (command == 0x01)
+  { 
     Serial.print("\nOpen the gate start...");
     cloudUp();
     grapeUp();
@@ -133,34 +134,34 @@ void loop() {
     Serial.println("Done.");
   }
 
-  if (command == 0x03) { // cloud down  - no sensor available
+  if (command == 0x03)
+  { 
     Serial.print("\ncurtainUP start...");
-    digitalWrite(ncurtainUP, HIGH);
+    digitalWrite(curtainUP, HIGH);
     delay(200);
-    digitalWrite(ncurtainUP, LOW);
+    digitalWrite(curtainUP, LOW);
     Serial.println("Done.");
   }
 
-  if (command == 0x04) { // grape down  - down sensor available
+  if (command == 0x04)
+  { 
     Serial.print("\nGate UP start...");
     gateUp();
     Serial.println("Done.");
   }
-  /*
-  if (command == 0x05) { // grape up  - top sensor available
+  
+  if (command == 0x05)
+  { 
+    // wait comand from you, after PoseiIN signal received
+  }
+
+  if (command == 0x06)
+  {
     Serial.print("\nGrape UP start...");
     grapeUp();
-    
     Serial.println("Done.");
   }
-
-  if (command == 0x06) { // column down  - down sensor available
-    Serial.println("\nColumn DOWN start...");
-    columnDown();
-    
-    Serial.println("\nColumn DOWN done");
-  }
-
+/*
   if (command == 0x07) { // column up  - top sensor available
     Serial.println("\nColumn UP start...");
     columnUp();
