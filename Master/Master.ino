@@ -35,8 +35,9 @@ int lightConAddr = 20;
 int motorConAddr = 21;
 int worldConAddr = 22;
 //Gadget states
-byte curGStates[18] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-byte newGStates[18] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+boolean operGStates[18] = {false, false, false, false, false, false, false, false, false, false, false, false};
+//boolean playGStates[18] = {false, false, false, false, false, false, false, false, false, false, false, false};
+boolean passGStates[18] = {false, false, false, false, false, false, false, false, false, false, false, false};
 
 byte start = 0;
 byte baloon = 1;
@@ -47,9 +48,10 @@ byte demetra = 5;
 byte vine = 6;
 byte dionis = 7;
 byte hercul = 8;
-byte molniya = 9;
-byte narcis = 10;
-byte afina = 11;
+byte narcis = 9;
+byte molniya = 10;
+byte afina1 = 11;
+byte afina2 = 11;
 byte octop = 12;
 byte note = 13;
 byte ghera = 14;
@@ -132,7 +134,7 @@ int level = 10;
 
 bool balloPASS  = false;
 bool pressPASS  = false;
-bool gateOpen   = false;
+//bool gateOpen   = false; need?
 bool startCard  = false;
 bool underOpen  = false;
 bool molniiDone = false;
@@ -272,7 +274,7 @@ void loop() {
     {
       if (checkStartRFID())
       {
-        start += 1;   // wait for prestart signal ( any RFID from startRF )
+        start ++;   // wait for prestart signal ( any RFID from startRF )
         if (start == 1)
         {
           // if received send command to Motor_controller and Light_controller
@@ -297,22 +299,24 @@ void loop() {
     }
   }
   else if (level = 20)  {
-    if ((!digitalRead(balloIN) || curGStates[baloon] == 1) && curGStates[baloon] < 2) //signal from finished ballon received
+    if ((!digitalRead(balloIN) || operGStates[baloon]) && !passGStates[baloon]) //signal from finished ballon received
     {
-      newGStates[baloon] == 2;
+      passGStates[baloon] = true;
+      if (operGStates[baloon]) send250ms(balloOUT);
       Serial.println("Ballon signal recieved. Turn on the lights ad roll up the curtain");
       // send (i2c) signal to motor_controller >rollUp and light_controller  >lights and stop wind
-      level = 30;
       sendToSlave(lightConAddr, 0x03); // random Wind
       delay(10);
       sendToSlave(motorConAddr, 0x03);
+      level = 30;
     }
     // if players never finish ballon, operator can skip it here (send signal to ballon)
   }
   else if (level = 30)  {
-    if ((!digitalRead(pressIN) || curGStates[presss] == 1) && curGStates[presss] < 2) //victory signal from press received
+    if ((!digitalRead(pressIN) || operGStates[presss]) && !passGStates[presss]) //victory signal from press received
     {
-      newGStates[presss] == 2;
+      passGStates[presss] = true;
+      if (operGStates[presss]) send250ms(pressOUT);
       Serial.println("Press signal recieved. Press gave players the RFID key to the gate ");
       level = 40;
     }
@@ -321,19 +325,13 @@ void loop() {
   else if (level = 40)  {
     if (millis() % 300 == 0) // every 300ms check RFID
     {
-      if (getGateRFID() || curGStates[gate] == 1) 
+      if (getGateRFID() || operGStates[gate])
       {
-        gateOpen = true; // wait for signal from gateRF(ID) (cpz3)
-        newGStates[gate] == 2;
+        passGStates[gate] = true;
+        sendToSlave(motorConAddr, 0x04); // send signal to motor_controller >openGate 
+        send250ms(gheraOUT);  // ghera start speaking, 'molnii' level
+        level = 50;
       }
-    }
-
-    if (gateOpen)
-    { // if gateRFIDkey is readed and gate(is)Open
-      //gheraLevel = 1 > and start Ghera > open HD1
-      level = 50;
-      sendToSlave(motorConAddr, 0x04); // send signal to motor_controller >openGate >
-      signal2ghera();  // ghera start speaking, 'molnii' level
     }
     // if players never find the key, operator can skip it here > gateOpen = true;
   }
@@ -355,19 +353,21 @@ void loop() {
     }
     // --------------------
     // ---------molnii--------------
-    if (!molniiDone) 
+    if (!molniiDone)
     {
-      if ((!digitalRead(poseiIN) || curGStates[poseidon] == 1) && curGStates[poseidon] < 2)
+      if ((!digitalRead(poseiIN) || operGStates[poseidon]) && !passGStates[poseidon])
       { // signal from poseidon
         // posei > command via (i2c) to motor_controller activate falling column > players get first part molnii
         // shoud be skippable from master console
-        newGStates[poseidon] == 2;
+        passGStates[poseidon] = true;
+        if (operGStates[poseidon]) send250ms(poseiOUT);
         sendToSlave(motorConAddr, 0x05); // send signal to motor_controller
-        digitalWrite(poseiHD, HIGH); // Открываем тайник Посейдона, даем игрокам трезубец
+        digitalWrite(poseiHD, LOW); // Открываем тайник Посейдона, даем игрокам трезубец
       }
-      if ((!digitalRead(demetIN) || curGStates[demetra] == 1) && curGStates[demetra] < 2) 
-      {  // signal from demetra    ?????????????????????????????
-        newGStates[demetra] = 2;
+      if ((!digitalRead(demetIN) || operGStates[demetra]) && !passGStates[demetra])
+      { // signal from demetra    ?????????????????????????????
+        passGStates[demetra] = true;
+        if (operGStates[demetra]) send250ms(demetOUT);
         digitalWrite(demetHD , LOW); // open demetra HD
         // shoud be skippable from master console
       }
@@ -376,33 +376,33 @@ void loop() {
       // players will get vine wich they can use to fill bottle for dionis
       // world send signal (i2c) to motor_controller to grape grow
 
-      if ((!digitalRead(dioniIN) || curGStates[dionis] == 1) && curGStates[dionis] < 2)
-      {      // if players gives dionis empty bottle
+      if ((!digitalRead(dioniIN) || operGStates[dionis]) && !passGStates[dionis])
+      { // if players gives dionis empty bottle
         // he will tell them that he dont like empty bottles
         // if signal from full bottle is received >
         // dioniHD1 opens > players gets second part molnii
-        newGStates[dionis] = 2;
+        passGStates[dionis] = true;
         digitalWrite(dioniHD1, LOW); // open first dionis vault
         // shoud be skippable from master console
       }
 
-      if ((!digitalRead(hercuIN) || curGStates[hercul] == 1) && curGStates[hercul] < 2) 
-      {      // hercu > players gets third part of molnii
-        newGStates[hercul] = 2;
+      if ((!digitalRead(hercuIN) || operGStates[hercul]) && !passGStates[hercul])
+      { // hercu > players gets third part of molnii
+        passGStates[hercul] = true;
         digitalWrite(hercuHD, LOW);
         // shoud be skippable from master console
       }
 
-      if ((!digitalRead(narciIN) || curGStates[narcis] == 1) && curGStates[narcis] < 2)
-      {      // narci > pattern information for players
+      if ((!digitalRead(narciIN) || operGStates[narcis]) && !passGStates[narcis])
+      { // narci > pattern information for players
         // nothing happen - narcis only give players information
         // shoud be triggerable from master console
       }
 
-      if (!digitalRead(molniIN) || curGStates[molniya] == 1) && curGStates[molniya] < 2)
+      if (!digitalRead(molniIN) || operGStates[molniya]) && !passGStates[molniya])
       {
         //if all molnii are done >   // gheraLevel = 2 >  speaks > opend HD2 (shields)
-        signal2ghera();  // moves ghera to 'shields' level
+        send250ms(gheraOUT);  // moves ghera to 'shields' level
         molniiDone = true;
         // may add some extra storm effects thru light_controller
         // shoud be triggerable from master console
@@ -410,10 +410,10 @@ void loop() {
     }// eof.molniiDone
 
     //-------- shields ------
-    if (!shieldDone) 
+    if (!shieldDone)
     {
       if (!digitalRead(afinaIN) && !afinaHD1open)
-      {  // afina first signal opens afinaHD1
+      { // afina first signal opens afinaHD1
         digitalWrite(afinaHD1, LOW); // here afina gives players a key to open next vault
         while (!digitalRead(afinaIN)) {;}
         delay(300);
@@ -421,18 +421,18 @@ void loop() {
       }
 
       if (!digitalRead(afinaIN) && afinaHD1open)
-      {  // afina  second signal > open afinaHD2  > players get escu1
+      { // afina  second signal > open afinaHD2  > players get escu1
         digitalWrite(afinaHD2, LOW); // here afina gives players another part of the shield
       }
 
-      if (!digitalRead(octopIN)) 
+      if (!digitalRead(octopIN))
       { // octop done > players get escu2
         // octopus has its own hideout, so nothing happens here
         // octopus gives players another part of the shield
       }
 
-      if (!digitalRead(noteIN)) 
-      {       
+      if (!digitalRead(noteIN))
+      {
         // note > players get escu3
         digitalWrite(noteHD, LOW);
       }
@@ -442,7 +442,7 @@ void loop() {
       // motor_controller will activate (cloudDOWN)
       // players will get part of the shield , that they shoud give to ghera later
 
-      if (!digitalRead(gheraIN)) 
+      if (!digitalRead(gheraIN))
       { //if all shields in ghera place (gheraLevel = 3 ) gera speaks - open HD3 (seals)
         shieldDone = true;
         signal2muses();
@@ -524,7 +524,7 @@ void loop() {
   if (level == 100) {
     // game over - victory !
   }
-  if (checkDevices()) sendStates();
+  sendGStates();
 }
 
 void sendToSlave(int address, byte data)
@@ -532,6 +532,13 @@ void sendToSlave(int address, byte data)
   Wire.beginTransmission(address); // transmit to device #8
   Wire.write(data);
   Wire.endTransmission();
+}
+
+void send250ms(int pin)
+{
+  digitalWrite(pin, HIGH);
+  delay(250);
+  digitalWrite(pin, LOW);
 }
 //I2C Request
 /*

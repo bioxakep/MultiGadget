@@ -1,51 +1,48 @@
-void sendStates()
-{
-  digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
-  rs485.write(0xFF);
-  for (int i = 0; i < devCount; i++) rs485.write(curGStates[i]);
-  rs485.write(0xAA);
-  digitalWrite(SSerialTxControl, LOW);  // Init Transmitter
-}
-
-
-boolean getOperSkips()
+void getOperSkips()
 {
   if (rs485.available() > 0)
   {
-    byte input[17] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    byte chkSum = 0;
+    byte input[16] = {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false};
     byte check = rs485.read();
-    byte chksum = 0;
-    while(rs485.available() && check != 0xFF) check = rs485.read();
-    if(check == 0xFF)
+    if (check == 0xFF)
     {
-      for (int i = 0; i < devCount - 1; i++) 
+      for (int i = 0; i < gadgCount; i++)
       {
         input[i] = rs485.read();
-        if(input[i] > 0) chksum++; // Подсчитываем значение контрольной суммы
+        if (input[i] > 0) chkSum++; // Подсчитываем значение контрольной суммы
       }
-      byte truechksum = rs485.read(); // Считываем значение контрольной суммы, должна совпасть с подсчитанной.
-      for (int i = 0; i < devCount; i++) 
+      byte dataChkSum = rs485.read(); // Считываем значение контрольной суммы, должна совпасть с подсчитанной.
+      if (chkSum == dataChkSum)
       {
-        if(input[i] != curGStates[i] && chksum == truechksum) curGStates[i] = input[i]; // Нужные изменения применяем
+        for (int i = 0; i < gadgCount; i++)
+        {
+          if (input[i] != curGStates[i]) operGStates[i] = input[i]; // Нужные изменения применяем
+        }
       }
     }
   }
   return false;
 }
 
-boolean checkDevices() // Проверяем прошел ли игрок какой-нибудь гаджет
+boolean sendGStates() // Проверяем прошел ли игрок какой-нибудь гаджет
 {
-  boolean changed = false;
-  byte chSum = 0;
-  for (int d = 0; d < devCount; d++)
+  byte chkSum = 0;
+  digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
+  rs485.write(0xFF);
+  boolean sendStates[16] = {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false};
+  for (int d = 0; d < gadgCount; d++)
   {
-    if (newGStates[d] == 2)
+    if (passGStates[d] && !operGStates[d])
     {
-      if(curGStates[d] == 0) changed = true;
-      curGStates[d] = 2;
-      chSum += 1;
+      operGStates[d] = true;
+      sendStates[d] = true;
+      chkSum++;
     }
+    rs485.write(sendStates[d]);
+    delay(2);
   }
-  curGStates[16] = chSum;
-  return changed;
+  rs485.write(chkSum);
+  rs485.write(0xAA);
+  digitalWrite(SSerialTxControl, LOW);  // Init Transmitter
 }
