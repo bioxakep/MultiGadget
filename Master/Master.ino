@@ -488,9 +488,9 @@ void loop() {
       // motor_controller will activate (cloudDOWN)
       // players will get part of the shield , that they shoud give to ghera later
 
-      if (!digitalRead(gheraIN) || operGStates[ghera])
+      if ((!digitalRead(gheraIN) || operGStates[ghera]) && !passGStates[ghera])
       { //if all shields in ghera place (gheraLevel = 3 ) gera speaks - open HD3 (seals)
-        shieldDone = true;
+        passGStates[ghera] = true;
         send250ms(musesOUT);
         // ghera is on 'seals' level
       }
