@@ -57,8 +57,9 @@ byte molniya = 10;
 byte afina1 = 11;
 byte afina2 = 11;
 byte octop = 12;
-byte note = 13;
-byte ghera = 14;
+byte note1 = 13;
+byte note2 = 14;
+byte ghera = 15;
 
 // lev 0
 //
@@ -136,7 +137,7 @@ int zodiaHD  = A10;
 
 byte level = 10;
 byte demediolevel = 0;
-
+byte notelevel = 0;
 boolean balloPASS  = false;
 boolean pressPASS  = false;
 //boolean gateOpen   = false; need?
@@ -350,13 +351,13 @@ void loop() {
       if (Wire.available() >= respSize)
       {
         byte trident = Wire.read();
-        if (trident) tridentState = true;
+        if (trident && !tridentState) tridentState = true;
         delay(10);
         byte wind = Wire.read();
-        if (wind) windRFState = true;
+        if (wind && !windRFState) windRFState = true;
         delay(10);
         byte rain = Wire.read();
-        if (rain && rainRFWait) 
+        if (rain && rainRFWait)
         {
           sendToSlave(motorConAddr, 0x06); // send signal to motor_controller > grapeUp..
           rainRFWait = false;
@@ -441,42 +442,56 @@ void loop() {
     //-------- shields ------
     if (!shieldDone)
     {
-      if (!digitalRead(afinaIN) && !afinaHD1open)
+      if ((!digitalRead(afinaIN) || operGStates[afina1]) && !passGStates[afina1])
       { // afina first signal opens afinaHD1
         digitalWrite(afinaHD1, LOW); // here afina gives players a key to open next vault
         while (!digitalRead(afinaIN)) {
           ;
         }
         delay(300);
-        afinaHD1open = true;
+        passGStates[afina1] = true;
       }
 
-      if (!digitalRead(afinaIN) && afinaHD1open)
+      if ((!digitalRead(afinaIN) || operGStates[afina1]) && !passGStates[afina2] && passGStates[afina1])
       { // afina  second signal > open afinaHD2  > players get escu1
         digitalWrite(afinaHD2, LOW); // here afina gives players another part of the shield
       }
 
-      if (!digitalRead(octopIN))
+      if ((!digitalRead(octopIN) || operGStates[octop]) && !passGStates[octop])
       { // octop done > players get escu2
         // octopus has its own hideout, so nothing happens here
         // octopus gives players another part of the shield
+        digitalWrite(octopOUT, HIGH);
+        //digitalWrite(octopHD, HIGH); ??
+      }
+      if (notelevel == 0) //get FRID
+      {
+        if ((!digitalRead(noteIN) || operGStates[note1]) && !passGStates[note1])
+        {
+          // note > players get escu3
+          if (operGStates[note]) send250ms(noteOUT);
+          digitalWrite(noteHD, LOW);
+          notelevel++;
+        }
+      }
+      else if (notelevel == 1) // wait wind from world
+      {
+        if((windRFState || operGStates[note2]) && !passGStates[note2])
+        {
+          
+        }
       }
 
-      if (!digitalRead(noteIN))
-      {
-        // note > players get escu3
-        digitalWrite(noteHD, LOW);
-      }
       // note gives players the wind element > they should put it int the World
       // wind will activate fastled backlight on world and windSensor
       // if players blow in the sensor World wil send signal to master, master will send signal to motor_controller (windBlow)
       // motor_controller will activate (cloudDOWN)
       // players will get part of the shield , that they shoud give to ghera later
 
-      if (!digitalRead(gheraIN))
+      if (!digitalRead(gheraIN) || operGStates[ghera])
       { //if all shields in ghera place (gheraLevel = 3 ) gera speaks - open HD3 (seals)
         shieldDone = true;
-        signal2muses();
+        send250ms(musesOUT);
         // ghera is on 'seals' level
       }
     } //eof_shields
