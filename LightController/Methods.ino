@@ -33,16 +33,16 @@ void lightOff()
 
 void randWind()
 {
-  tick = millis();
+  unsigned long tick = millis();
   if(windState && tick - startWind > windTime)
   {
-    windDelay = random(minWindPause, maxWindPause);
+    windPause = random(minWindPause, maxWindPause);
     windState = false;
     stopWind = tick;
   }
-  if(!windState && tick - stopWind > windDelay)
+  if(!windState && tick - stopWind > windPause)
   {
-    windTime = random(minWindDelay, maxWindDelay);
+    windTime = random(minWindTime, maxWindTime);
     windState = true;
     startWind = tick;
   }

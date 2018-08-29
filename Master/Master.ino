@@ -260,16 +260,16 @@ void setup() {
   digitalWrite(SSerialTxControl, LOW);  // Init Recieve RS485
   //I2C Start
   Wire.begin();
-  Serial.println("I2C Started.")
+  Serial.println("I2C Started.");
   delay(10);
   rs485.begin(9600);
-  Serial.println("RS485 Started.")
+  Serial.println("RS485 Started.");
   delay(10);
   checkInputs();
-  Serial.println("Inputs Checked.")
+  Serial.println("Inputs Checked.");
   delay(10);
   openLocks();
-  Serial.println("Locks Opened.")
+  Serial.println("Locks Opened.");
 }
 
 void loop() {
@@ -278,7 +278,7 @@ void loop() {
   {
     if (millis() % 330 == 0)
     {
-      if (checkStartRFID())
+      if (getStartRFID())
       {
         start ++;   // wait for prestart signal ( any RFID from startRF )
         if (start == 1)
@@ -351,10 +351,10 @@ void loop() {
       if (Wire.available() >= respSize)
       {
         byte trident = Wire.read();
-        if (trident && !tridentState) tridentState = true;
+        if (trident && tridentWait) tridentWait = false;
         delay(10);
         byte wind = Wire.read();
-        if (wind && !windRFState) windRFState = true;
+        if (wind && windRFWait) windRFWait = false;
         delay(10);
         byte rain = Wire.read();
         if (rain && rainRFWait)
@@ -382,7 +382,6 @@ void loop() {
         if ((!digitalRead(demetIN) || operGStates[demetra]) && !passGStates[demetra])
         { // signal from demetra    ?????????????????????????????
           passGStates[demetra] = true;
-          rainStage = true;
           if (operGStates[demetra]) send250ms(demetOUT);
           digitalWrite(demetHD , LOW); // open demetra HD
           // shoud be skippable from master console
@@ -391,7 +390,7 @@ void loop() {
       }
       else if (demediolevel == 1)
       {
-        if ((!digitalRead(vineIN) || operGStates[vine]) && !passGStates[vine])
+        if ((!digitalRead(vinemIN) || operGStates[vine]) && !passGStates[vine])
         {
           send250ms(dioniOUT);
           passGStates[vine] = true;
@@ -469,14 +468,14 @@ void loop() {
         if ((!digitalRead(noteIN) || operGStates[note1]) && !passGStates[note1])
         {
           // note > players get escu3
-          if (operGStates[note]) send250ms(noteOUT);
+          if (operGStates[note1]) send250ms(noteOUT);
           digitalWrite(noteHD, LOW);
           notelevel++;
         }
       }
       else if (notelevel == 1) // wait wind from world
       {
-        if((windRFState || operGStates[note2]) && !passGStates[note2])
+        if((!windRFWait || operGStates[note2]) && !passGStates[note2])
         {
           
         }
@@ -515,7 +514,7 @@ void loop() {
       }
 
       if (digitalRead(arphaIN) == LOW) {    //  signal from arpha received
-        signal2muses();  // send signal to shut up the muses
+        send250ms(musesOUT);  // send signal to shut up the muses
         digitalWrite(arphaHD, LOW);  // give players seal 3
       }
 
@@ -559,7 +558,7 @@ void loop() {
       if (crist1 && crist2 && crist3) {  //if all crystals are in place > give shoe  >>> final
         level = 100;
         cristaDone = true;
-        signal2ghera();
+        send250ms(gheraOUT);
       }
 
       if (millis() % 5000 == 0) openOpened();  // open (and re-open if closed) underground locks

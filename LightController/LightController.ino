@@ -49,7 +49,7 @@ int maxWindPause = 900;
 int minWindTime = 1500;
 int maxWindTime = 3000;
 unsigned long windTime = 0;
-unsigned long windDelay = 0;
+unsigned long windPause = 0;
 unsigned long startWind = 0;
 unsigned long stopWind = 0;
 
@@ -105,6 +105,7 @@ void setup()
 }
 
 void loop() {
+  
   if(command > 0) Serial.println("Command = " + String(command));
 
   if(command == 0x01) lightOff(); // Выключить весь свет

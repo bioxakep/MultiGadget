@@ -7,7 +7,7 @@ void getOperSkips()
     byte check = rs485.read();
     if (check == 0xFF)
     {
-      for (int i = 0; i < gadgCount; i++)
+      for (int i = 0; i < 16; i++)
       {
         input[i] = rs485.read();
         if (input[i] > 0) chkSum++; // Подсчитываем значение контрольной суммы
@@ -15,9 +15,9 @@ void getOperSkips()
       byte dataChkSum = rs485.read(); // Считываем значение контрольной суммы, должна совпасть с подсчитанной.
       if (chkSum == dataChkSum)
       {
-        for (int i = 0; i < gadgCount; i++)
+        for (int i = 0; i < 16; i++)
         {
-          if (input[i] != curGStates[i]) operGStates[i] = input[i]; // Нужные изменения применяем
+          if (input[i] != passGStates[i]) operGStates[i] = input[i]; // Нужные изменения применяем
         }
       }
     }
@@ -31,7 +31,7 @@ boolean sendGStates() // Проверяем прошел ли игрок как�
   digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
   rs485.write(0xFF);
   boolean sendStates[16] = {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false};
-  for (int d = 0; d < gadgCount; d++)
+  for (int d = 0; d < 16; d++)
   {
     if (passGStates[d] && !operGStates[d])
     {

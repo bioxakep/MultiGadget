@@ -16,7 +16,7 @@ void cloudDown()
   while (motor < 50)
   { // revolutions of motor
     digitalWrite(cloudDN, HIGH);
-    if (!digitalRead(cloudOOO)LOW) {
+    if (!digitalRead(cloudOOO)) {
       motor++;
       while (!digitalRead(cloudOOO)) {
         ;

@@ -90,10 +90,10 @@ void setup() {
   digitalWrite(mainDoor, LOW);
   digitalWrite(underDoor, LOW);
 
-  digitalWrite(poseivalve, LOW);   // unpowered valve dont let water get out of the vault
+  digitalWrite(poseiValv, LOW);   // unpowered valve dont let water get out of the vault
   digitalWrite(poseiPump, HIGH);
   delay(10000);                    /// some time to fill the poseidon vault with water
-  digitalWrite(poseiPump, Low);
+  digitalWrite(poseiPump, LOW);
   digitalWrite(poseiLock, HIGH);   // lock the cover of the vault while if full of water
 
   Serial.println("\nMotor Controller v1  \n21_AGO_2018 ");
@@ -187,7 +187,6 @@ void loop() {
   }
   */
   command = 0;
-  motor = 0;
 }
 
 void receiveEvent(int howMany) 
