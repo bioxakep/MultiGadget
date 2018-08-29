@@ -299,6 +299,7 @@ void loop() {
           delay(200);
           //send random wind to lightController
           sendToSlave(lightConAddr, 0x02); // random Wind
+          Serial.println("Go to level 20");
           level = 20;
         }
       }
@@ -315,6 +316,7 @@ void loop() {
       delay(10);
       sendToSlave(motorConAddr, 0x03);
       level = 30;
+      Serial.println("Go to level 30");
     }
     // if players never finish ballon, operator can skip it here (send signal to ballon)
   }
@@ -325,6 +327,7 @@ void loop() {
       if (operGStates[presss]) send250ms(pressOUT);
       Serial.println("Press signal recieved. Press gave players the RFID key to the gate ");
       level = 40;
+      Serial.println("Go to level 40");
     }
     // if players never finish press, operator can skip it here (send signal to press)
   }
@@ -337,6 +340,7 @@ void loop() {
         sendToSlave(motorConAddr, 0x04); // send signal to motor_controller >openGate
         send250ms(gheraOUT);  // ghera start speaking, 'molnii' level
         level = 50;
+        Serial.println("Go to level 50");
       }
     }
     // if players never find the key, operator can skip it here > gateOpen = true;
@@ -359,6 +363,7 @@ void loop() {
         byte rain = Wire.read();
         if (rain && rainRFWait)
         {
+          Serial.println("Rain RFID Recieved");
           sendToSlave(motorConAddr, 0x06); // send signal to motor_controller > grapeUp..
           rainRFWait = false;
         }
