@@ -153,15 +153,11 @@ int zodiaHD  = A10;
 byte level = 10;
 byte demediolevel = 0;
 byte notelevel = 0;
-boolean balloPASS  = false;
-boolean pressPASS  = false;
 //boolean gateOpen   = false; need?
-boolean startCard  = false;
 boolean underOpen  = false;
-boolean molniiDone = false;
 boolean shieldDone = false;
-boolean afinaHD1open = false;
 boolean sealsDone  = false;
+
 boolean tridentWait = true;
 
 boolean seal1  = false;
