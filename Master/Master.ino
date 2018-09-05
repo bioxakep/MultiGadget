@@ -339,7 +339,7 @@ void loop() {
     }
     // if players never finish ballon, operator can skip it here (send signal to ballon)
   }
-  else if (level == 30)  
+  else if (level == 30)
   {
     if ((!digitalRead(pressIN) || operGStates[presss]) && !passGStates[presss]) //victory signal from press received
     {
@@ -352,14 +352,15 @@ void loop() {
     // if players never finish press, operator can skip it here (send signal to press)
   }
   else if (level == 40)  {
-      if ((getGateRFID() || operGStates[gate]) && !passGStates[gate])
-      {
-        passGStates[gate] = true;
-        sendToSlave(motorConAddr, 0x04); // send signal to motor_controller >openGate
-        send250ms(gheraOUT);  // ghera start speaking, 'molnii' level
-        level = 50;
-        Serial.println("Go to level 50");
-      }
+    gateRFWait = !getGateRFID();
+    if ((!gateRFWait || operGStates[gate]) && !passGStates[gate])
+    {
+      passGStates[gate] = true;
+      sendToSlave(motorConAddr, 0x04); // send signal to motor_controller >openGate
+      send250ms(gheraOUT);  // ghera start speaking, 'molnii' level
+      level = 50;
+      Serial.println("Go to level 50");
+    }
     // if players never find the key, operator can skip it here > gateOpen = true;
   }
   else if (level == 50)
@@ -367,18 +368,18 @@ void loop() {
     //Big request to World
     if (millis() % 100 == 0)
     {
-        if (getWindRFID() && windRFWait) 
-        {
-          Serial.println("Wind RFID Recieved");
-          windRFWait = false;
-        }
+      if (getWindRFID() && windRFWait)
+      {
+        Serial.println("Wind RFID Recieved");
+        windRFWait = false;
+      }
 
-        if (getRainRFID() && rainRFWait)
-        {
-          Serial.println("Rain RFID Recieved");
-          sendToSlave(motorConAddr, 0x06); // send signal to motor_controller > grapeUp..
-          rainRFWait = false;
-        }
+      if (getRainRFID() && rainRFWait)
+      {
+        Serial.println("Rain RFID Recieved");
+        sendToSlave(motorConAddr, 0x06); // send signal to motor_controller > grapeUp..
+        rainRFWait = false;
+      }
     }
     // --------------------
     // ---------molnii--------------

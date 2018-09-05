@@ -44,7 +44,7 @@ boolean getGateRFID() {
     byte addr[6];
     int ficha3 = 0;
     cpz3->getAddress(addr);
-    Serial.print("\nBeacon-2: ");
+    Serial.print("Beacon-gate: ");
     for(int i = 0; i < 6; i++) 
     {                               
       ficha3 = ficha3 + addr[i];    // Serial.print(addr[i], HEX);
