@@ -29,17 +29,9 @@
   плюс если позтция = 2.West то включаем выход redflower, если позтция = 4.East то включаем выход bluflower
   во всех остальных позициях оба (redflower и blueflower) выключенны
 */
-ArdCPZ *rainRFID;
-ArdCPZ *windRFID;
-
-
 int worldAdd = A0;
 int turner   = A3;
-int windRF   = A2;
-int windSens = 8;
 int fastled  = 7;
-int rainRF   = 6;
-int trident  = 5;
 int redflower = 53;
 int bluflower = 51;
 int location = 1;
@@ -63,9 +55,6 @@ void setup()
   Serial.println ("trident  = " + String(digitalRead(trident)));
 
   Serial.println("\n -----------------------------------------------");
-
-  rainRFID = new ArdCPZ(rainRF);
-  windRFID = new ArdCPZ(windRF);
 }
 
 void loop() {
@@ -85,8 +74,5 @@ void loop() {
 
 void requestEvent()
 {
-  Wire.write(tridentState);
-  Wire.write(windRFState);
-  Wire.write(rainRFState);
 }
 

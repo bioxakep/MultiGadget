@@ -153,9 +153,6 @@ int zodiaHD  = A10;
 //int worldIN   = 12; free
 //int worldOUT  = 11; free
 
-
-
-
 byte level = 10;
 byte demediolevel = 0;
 byte notelevel = 0;
@@ -190,8 +187,8 @@ void setup() {
   //Serial3.begin(9600);  //xbee
   Serial1.begin(9600);  //RS-485 adapter
 
-  Serial.println("\nSKY Master v1 ");
-  Serial.println("17 Aug 2018");
+  Serial.println("\nSKY Master v2 ");
+  Serial.println("5 Sep 2018");
 
   delay(100);
   mp3_set_serial(Serial);
@@ -342,7 +339,8 @@ void loop() {
     }
     // if players never finish ballon, operator can skip it here (send signal to ballon)
   }
-  else if (level = 30)  {
+  else if (level = 30)  
+  {
     if ((!digitalRead(pressIN) || operGStates[presss]) && !passGStates[presss]) //victory signal from press received
     {
       passGStates[presss] = true;
@@ -372,24 +370,14 @@ void loop() {
     //Big request to World
     if (millis() % 333 == 0)
     {
-      int respSize = Wire.requestFrom(worldConAddr, 3);
-      delay(10);
-      if (Wire.available() >= respSize)
-      {
-        byte trident = Wire.read();
-        if (trident && tridentWait) tridentWait = false;
-        delay(10);
-        byte wind = Wire.read();
-        if (wind && windRFWait) windRFWait = false;
-        delay(10);
-        byte rain = Wire.read();
-        if (rain && rainRFWait)
+        if (getWindRFID() && windRFWait) windRFWait = false;
+
+        if (getRainRFID() && rainRFWait)
         {
           Serial.println("Rain RFID Recieved");
           sendToSlave(motorConAddr, 0x06); // send signal to motor_controller > grapeUp..
           rainRFWait = false;
         }
-      }
     }
     // --------------------
     // ---------molnii--------------
@@ -612,16 +600,3 @@ void send250ms(int pin)
   delay(250);
   digitalWrite(pin, LOW);
 }
-//I2C Request
-/*
-   byte bufercnt = Wire.requestFrom(rfidSlaveAddr[i], 1);
-        if (bufercnt == 1)
-        {
-          currVals[i] = Wire.read();
-          part = ((currVals[i] * 1.0) / 10.0) * 100.0; //TEST
-          if (part == 100 && !RFIDClosed[i]) {
-            digitalWrite(RFIDBlockRelays[i], LOW);
-            RFIDClosed[i] = true;
-          }
-        }
-*/

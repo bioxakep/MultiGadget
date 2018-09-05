@@ -12,7 +12,7 @@ boolean getWindRFID() {
     }
     Serial.print(" sum = ");
     Serial.println(ficha1);
-    if (ficha1 == startBeacon) return true;
+    if (ficha1 == windBeacon) return true;
     else return false;
   }
 }
