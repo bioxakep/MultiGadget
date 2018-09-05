@@ -324,7 +324,7 @@ void loop() {
     }
     startStates[1] = startStates[0];
   }
-  else if (level = 20)  {
+  else if (level == 20)  {
     if ((!digitalRead(balloIN) || operGStates[baloon]) && !passGStates[baloon]) //signal from finished ballon received
     {
       passGStates[baloon] = true;
@@ -339,7 +339,7 @@ void loop() {
     }
     // if players never finish ballon, operator can skip it here (send signal to ballon)
   }
-  else if (level = 30)  
+  else if (level == 30)  
   {
     if ((!digitalRead(pressIN) || operGStates[presss]) && !passGStates[presss]) //victory signal from press received
     {
@@ -351,7 +351,7 @@ void loop() {
     }
     // if players never finish press, operator can skip it here (send signal to press)
   }
-  else if (level = 40)  {
+  else if (level == 40)  {
     if (millis() % 300 == 0) // every 300ms check RFID
     {
       if (getGateRFID() || operGStates[gate])
@@ -365,7 +365,7 @@ void loop() {
     }
     // if players never find the key, operator can skip it here > gateOpen = true;
   }
-  else if (level = 50)
+  else if (level == 50)
   { // on level 50 all events may be done in any order/sequence
     //Big request to World
     if (millis() % 333 == 0)
