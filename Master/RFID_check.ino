@@ -5,7 +5,7 @@ boolean getWindRFID() {
     byte addr[6];
     int ficha1 = 0;
     cpz1->getAddress(addr);
-    Serial.print("\nBeacon-1: ");
+    Serial.print("\nBeacon-Wind: ");
     for(int i = 0; i < 6; i++) 
     {                               
       ficha1 = ficha1 + addr[i];    // Serial.print(addr[i], HEX);
@@ -25,7 +25,7 @@ boolean getUnderRFID() {
     byte addr[6];
     int ficha2 = 0;
     cpz2->getAddress(addr);
-    Serial.print("\nBeacon-2: ");
+    Serial.print("\nBeacon-Under: ");
     for(int i = 0; i < 6; i++) 
     {                               
       ficha2 = ficha2 + addr[i];    // Serial.print(addr[i], HEX);
@@ -64,7 +64,7 @@ boolean getRainRFID() {
     byte addr[6];
     int ficha4 = 0;
     cpz4->getAddress(addr);
-    Serial.print("\nBeacon-2: ");
+    Serial.print("\nBeacon-Rain: ");
     for(int i = 0; i < 6; i++) 
     {                               
       ficha4 = ficha4 + addr[i];    // Serial.print(addr[i], HEX);
