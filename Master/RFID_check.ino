@@ -15,11 +15,11 @@ boolean getWindRFID() {
     if (ficha1 == windBeacon) return true;
     else return false;
   }
+  else return false;
 }
 
 boolean getUnderRFID() {
   cpz2->check();
-
   if(cpz2->isBeaconConnecting())
   {
     byte addr[6];
@@ -35,10 +35,10 @@ boolean getUnderRFID() {
     if (ficha2 == underBeacon) return true;
     else return false;
   }
+  else return false;
 }
 boolean getGateRFID() {
   cpz3->check();
-
   if(cpz3->isBeaconConnecting())
   {
     byte addr[6];
@@ -54,11 +54,11 @@ boolean getGateRFID() {
     if (ficha3 == gateBeacon) return true;
     else return false;
   }
+  else return false;
 }
 
 boolean getRainRFID() {
   cpz4->check();
-
   if(cpz4->isBeaconConnecting())
   {
     byte addr[6];
@@ -74,5 +74,6 @@ boolean getRainRFID() {
     if (ficha4 == rainBeacon) return true;
     else return false;
   }
+  else return false;
 }
 

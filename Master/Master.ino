@@ -11,11 +11,8 @@
 #include <SoftwareSerial.h>
 
 //I2C PINS: 20-21
-#define SSerialRX 10  //Serial Receive pin
-#define SSerialTX 11  //Serial Transmit pin
-#define SSerialTxControl 3   //RS485 Direction control
 
-SoftwareSerial rs485(SSerialRX, SSerialTX); // RX, TX
+#define SSerialTxControl 3   //RS485 Direction control
 
 byte devCount = 16;//Under calculate volitile gadgets...
 
@@ -282,7 +279,7 @@ void setup() {
   Wire.begin();
   Serial.println("I2C Started.");
   delay(10);
-  rs485.begin(9600);
+  
   Serial.println("RS485 Started.");
   delay(10);
   checkInputs();
