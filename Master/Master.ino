@@ -145,7 +145,7 @@ int minotOUT = 45;
 int minotHD  = A10;
 
 int zodiaIN  = 5;
-int zodiaHD  = A10;
+int zodiaHD  = A11;
 
 //int worldIN   = 12; free
 //int worldOUT  = 11; free
