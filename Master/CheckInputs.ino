@@ -20,3 +20,15 @@ Serial.print(" flowrIN = "); Serial.print  (digitalRead(flowrIN) ? "HIGH" : "LOW
 Serial.print(" gheraIN = "); Serial.println(digitalRead(gheraIN) ? "HIGH" : "LOW"); 
 //Serial.print(" spareIN = "); Serial.print  (digitalRead(spareIN) ? "HIGH" : "LOW"); 
 }
+
+boolean debounce(boolean prevstate ,int pin)
+{
+  boolean currstate = digitalRead(pin);
+  if (currstate != prevstate)
+  {
+    delay(5);
+    currstate = digitalRead(pin);
+  }
+  return currstate;
+}
+

@@ -10,6 +10,7 @@
 #include <DFPlayer_Mini_Mp3.h>
 #include <SoftwareSerial.h>
 
+//I2C PINS: 20-21
 #define SSerialRX 10  //Serial Receive pin
 #define SSerialTX 11  //Serial Transmit pin
 #define SSerialTxControl 3   //RS485 Direction control
@@ -18,76 +19,84 @@ SoftwareSerial rs485(SSerialRX, SSerialTX); // RX, TX
 
 byte devCount = 16;//Under calculate volitile gadgets...
 
-int startRF  = 8;    // RFID key to start
-int underRF  = 9;    // RFID key to the underground door
-int gateRF   = 10;   // RFID key to gate
+int windRFPin  = A0;    // RFID key to start
+int underRFPin  = 9;    // RFID key to the underground door
 
-ArdCPZ *cpz1;
-ArdCPZ *cpz2;
-ArdCPZ *cpz3;
+int rainRFPin = 12;
 
-int startBeacon = 499;
+int triPin = 11;
+int firePin = 3;
+
+//Итого:  , worldAdd (факел) = 3
+ArdCPZ *cpz1; //Wind
+ArdCPZ *cpz2; //Under
+ArdCPZ *cpz4; //Rain
+
+int windBeacon = 499;
 int underBeacon = 328;
-int gateBeacon  = 230;
+int rainBeacon  = 410;
 
-byte tridentWait = true;
-byte windRFWait = true;
-byte rainRFWait = true;
+boolean windRFWait = true;
+boolean rainRFWait = true;
+boolean underRFWait = true;
 
 //address i2c
 int lightConAddr = 20;
 int motorConAddr = 21;
 int worldConAddr = 22;
+
 //Gadget states
 boolean operGStates[18] = {false, false, false, false, false, false, false, false, false, false, false, false};
 //boolean playGStates[18] = {false, false, false, false, false, false, false, false, false, false, false, false};
 boolean passGStates[18] = {false, false, false, false, false, false, false, false, false, false, false, false};
 
-byte start = 0;
-byte baloon = 1;
-byte presss = 2;
-byte gate = 3;
-byte poseidon = 4;
-byte demetra = 5;
-byte vine = 6;
-byte dionis = 7;
-byte hercul = 8;
-byte narcis = 9;
-byte molniya = 10;
-byte afina1 = 11;
-byte afina2 = 11;
-byte octop = 12;
-byte note1 = 13;
-byte note2 = 14;
-byte ghera = 15;
-
 // lev 0
 //
+byte start = 0;
+int startPin = 8;
+boolean startStates[2] = {HIGH, HIGH};
+
+byte baloon = 1;
 int balloIN  = 50;   // a.
 int balloOUT = 44;
 
+byte presss = 2;
 int pressIN  = 48;   // b.
 int pressOUT = 42;
 
+byte gate = 3;
+int gateRFPin   = 10;   // RFID key to gate
+int gateBeacon  = 230;
+boolean gateRFWait = true;
+ArdCPZ *cpz3; //Gate
+
+byte poseidon = 4;
 int poseiIN  = 53;   // h.
 int poseiOUT = 43;
 int poseiHD = 21; // CHOOSE PIN
 
+byte demetra = 5;
 int demetIN  = 26;   // d.
 int demetOUT = 38;
 int demetHD  = A1;
 
+byte vine = 6;
 int vinemIN  = 24;   //e.
 int vinemOUT = 36;
 
+byte dionis = 7;
 int dioniIN  = 22;   //f.
 int dioniOUT = 34;
 int dioniHD1 = A2;   // piston
 int dioniHD2 = A3;
 
+byte hercul = 8;
 int hercuIN  = 7;
 int hercuHD  = A4;
 
+byte narcis = 9;
+
+byte molniya = 10;
 int molniIN  = 52;   // g.
 int molniOUT = 32;
 
@@ -100,13 +109,21 @@ int noteIN   = 49;   // j.
 int noteOUT  = 39;
 int noteHD   = A6;
 
+byte afina1 = 11;
+byte afina2 = 11;
 int afinaIN  = 27;   // m.
 int afinaOUT = 35;   //
 int afinaHD1 = A7;
 int afinaHD2 = A8;
 
+byte octop = 12;
 int octopIN  = 47;   // k.
 int octopOUT = 37;
+
+byte note1 = 13;
+byte note2 = 14;
+
+int timeHD = A5;
 
 int arphaIN  = 6;
 int arphaHD  = A9;
@@ -118,6 +135,7 @@ int flowrHD  = A13;
 int musesIN  = 23;   // o. to change their messages
 int musesOUT = 31;   // correct pattern
 
+byte ghera = 15;
 int gheraIN   = 4;
 int gheraOUT  = 2;
 
@@ -135,6 +153,9 @@ int zodiaHD  = A10;
 //int worldIN   = 12; free
 //int worldOUT  = 11; free
 
+
+
+
 byte level = 10;
 byte demediolevel = 0;
 byte notelevel = 0;
@@ -147,6 +168,7 @@ boolean molniiDone = false;
 boolean shieldDone = false;
 boolean afinaHD1open = false;
 boolean sealsDone  = false;
+boolean tridentWait = true;
 
 boolean seal1  = false;
 boolean seal2  = false;
@@ -181,7 +203,7 @@ void setup() {
 
   Serial.println("\n--------------");
 
-
+  pinMode(startPin, INPUT_PULLUP);
   pinMode( balloIN  , INPUT_PULLUP);
   pinMode( balloOUT , OUTPUT);
 
@@ -252,9 +274,10 @@ void setup() {
   //pinMode( worldIN  , INPUT_PULLUP);
   //pinMode( worldOUT , OUTPUT);
 
-  cpz1 = new ArdCPZ(startRF);
-  cpz2 = new ArdCPZ(underRF);
-  cpz3 = new ArdCPZ(gateRF);
+  cpz1 = new ArdCPZ(windRFPin);
+  cpz2 = new ArdCPZ(underRFPin);
+  cpz3 = new ArdCPZ(gateRFPin);
+  cpz4 = new ArdCPZ(rainRFPin);
 
   pinMode(SSerialTxControl, OUTPUT);
   digitalWrite(SSerialTxControl, LOW);  // Init Recieve RS485
@@ -276,34 +299,33 @@ void loop() {
   getOperSkips();
   if (level == 10) // START
   {
-    if (millis() % 330 == 0)
+    startStates[0] = debounce(startStates[1], startPin);
+    if (!startStates[0] && startStates[1])
     {
-      if (getStartRFID())
+      start ++;   // wait for prestart signal ( any RFID from startRF )
+      if (start == 1)
       {
-        start ++;   // wait for prestart signal ( any RFID from startRF )
-        if (start == 1)
-        {
-          // if received send command to Motor_controller and Light_controller
-          mp3_play(2); // prestart message
-          delay(200);
-          //commands to light and motor controllers
-          sendToSlave(lightConAddr, 0x01); // выключаем весь свет
-          delay(10);
-          sendToSlave(motorConAddr, 0x01); // поднимает облако [cloud up], поднимает колонну[column up],
-          // поднимают виноград [grape up]
-        }
-        else if (start == 2)
-        {
-          mp3_play(3); // start message
-          //start game
-          delay(200);
-          //send random wind to lightController
-          sendToSlave(lightConAddr, 0x02); // random Wind
-          Serial.println("Go to level 20");
-          level = 20;
-        }
+        // if received send command to Motor_controller and Light_controller
+        mp3_play(2); // prestart message
+        delay(200);
+        //commands to light and motor controllers
+        sendToSlave(lightConAddr, 0x01); // выключаем весь свет
+        delay(10);
+        sendToSlave(motorConAddr, 0x01); // поднимает облако [cloud up], поднимает колонну[column up],
+        // поднимают виноград [grape up]
+      }
+      else if (start == 2)
+      {
+        mp3_play(3); // start message
+        //start game
+        delay(200);
+        //send random wind to lightController
+        sendToSlave(lightConAddr, 0x02); // random Wind
+        Serial.println("Go to level 20");
+        level = 20;
       }
     }
+    startStates[1] = startStates[0];
   }
   else if (level = 20)  {
     if ((!digitalRead(balloIN) || operGStates[baloon]) && !passGStates[baloon]) //signal from finished ballon received
@@ -480,9 +502,9 @@ void loop() {
       }
       else if (notelevel == 1) // wait wind from world
       {
-        if((!windRFWait || operGStates[note2]) && !passGStates[note2])
+        if ((!windRFWait || operGStates[note2]) && !passGStates[note2])
         {
-          
+
         }
       }
 

@@ -1,4 +1,4 @@
-boolean getStartRFID() {
+boolean getWindRFID() {
   cpz1->check();
   if(cpz1->isBeaconConnecting())
   {
@@ -52,6 +52,26 @@ boolean getGateRFID() {
     Serial.print(" sum = ");
     Serial.println(ficha3);
     if (ficha3 == gateBeacon) return true;
+    else return false;
+  }
+}
+
+boolean getRainRFID() {
+  cpz4->check();
+
+  if(cpz4->isBeaconConnecting())
+  {
+    byte addr[6];
+    int ficha4 = 0;
+    cpz4->getAddress(addr);
+    Serial.print("\nBeacon-2: ");
+    for(int i = 0; i < 6; i++) 
+    {                               
+      ficha4 = ficha4 + addr[i];    // Serial.print(addr[i], HEX);
+    }
+    Serial.print(" sum = ");
+    Serial.println(ficha4);
+    if (ficha4 == rainBeacon) return true;
     else return false;
   }
 }
