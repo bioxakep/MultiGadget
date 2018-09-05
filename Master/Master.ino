@@ -354,7 +354,7 @@ void loop() {
   else if (level == 40)  {
     if (millis() % 300 == 0) // every 300ms check RFID
     {
-      if (getGateRFID() || operGStates[gate])
+      if ((getGateRFID() || operGStates[gate]) && !passGStates[gate])
       {
         passGStates[gate] = true;
         sendToSlave(motorConAddr, 0x04); // send signal to motor_controller >openGate
@@ -370,7 +370,11 @@ void loop() {
     //Big request to World
     if (millis() % 333 == 0)
     {
-        if (getWindRFID() && windRFWait) windRFWait = false;
+        if (getWindRFID() && windRFWait) 
+        {
+          Serial.println("Wind RFID Recieved");
+          windRFWait = false;
+        }
 
         if (getRainRFID() && rainRFWait)
         {
@@ -387,6 +391,7 @@ void loop() {
       { // signal from poseidon
         // posei > command via (i2c) to motor_controller activate falling column > players get first part molnii
         // shoud be skippable from master console
+        Serial.println("Poseidon Done");
         passGStates[poseidon] = true;
         if (operGStates[poseidon]) send250ms(poseiOUT);
         sendToSlave(motorConAddr, 0x05); // send signal to motor_controller
@@ -400,6 +405,7 @@ void loop() {
           if (operGStates[demetra]) send250ms(demetOUT);
           digitalWrite(demetHD , LOW); // open demetra HD
           // shoud be skippable from master console
+          Serial.println("Demetra 1 part Done");
           demediolevel++;
         }
       }
@@ -409,6 +415,7 @@ void loop() {
         {
           send250ms(dioniOUT);
           passGStates[vine] = true;
+          Serial.println("Demetra 2 part Done");
           demediolevel++;
         }
       }
@@ -422,6 +429,7 @@ void loop() {
           passGStates[dionis] = true;
           digitalWrite(dioniHD1, LOW); // open first dionis vault
           // shoud be skippable from master console
+          Serial.println("Demetra Done");
           demediolevel++;
         }
       }
@@ -433,6 +441,7 @@ void loop() {
       if ((!digitalRead(hercuIN) || operGStates[hercul]) && !passGStates[hercul])
       { // hercu > players gets third part of molnii
         passGStates[hercul] = true;
+        Serial.println("Hercules Done");
         digitalWrite(hercuHD, LOW);
         // shoud be skippable from master console
       }
@@ -441,6 +450,7 @@ void loop() {
       { // narci > pattern information for players
         // nothing happen - narcis only give players information
         // shoud be triggerable from master console
+        Serial.println("Narcis Done");
       }
 
       if (!digitalRead(molniIN) || operGStates[molniya])
@@ -448,6 +458,7 @@ void loop() {
         //if all molnii are done >   // gheraLevel = 2 >  speaks > opend HD2 (shields)
         send250ms(gheraOUT);  // moves ghera to 'shields' level
         passGStates[molniya] = true;
+        Serial.println("MOLNII Done");
         // may add some extra storm effects thru light_controller
         // shoud be triggerable from master console
       }
@@ -464,11 +475,13 @@ void loop() {
         }
         delay(300);
         passGStates[afina1] = true;
+        Serial.println("Afina 1 part Done");
       }
 
       if ((!digitalRead(afinaIN) || operGStates[afina1]) && !passGStates[afina2] && passGStates[afina1])
       { // afina  second signal > open afinaHD2  > players get escu1
         digitalWrite(afinaHD2, LOW); // here afina gives players another part of the shield
+        Serial.println("Afina 2 part Done");
       }
 
       if ((!digitalRead(octopIN) || operGStates[octop]) && !passGStates[octop])
@@ -476,6 +489,7 @@ void loop() {
         // octopus has its own hideout, so nothing happens here
         // octopus gives players another part of the shield
         digitalWrite(octopOUT, HIGH);
+        Serial.println("Octopus Done");
         //digitalWrite(octopHD, HIGH); ??
       }
       if (notelevel == 0) //get FRID
@@ -485,6 +499,7 @@ void loop() {
           // note > players get escu3
           if (operGStates[note1]) send250ms(noteOUT);
           digitalWrite(noteHD, LOW);
+          Serial.println("Note 1 part Done");
           notelevel++;
         }
       }
@@ -492,7 +507,8 @@ void loop() {
       {
         if ((!windRFWait || operGStates[note2]) && !passGStates[note2])
         {
-
+          //FastLED, CloudDOWN, WindBlow
+          // отдать 3 часть щита
         }
       }
 
@@ -507,10 +523,11 @@ void loop() {
         passGStates[ghera] = true;
         send250ms(musesOUT);
         // ghera is on 'seals' level
+        Serial.println("SHIELD Done");
       }
     } //eof_shields
 
-    //---------seals --------
+    //---------seals --------печати
     if (sealsDone == false) {
 
       if (digitalRead(flowrIN) == LOW && flowerFirst == false) {  // first level of flower
