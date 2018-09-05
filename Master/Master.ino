@@ -352,8 +352,6 @@ void loop() {
     // if players never finish press, operator can skip it here (send signal to press)
   }
   else if (level == 40)  {
-    if (millis() % 300 == 0) // every 300ms check RFID
-    {
       if ((getGateRFID() || operGStates[gate]) && !passGStates[gate])
       {
         passGStates[gate] = true;
@@ -362,13 +360,12 @@ void loop() {
         level = 50;
         Serial.println("Go to level 50");
       }
-    }
     // if players never find the key, operator can skip it here > gateOpen = true;
   }
   else if (level == 50)
   { // on level 50 all events may be done in any order/sequence
     //Big request to World
-    if (millis() % 333 == 0)
+    if (millis() % 100 == 0)
     {
         if (getWindRFID() && windRFWait) 
         {
