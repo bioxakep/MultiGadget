@@ -66,7 +66,7 @@ int pressOUT = 42;
 
 byte gate = 3;
 int gateRFPin   = 10;   // RFID key to gate
-int gateBeacon  = 230;
+int gateBeacon  = 384;
 boolean gateRFWait = true;
 ArdCPZ *cpz3; //Gate
 
@@ -352,7 +352,12 @@ void loop() {
     // if players never finish press, operator can skip it here (send signal to press)
   }
   else if (level == 40)  {
-    gateRFWait = !getGateRFID();
+    if (millis() % 333 == 0)
+    { gateRFWait = !getGateRFID();
+      Serial.println("gateWait = " + String(gateRFWait));
+      Serial.println("gatePassState = " + String(passGStates[gate]));
+    }
+
     if ((!gateRFWait || operGStates[gate]) && !passGStates[gate])
     {
       passGStates[gate] = true;
