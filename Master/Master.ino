@@ -121,8 +121,6 @@ byte note2 = 14;
 
 int timeOUT = A5;
 
-
-
 int musesIN  = 23;   // o. to change their messages
 int musesOUT = 31;   // correct pattern
 
@@ -591,10 +589,11 @@ void loop() {
       passGStates[minot] = true;
     }
 
-    if (digitalRead(gorgoIN) == false ) {     // if gorgona done > players get cryst3
+    if ((!digitalRead(gorgoIN) || operGStates[gorgona]) && !passGStates[gorgona]) 
+    {     // if gorgona done > players get cryst3
       // shoud be skippable from master console
       // click lock
-      gorgoState = true;
+      passGStates[gorgona] = true;
     }
 
 
