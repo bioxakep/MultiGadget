@@ -125,7 +125,7 @@ void loop() {
   }
 
 
-  if (command == 0x01)
+  if (command == 0x10)
   { 
     Serial.print("\nOpen the gate start...");
     cloudUp();
@@ -134,7 +134,7 @@ void loop() {
     Serial.println("Done.");
   }
 
-  if (command == 0x03)
+  if (command == 0x20)
   { 
     Serial.print("\ncurtainUP start...");
     digitalWrite(curtainUP, HIGH);
@@ -143,19 +143,33 @@ void loop() {
     Serial.println("Done.");
   }
 
-  if (command == 0x04)
+  if (command == 0x30)
   { 
     Serial.print("\nGate UP start...");
     gateUp();
     Serial.println("Done.");
   }
   
-  if (command == 0x05)
+  if (command == 0x40)
   { 
     // wait comand from you, after PoseiIN signal received
   }
 
-  if (command == 0x06)
+  if (command == 0x50)
+  {
+    Serial.print("\nGrape UP start...");
+    grapeUp();
+    Serial.println("Done.");
+  }
+
+  if (command == 0x60)
+  {
+    Serial.print("\nGrape UP start...");
+    grapeUp();
+    Serial.println("Done.");
+  }
+
+  if (command == 0x70)
   {
     Serial.print("\nGrape UP start...");
     grapeUp();

@@ -163,9 +163,9 @@ byte level = 10;
 byte demediolevel = 0;
 byte notelevel = 0;
 //boolean gateOpen   = false; need?
-boolean underOpen  = false;
 boolean shieldDone = false;
 boolean sealsDone  = false;
+boolean molniyaDone = false;
 
 boolean tridentWait = true;
 
@@ -294,7 +294,8 @@ void setup() {
   Serial.println("Locks Opened.");
 }
 
-void loop() {
+void loop()
+{
   getOperSkips();
   if (level == 10) // START
   {
@@ -308,9 +309,9 @@ void loop() {
         mp3_play(2); // prestart message
         delay(200);
         //commands to light and motor controllers
-        sendToSlave(lightConAddr, 0x01); // выключаем весь свет
+        sendToSlave(lightConAddr, 0x10); // выключаем весь свет
         delay(10);
-        sendToSlave(motorConAddr, 0x01); // поднимает облако [cloud up], поднимает колонну[column up],
+        sendToSlave(motorConAddr, 0x10); // поднимает облако [cloud up], поднимает колонну[column up],
         // поднимают виноград [grape up]
       }
       else if (start == 2)
@@ -319,23 +320,24 @@ void loop() {
         //start game
         delay(200);
         //send random wind to lightController
-        sendToSlave(lightConAddr, 0x02); // random Wind
+        sendToSlave(lightConAddr, 0x15); // random Wind
         Serial.println("Go to level 20");
         level = 20;
       }
     }
     startStates[1] = startStates[0];
   }
-  else if (level == 20)  {
+  else if (level == 20)
+  {
     if ((!digitalRead(balloIN) || operGStates[baloon]) && !passGStates[baloon]) //signal from finished ballon received
     {
       passGStates[baloon] = true;
       if (operGStates[baloon]) send250ms(balloOUT);
       Serial.println("Ballon signal recieved. Turn on the lights ad roll up the curtain");
       // send (i2c) signal to motor_controller >rollUp and light_controller  >lights and stop wind
-      sendToSlave(lightConAddr, 0x03); // random Wind
+      sendToSlave(lightConAddr, 0x20); // random Wind
       delay(10);
-      sendToSlave(motorConAddr, 0x03);
+      sendToSlave(motorConAddr, 0x20);
       level = 30;
       Serial.println("Go to level 30");
     }
@@ -361,7 +363,7 @@ void loop() {
     if ((!gateRFWait || operGStates[gate]) && !passGStates[gate])
     {
       passGStates[gate] = true;
-      sendToSlave(motorConAddr, 0x04); // send signal to motor_controller >openGate
+      sendToSlave(motorConAddr, 0x40); // send signal to motor_controller >openGate
       send250ms(gheraOUT);  // ghera start speaking, 'molnii' level
       level = 50;
       Serial.println("Go to level 50");
@@ -381,13 +383,20 @@ void loop() {
       if (getRainRFID() && rainRFWait)
       {
         Serial.println("Rain RFID Recieved");
-        sendToSlave(motorConAddr, 0x06); // send signal to motor_controller > grapeUp..
+        sendToSlave(motorConAddr, 0x50); // send signal to motor_controller > grapeUp..
+        rainRFWait = false;
+      }
+
+      if (getUnderRFID() && underRFWait)
+      {
+        Serial.println("Rain RFID Recieved");
+        sendToSlave(motorConAddr, 0x50); // send signal to motor_controller > grapeUp..
         rainRFWait = false;
       }
     }
     // --------------------
     // ---------molnii--------------
-    if (!passGStates[molniya])
+    if (!molniyaDone)
     {
       if ((!digitalRead(poseiIN) || operGStates[poseidon]) && !passGStates[poseidon])
       { // signal from poseidon
@@ -396,7 +405,7 @@ void loop() {
         Serial.println("Poseidon Done");
         passGStates[poseidon] = true;
         if (operGStates[poseidon]) send250ms(poseiOUT);
-        sendToSlave(motorConAddr, 0x05); // send signal to motor_controller
+        sendToSlave(motorConAddr, 0x60); // send signal to motor_controller
         digitalWrite(poseiHD, LOW); // Открываем тайник Посейдона, даем игрокам трезубец
       }
       if (demediolevel == 0)
@@ -505,11 +514,19 @@ void loop() {
       }
       if ((!windRFWait || operGStates[note2]) && !passGStates[note2] && passGStates[note1])
       {
-        sendToSlave(lightConAddr, 0x06); // send signal to lightController FastLED ON
-        sendToSlave(motorConAddr, 0x06); // send signal to start blow wind and cloud down
+        sendToSlave(lightConAddr, 0x70); // send signal to lightController FastLED ON
+        sendToSlave(motorConAddr, 0x70); // send signal to start blow wind and cloud down
         passGStates[note2] = true;
         //FastLED, CloudDOWN, WindBlow
         // отдать 3 часть щита
+      }
+
+      if ((!digitalRead(gheraIN) || operGStates[ghera]) && !passGStates[ghera])
+      { //if all shields in ghera place (gheraLevel = 3 ) gera speaks - open HD3 (seals)
+        passGStates[ghera] = true;
+        send250ms(musesOUT);
+        // ghera is on 'seals' level
+        Serial.println("SHIELD Done");
       }
     }
 
@@ -519,108 +536,102 @@ void loop() {
     // motor_controller will activate (cloudDOWN)
     // players will get part of the shield , that they shoud give to ghera later
 
-    if ((!digitalRead(gheraIN) || operGStates[ghera]) && !passGStates[ghera])
-    { //if all shields in ghera place (gheraLevel = 3 ) gera speaks - open HD3 (seals)
-      passGStates[ghera] = true;
-      send250ms(musesOUT);
-      // ghera is on 'seals' level
-      Serial.println("SHIELD Done");
-    }
-  } //eof_shields
+    //eof_shields
 
-  //---------seals --------печати
-  if (!sealsDone)
-  {
-    if ((!digitalRead(flowrIN) || operGStates[flower1]) && !passGStates[flower1])
-    { // first level of flower
-      while (!digitalRead(flowrIN)) {
-        ;
-      }
-      delay(50);
-      passGStates[flower1] = true;
-    }
-
-    if ((!digitalRead(flowrIN) || operGStates[flower1]) && passGStates[flower1] && !passGStates[flower2])
-    { // second level of flower
-      while (!digitalRead(flowrIN)) { ; }
-      delay(50);
-      digitalWrite(flowrHD, LOW); // players get seal 1
-      passGStates[flower2] = true;
-    }
-
-    if ((!digitalRead(dioniIN) || operGStates[dionis2]) && !passGStates[dionis2])
-    { // dionis(2) cold heart if all done
-      digitalWrite(dioniHD2, LOW);  // open second dionis vault > players get seal 2
-      passGStates[dionis2] = true;
-    }
-
-    if ((!digitalRead(arphaIN) || operGStates[arpha]) && !passGStates[arpha])
-    { //  signal from arpha received
-      send250ms(musesOUT);  // send signal to shut up the muses
-      digitalWrite(arphaHD, LOW);  // give players seal 3
-      passGStates[arpha] = true;
-    }
-    if (passGStates[flower2] && passGStates[arpha] && passGStates[dionis2])
+    //---------seals --------печати
+    if (!sealsDone)
     {
-      sealsDone = true;
+      if ((!digitalRead(flowrIN) || operGStates[flower1]) && !passGStates[flower1])
+      { // first level of flower
+        while (!digitalRead(flowrIN)) {
+          ;
+        }
+        delay(50);
+        passGStates[flower1] = true;
+      }
 
-    }
-    // if all seals are in ghera place  > gheraLevel send signal to master  >>   sealsDone = true;
-    // ((((  ghera speaks > open HD4 (key for underground) ))))
-    //
-    // master send signal to motor_controller(COLUMNS_UP) to shift columns up
-    // and send signal to motor_controller to raise up the columns
-  }// eof_seals
+      if ((!digitalRead(flowrIN) || operGStates[flower1]) && passGStates[flower1] && !passGStates[flower2])
+      { // second level of flower
+        while (!digitalRead(flowrIN)) {
+          ;
+        }
+        delay(50);
+        digitalWrite(flowrHD, LOW); // players get seal 1
+        passGStates[flower2] = true;
+      }
 
-  //---------cristals------
-  if (!cristaDone)
-  { // underground level
-    if ((!digitalRead(zodiaIN) || operGStates[zodiak]) && !passGStates[zodiak])
-    { // if zodia done > players get cryst1
-      // shoud be skippable from master console
-      // click lock
-      passGStates[zodiak] = true;
-    }
+      if ((!digitalRead(dioniIN) || operGStates[dionis2]) && !passGStates[dionis2])
+      { // dionis(2) cold heart if all done
+        digitalWrite(dioniHD2, LOW);  // open second dionis vault > players get seal 2
+        passGStates[dionis2] = true;
+      }
 
-    if ((!digitalRead(minotIN) || operGStates[minot]) && !passGStates[minot])
-    { // if minotavr done > players get cryst2
-      // shoud be skippable from master console
-      // click lock
-      passGStates[minot] = true;
-    }
+      if ((!digitalRead(arphaIN) || operGStates[arpha]) && !passGStates[arpha])
+      { //  signal from arpha received
+        send250ms(musesOUT);  // send signal to shut up the muses
+        digitalWrite(arphaHD, LOW);  // give players seal 3
+        passGStates[arpha] = true;
+      }
+      if (passGStates[flower2] && passGStates[arpha] && passGStates[dionis2])
+      {
+        sealsDone = true;
+        sendToSlave(motorConroller, 0x80); // master send signal to motor_controller(COLUMNS_UP) to shift columns up
+        //how to open HD4 - what pin?
+      }
+      // if all seals are in ghera place  > gheraLevel send signal to master  >>   sealsDone = true;
+      // ((((  ghera speaks > open HD4 (key for underground) ))))
+    }// eof_seals
 
-    if ((!digitalRead(gorgoIN) || operGStates[gorgona]) && !passGStates[gorgona]) 
-    {     // if gorgona done > players get cryst3
-      // shoud be skippable from master console
-      // click lock
-      passGStates[gorgona] = true;
-    }
+    //---------cristals------
+    if (!cristaDone)
+    { // underground level
+      if ((!digitalRead(zodiaIN) || operGStates[zodiak]) && !passGStates[zodiak])
+      { // if zodia done > players get cryst1
+        // shoud be skippable from master console
+        // click lock
+        passGStates[zodiak] = true;
+      }
+
+      if ((!digitalRead(minotIN) || operGStates[minot]) && !passGStates[minot])
+      { // if minotavr done > players get cryst2
+        // shoud be skippable from master console
+        // click lock
+        passGStates[minot] = true;
+      }
+
+      if ((!digitalRead(gorgoIN) || operGStates[gorgona]) && !passGStates[gorgona])
+      { // if gorgona done > players get cryst3
+        // shoud be skippable from master console
+        // click lock
+        passGStates[gorgona] = true;
+      }
 
 
-    /// missing part -- missing pins  -- run on 3 RFIDs on motor_citr or light_contr
-    /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    /// they just received the cristals , now they have to install them in a correct place all three
-    //  crist1 = true;
-    //  crist2 = true;
-    //  crist3 = true;
-    /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      /// missing part -- missing pins  -- run on 3 RFIDs on motor_citr or light_contr
+      /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      /// they just received the cristals , now they have to install them in a correct place all three
+      //  crist1 = true;
+      //  crist2 = true;
+      //  crist3 = true;
+      /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    if (crist1 && crist2 && crist3) {  //if all crystals are in place > give shoe  >>> final
-      level = 100;
-      cristaDone = true;
-      send250ms(gheraOUT);
-    }
+      if (passGStates[zodiak] && passGStates[minot] && passGStates[gorgona])
+      { //if all crystals are in place > give shoe  >>> final
+        level = 100;
+        cristaDone = true;
+        send250ms(gheraOUT);
+      }
 
-    if (millis() % 5000 == 0) openOpened();  // open (and re-open if closed) underground locks
-  } // eof_cristals
+      if (millis() % 5000 == 0) openOpened();  // open (and re-open if closed) underground locks
+    } // eof_cristals
+  } // eof.level_50
 
-} // eof.level_50
-
-if (level == 100) {
-  // game over - victory !
-}
-sendGStates();
-}
+  if (level == 100)
+  {
+    // game over - victory !
+  }
+  sendGStates();
+} // LOOP END
 
 void sendToSlave(int address, byte data)
 {

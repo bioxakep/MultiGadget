@@ -68,15 +68,13 @@ void closeLocks() {
 }
 
 void openOpened()  {
-  if (zodiaState || minotState || gorgoState) {
-    if (zodiaState) digitalWrite(zodiaHD, HIGH);
-    if (minotState) digitalWrite(minotHD, HIGH);
-    if (gorgoState) digitalWrite(gorgoHD, HIGH);
-    delay(200);
-    digitalWrite(zodiaHD, LOW);
-    digitalWrite(minotHD, LOW);
-    digitalWrite(gorgoHD, LOW);
-  }
+  if (zodiaState) digitalWrite(zodiaHD, HIGH);
+  if (minotState) digitalWrite(minotHD, HIGH);
+  if (gorgoState) digitalWrite(gorgoHD, HIGH);
+  delay(200);
+  digitalWrite(zodiaHD, LOW);
+  digitalWrite(minotHD, LOW);
+  digitalWrite(gorgoHD, LOW);
 }
 
 
