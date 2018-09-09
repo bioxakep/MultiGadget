@@ -18,10 +18,11 @@ byte devCount = 21;//Under calculate volitile gadgets...
 
 int windRFPin  = A0;    // RFID key to start
 int underRFPin  = 9;    // RFID key to the underground door
-
 int rainRFPin = 12;
 
 int triPin = 11;
+
+boolean fireState = false;
 int firePin = 3;
 
 //Итого:  , worldAdd (факел) = 3
@@ -407,6 +408,11 @@ void loop()
         if (operGStates[poseidon]) send250ms(poseiOUT);
         sendToSlave(motorConAddr, 0x60); // send signal to motor_controller
         digitalWrite(poseiHD, LOW); // Открываем тайник Посейдона, даем игрокам трезубец
+      }
+      if (!digitalRead(firePin) && !fireState)
+      {
+        sendToSlave(motorConAddr, 0x65); // send signal to motor_controller Column Down
+        fireState = true;
       }
       if (demediolevel == 0)
       {

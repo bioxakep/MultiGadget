@@ -38,6 +38,7 @@ int cryst3    = 25;
 
 int flowerR   = 53;
 int flowerB   = 51;
+int fastled  = 7;
 
 byte command = 0;
 int thisI2CAddr = 20;
