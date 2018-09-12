@@ -153,7 +153,11 @@ void loop() {
       for (int p = 0; p < 4; p++)
       {
         byte currCol = currPosInds[(p + dir) % 4];
-        byte prevCol = currPosInds[(p + dir - 1) % 4];
+        byte prevCol = currPosInds[(p + dir - 1) % 4]; // Для будущего написания плавности
+        if (prevCol > currCol)
+        {
+          
+        }
         Serial.print(String(places[p]) + " is " + String(colors[currCol]));
         for (int c = 0; c < 2; c++)
         {
