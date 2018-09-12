@@ -29,37 +29,58 @@ int dvor_R    = 45;
 int dvor_G    = 3;
 int dvor_B    = 2;
 
-int wind      = A8; // AC relay to control Wind blower
-int underlight = A2; // relay to control underground lighting (not used in game but remotely by operator)
-int extralight = A7; // additional light (not implemented yet) but available on hardware as 5A DC_Relay
+int wind      = A8; //  AC relay to control Wind blower
+int mainLight = A2; //  main light in game, will turn on after ballon
+int underLight = A7; //  (U light)relay to control underground lighting (not used in game but remotely by operator)
+int extraLight = 41;
 int cryst1    = 23;
 int cryst2    = 24;
 int cryst3    = 25;
 
 int flowerR   = 53;
 int flowerB   = 51;
-int fastled  = 7;
+int fastled   = 7;
+
+int motor     = 49;
+int north     = 47;
+int turner    = 43;
 
 byte command = 0;
 int thisI2CAddr = 20;
 
-boolean windState = false;
-boolean randomWind = false;
 int minWindPause = 100;
 int maxWindPause = 900;
 int minWindTime = 1500;
 int maxWindTime = 3000;
+
 unsigned long windTime = 0;
 unsigned long windPause = 0;
 unsigned long startWind = 0;
 unsigned long stopWind = 0;
+unsigned long blowTime = 10000;
+boolean windState = false;
+boolean randomWind = false;
 
-void setup() 
+boolean cristStates[3] = {false, false, false};
+boolean flowerBState = false;
+int turnCount = 0;
+byte dir = 0;
+byte prevPosInds[4] = {1, 0, 2, 0};
+byte currPosInds[4] = {1, 0, 2, 0};
+int colorPins[4][2] = {{10, 12}, {7, 9}, {4, 6}, {2, 45}};
+String places[4] = {"OknoA", "OknoB", "OknoC", "Dvor"};
+String colors[3] = {"BLK", "BLU", "RED"};
+
+boolean moonSun = true; // TEST
+
+
+void setup()
 {
   Serial.begin(9600);
   Wire.begin(thisI2CAddr);
   Wire.onReceive(receiveEvent);
-  
+  Wire.onRequest(requestEvent);
+
   pinMode(oknoA_R, OUTPUT);
   pinMode(oknoA_G, OUTPUT);
   pinMode(oknoA_B, OUTPUT);
@@ -78,8 +99,10 @@ void setup()
   pinMode(dvor_B, OUTPUT);
 
   pinMode(wind,   OUTPUT);
-  pinMode(underlight, OUTPUT);
-  pinMode(extralight, OUTPUT);
+  pinMode(underLight, OUTPUT);
+  pinMode(extraLight, OUTPUT);
+  pinMode(turner, INPUT_PULLUP);
+  pinMode(north, INPUT_PULLUP);
 
   pinMode(flowerR, OUTPUT);
   pinMode(flowerB, OUTPUT);
@@ -87,8 +110,8 @@ void setup()
   digitalWrite(flowerR, LOW);
   digitalWrite(flowerB, LOW);
   digitalWrite(wind,    LOW);
-  digitalWrite(underlight, HIGH);
-  digitalWrite(extralight, LOW);
+  digitalWrite(underLight, HIGH);
+  digitalWrite(extraLight, LOW);
 
   pinMode(cryst1, INPUT_PULLUP);
   pinMode(cryst2, INPUT_PULLUP);
@@ -106,22 +129,102 @@ void setup()
 }
 
 void loop() {
-  
-  if(command > 0) Serial.println("Command = " + String(command));
 
-  if(command == 0x01) lightOff(); // Выключить весь свет
-  else if(command == 0x02) randomWind = true;
-  else if(command == 0x03) // Baloon passed
+  if (moonSun)
+  {
+    // считаем число замыканий, делим на 3. если счетчик увеличился
+    // сменяем цвета в цикле и мотор на 12 сек
+    // если срабатывает north сравниваем 0 у нас или нет в модуле и если нет - обновляем счетчик
+    if (digitalRead(turner)) turnCount++;
+    if (digitalRead(north))
+    {
+      dir = 0;
+      turnCount = 0;
+    }
+    if (turnCount == 3)
+    {
+      Serial.print("Next Turn::");
+      turnCount = 0;
+      dir = (dir + 1) % 4;
+      for (int p = 0; p < 4; p++)
+      {
+        byte currCol = currPosInds[(p + dir) % 4];
+        byte prevCol = currPosInds[(p + dir - 1) % 4];
+        Serial.print(String(places[p]) + " is " + String(colors[currCol]));
+        for (int c = 0; c < 2; c++)
+        {
+          digitalWrite(colorPins[p][c], currCol - 1 == c);
+        }
+      }
+      digitalWrite(flowerB, flowerBState);
+      flowerBState = !flowerBState;
+      Serial.println(" and FlowerB is " + String(flowerBState));
+    }
+  }
+
+  if (command > 0) Serial.println("Command = " + String(command));
+
+  if (command == 0x10) lightOff(); // Выключить весь свет
+  else if (command == 0x15) randomWind = true;
+  else if (command == 0x20) // Baloon passed
   {
     randomWind = false;
     windState = false;
     digitalWrite(wind, windState);
   }
-  
+  else if (command == 0x80) // Wind Blow 10 secs
+  {
+    startWind = millis();
+    windState = true;
+    digitalWrite(wind, windState);
+  }
+  else if (command == 0x90) moonSun = true;
   command = 0;
 
 
-  if(randomWind) randWind();
+  if (randomWind) randWind();
+  else if (windState) // for stop wind after comand 0x80
+  {
+    unsigned long tick = millis();
+    if (tick - startWind > blowTime)
+    {
+      windState = false;
+      digitalWrite(wind, windState);
+    }
+  }
+
+
+
+  /*
+
+    North = 1
+    West  = 2
+    South = 3                              1 2 3 4
+    East  = 4                              N W S E
+    //if command == North >    oknoA = blue 1 0 2 0
+    //                        oknoB = dark 0 1 0 2
+    //                        oknoC = red  2 0 1 0
+    //                        dvor  = dark 0 2 0 1
+    //                        flowerR = OFF
+
+    //if command == West  >   oknoA = dark 0
+    //                        oknoB = blue 1
+    //                        oknoC = dark 0
+    //                        dvor  = red  2
+    //                        flowerR = ON
+
+    //if command == South >   oknoA = red  2
+    //                        oknoB = dark 0
+    //                        oknoC = blue 1
+    //                        dvor  = dark 0
+    //                        flowerR = OFF
+
+    //if command == East  >   oknoA = dark 0
+    //                        oknoB = red  2
+    //                        oknoC = dark 0
+    //                        dvor  = blue 1
+    //                        flowerB = ON
+  */
   // wait for command from master via i2c (most commands to control oknoX cames from World (thru Master I think)
 
   //if command == windRandom > turn on wind randomly until command windStop is recieved from master
@@ -162,12 +265,26 @@ void loop() {
 
 }
 
-void receiveEvent(int howMany) 
+void receiveEvent(int howMany)
 {
   if (Wire.available()) // пройтись по всем до последнего
-  { 
+  {
     byte c = Wire.read();    // принять байт как символ
-    if(c > 0x00 && c < 0x20) command = c;
+    if (c > 0x00 && c < 0x20) command = c;
   }
+  /*
+     commands
+     0x10 =
+  */
+}
+
+void requestEvent()
+{
+  byte ans = 0x00;
+  for (int i = 0; i < 3; i++)
+  {
+    if (cristStates[i]) ans |= (1 << i);
+  }
+  Wire.write(ans);
 }
 

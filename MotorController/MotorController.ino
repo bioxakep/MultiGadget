@@ -2,7 +2,7 @@
 // 13 AGO 2018
 // 21 AGO 2018 adjusted - I2C enabled - xBee deleted
 #include "Wire.h" // I2C
-
+#include <DFPlayer_Mini_Mp3.h>
 
 int remote1   = 31;
 int remote2   = 35;
@@ -46,8 +46,10 @@ int thisI2CAddr = 21;
 
 void setup() {
   Serial.begin(9600);
+  Serial3.begin(9600);
   Wire.begin(thisI2CAddr);
   Wire.onReceive(receiveEvent);
+  mp3_set_serial(Serial3);
   pinMode(remote1, INPUT_PULLUP);
   pinMode(remote2, INPUT_PULLUP);
   pinMode(remote3, INPUT_PULLUP);

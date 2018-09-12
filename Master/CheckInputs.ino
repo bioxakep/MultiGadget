@@ -18,6 +18,7 @@ Serial.print(" minotIN = "); Serial.print  (digitalRead(minotIN) ? "HIGH" : "LOW
 Serial.print(" zodiaIN = "); Serial.println(digitalRead(zodiaIN) ? "HIGH" : "LOW"); 
 Serial.print(" flowrIN = "); Serial.print  (digitalRead(flowrIN) ? "HIGH" : "LOW"); 
 Serial.print(" gheraIN = "); Serial.println(digitalRead(gheraIN) ? "HIGH" : "LOW"); 
+Serial.print(" triPin  = "); Serial.println  (digitalRead(triPin)  ? "HIGH" : "LOW"); 
 //Serial.print(" spareIN = "); Serial.print  (digitalRead(spareIN) ? "HIGH" : "LOW"); 
 }
 
@@ -31,4 +32,5 @@ boolean debounce(boolean prevstate ,int pin)
   }
   return currstate;
 }
+
 

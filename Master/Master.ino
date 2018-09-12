@@ -38,6 +38,7 @@ boolean windRFWait = true;
 boolean rainRFWait = true;
 boolean underRFWait = true;
 
+int curHighPin = -1;
 //address i2c
 int lightConAddr = 20;
 int motorConAddr = 21;
@@ -184,6 +185,7 @@ boolean minotState = false;
 boolean gorgoState = false;
 
 boolean flowerFirst = false;
+unsigned long startHighPin = 0;
 
 void setup() {
   Serial.begin (9600);
@@ -297,6 +299,14 @@ void setup() {
 
 void loop()
 {
+  if(curHighPin > 0)
+  {
+    if(millis() - startHighPin > 250)
+    {
+      digitalWrite(curHighPin, LOW);
+      curHighPin = -1;
+    }
+  }
   getOperSkips();
   if (level == 10) // START
   {
@@ -391,7 +401,7 @@ void loop()
       if (getUnderRFID() && underRFWait)
       {
         Serial.println("Rain RFID Recieved");
-        sendToSlave(motorConAddr, 0x50); // send signal to motor_controller > grapeUp..
+        sendToSlave(motorConAddr, 0x55); // send signal to motor_controller > grapeUp..
         rainRFWait = false;
       }
     }
@@ -553,6 +563,7 @@ void loop()
           ;
         }
         delay(50);
+        if(operGStates[flower1]) send250ms(flowrOUT);
         passGStates[flower1] = true;
       }
 
@@ -563,6 +574,7 @@ void loop()
         }
         delay(50);
         digitalWrite(flowrHD, LOW); // players get seal 1
+        if(operGStates[flower2]) send250ms(flowrOUT);
         passGStates[flower2] = true;
       }
 
@@ -652,3 +664,12 @@ void send250ms(int pin)
   delay(250);
   digitalWrite(pin, LOW);
 }
+
+void send250ms2(int pin)
+{
+  if(curHighPin > 0) return;
+  curHighPin = pin;
+  digitalWrite(curHighPin, HIGH);
+  startHighPin = millis();
+}
+
