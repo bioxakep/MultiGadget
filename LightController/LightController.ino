@@ -135,7 +135,11 @@ void loop() {
     // считаем число замыканий, делим на 3. если счетчик увеличился
     // сменяем цвета в цикле и мотор на 12 сек
     // если срабатывает north сравниваем 0 у нас или нет в модуле и если нет - обновляем счетчик
-    if (digitalRead(turner)) turnCount++;
+    if (digitalRead(turner))
+    {
+      turnCount++;
+      delay(10);
+    }
     if (digitalRead(north))
     {
       dir = 0;
