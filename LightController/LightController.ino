@@ -157,7 +157,7 @@ void loop() {
         Serial.print(String(places[p]) + " is " + String(colors[currCol]));
         for (int c = 0; c < 2; c++)
         {
-          digitalWrite(colorPins[p][c], currCol - 1 == c);
+          digitalWrite(colorPins[p][c], ((currCol - 1) == c));
         }
       }
       digitalWrite(flowerB, flowerBState);
@@ -205,7 +205,7 @@ void loop() {
     West  = 2
     South = 3                              1 2 3 4
     East  = 4                              N W S E
-    //if command == North >    oknoA = blue 1 0 2 0
+    //if command == North >   oknoA = blue 1 0 2 0
     //                        oknoB = dark 0 1 0 2
     //                        oknoC = red  2 0 1 0
     //                        dvor  = dark 0 2 0 1
