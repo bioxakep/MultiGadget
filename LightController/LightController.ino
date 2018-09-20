@@ -2,6 +2,7 @@
 // 17 AGO 2018
 // I2C enabled - slave for master // xBee removed - receives commands from Master and World
 // 23 AGO 2018 flowers added
+// 13 Sep 2018 windows and colors corrected
 
 // bright on all windows
 // red on selected window
@@ -12,17 +13,17 @@
 /// PWM color control for windows
 #include "Wire.h" // I2C
 
-int oknoA_R   = 12;
-int oknoA_G   = 11;
-int oknoA_B   = 10;
+int oknoA_R   = 6;
+int oknoA_G   = 5;
+int oknoA_B   = 4;
 
 int oknoB_R   =  9;
 int oknoB_G   =  8;
 int oknoB_B   =  7;
 
-int oknoC_R   =  6;
-int oknoC_G   =  5;
-int oknoC_B   =  4;
+int oknoC_R   =  12;
+int oknoC_G   =  11;
+int oknoC_B   =  10;
 
 int dvor_W    = 46;
 int dvor_R    = 45;
@@ -70,6 +71,7 @@ byte currPosInds[4] = {1, 0, 2, 0};
 int colorPins[4][2] = {{10, 12}, {7, 9}, {4, 6}, {2, 45}};
 String places[4] = {"OknoA", "OknoB", "OknoC", "Dvor"};
 String colors[3] = {"BLK", "BLU", "RED"};
+int lStep = 10;
 
 boolean moonSun = true; // TEST
 
@@ -117,7 +119,7 @@ void setup()
   pinMode(cryst2, INPUT_PULLUP);
   pinMode(cryst3, INPUT_PULLUP);
 
-  Serial.println("\nLight Controller v1  \n21_AGO_2018 ");
+  Serial.println("\nLight Controller v1  \nSep_2018 ");
   Serial.println("Hardware = Mega\n");
 
   testing();
@@ -125,7 +127,12 @@ void setup()
   Serial.println("Crystal 1  = " + String(digitalRead(cryst1)));
   Serial.println("Crystal 2  = " + String(digitalRead(cryst2)));
   Serial.println("Crystal 3  = " + String(digitalRead(cryst3)));
+  Serial.println("turner     = " + String(digitalRead(turner)));
   randomSeed(A0);
+
+  lightOff();
+  Serial.println("\nReady\n");
+
 }
 
 void loop() {
@@ -135,38 +142,43 @@ void loop() {
     // считаем число замыканий, делим на 3. если счетчик увеличился
     // сменяем цвета в цикле и мотор на 12 сек
     // если срабатывает north сравниваем 0 у нас или нет в модуле и если нет - обновляем счетчик
-    if (digitalRead(turner))
+    if (!digitalRead(turner))
     {
       turnCount++;
-      delay(10);
+      //Serial.print("Turn detected");
+      delay(100);
     }
-    if (digitalRead(north))
+    if (!digitalRead(north))
     {
       dir = 0;
       turnCount = 0;
     }
-    if (turnCount == 3)
+    if (turnCount == 3) // BLK -- RED -- BLK -- BLU
     {
+      //Windows Color Control
       Serial.print("Next Turn::");
       turnCount = 0;
       dir = (dir + 1) % 4;
       for (int p = 0; p < 4; p++)
       {
-        byte currCol = currPosInds[(p + dir) % 4];
-        byte prevCol = currPosInds[(p + dir - 1) % 4]; // Для будущего написания плавности
+        byte currCol = currPosInds[(p + dir) % 4]; // dir - текущее направление (N,E,W,S), currCol - цвет для конкретного окна в текщем направлении.
+        byte prevCol = currPosInds[(p + dir - 1) % 4]; // Для будущего написания плавности, цвет для конкретного окна в предыдущем направлении.
+
+        Serial.print(String(places[p]) + " is " + String(colors[currCol]));
         if (prevCol > currCol)
         {
-          
+          for (int r = 255; r > 0; r = r - lStep) analogWrite(colorPins[p][prevColor], r);
         }
-        Serial.print(String(places[p]) + " is " + String(colors[currCol]));
-        for (int c = 0; c < 2; c++)
+        else
         {
-          digitalWrite(colorPins[p][c], ((currCol - 1) == c));
+          for (int r = 0; r > 255; r = r + lStep) analogWrite(colorPins[p][currColor], r);
         }
       }
-      digitalWrite(flowerB, flowerBState);
-      flowerBState = !flowerBState;
-      Serial.println(" and FlowerB is " + String(flowerBState));
+      //Flowers Control
+      digitalWrite(flowerB, dir == 0);
+      digitalWrite(flowerR, dir == 2);
+      Serial.print(", FloB is " + String(dir == 0));
+      Serial.println(", FloR is " + String(dir == 2));
     }
   }
 
@@ -213,7 +225,7 @@ void loop() {
     //                        oknoB = dark 0 1 0 2
     //                        oknoC = red  2 0 1 0
     //                        dvor  = dark 0 2 0 1
-    //                        flowerR = OFF
+    //                        flowerB = OFF
 
     //if command == West  >   oknoA = dark 0
     //                        oknoB = blue 1

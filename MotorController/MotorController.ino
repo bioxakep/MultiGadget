@@ -1,6 +1,7 @@
 // Motor Comtroller v1
 // 13 AGO 2018
 // 21 AGO 2018 adjusted - I2C enabled - xBee deleted
+// 12 sep 2018 remote control temp sequence created, auto column and auto grape tested
 #include "Wire.h" // I2C
 #include <DFPlayer_Mini_Mp3.h>
 
@@ -14,8 +15,8 @@ int gateTOP   = A11;
 
 int columnDN  = A12;
 int columnUP  = A13;
-int columnTOP = A8;
-int columnBOT = A9;
+int columnTOP = A9;
+int columnBOT = A8;
 int columnOOO = A10;
 
 int grapeUP   = 27;
@@ -43,6 +44,11 @@ byte command = 0;
 int thisI2CAddr = 21;
 //int courtainUP = not implemented yet
 //int courtainDN = not implemented yet
+
+bool  grapeOnTop = false;
+bool  grapeOnBot = false;
+bool  columnOnTop = false;
+bool  columnOnBot = false;
 
 void setup() {
   Serial.begin(9600);
@@ -94,7 +100,7 @@ void setup() {
 
   digitalWrite(poseiValv, LOW);   // unpowered valve dont let water get out of the vault
   digitalWrite(poseiPump, HIGH);
-  delay(10000);                    /// some time to fill the poseidon vault with water
+ /// delay(10000);                    /// some time to fill the poseidon vault with water
   digitalWrite(poseiPump, LOW);
   digitalWrite(poseiLock, HIGH);   // lock the cover of the vault while if full of water
 
@@ -106,25 +112,61 @@ void setup() {
 void loop() {
 
   digitalWrite(gateUP,  LOW);
-  digitalWrite(columnUP, LOW);
-  digitalWrite(columnDN, LOW);
-  digitalWrite(grapeUP, LOW);
-  digitalWrite(grapeDN, LOW);
+ // digitalWrite(columnUP, LOW);
+ // digitalWrite(columnDN, LOW);
+ // digitalWrite(grapeUP, LOW);
+ // digitalWrite(grapeDN, LOW);
   digitalWrite(cloudUP, LOW);
   digitalWrite(cloudDN, LOW);
 
   // receives command from master via i2c
 
-  if (!digitalRead(remote1)) { // manual  control by radio remote control
-    Serial.println("\nRemote control (1)");
-    command = 0x02;
-    //cloudUp();
-  }
-  if (!digitalRead(remote2)) { // manual  control by radio remote control
-    Serial.println("\nRemote control (2)");
-    command = 0x04;
+  if (digitalRead(remote1)==LOW &&  grapeOnTop == false) {            // manual  control by radio remote control
+    Serial.println("\nRemote control (1) grape up");
+    digitalWrite(grapeUP, HIGH);
+    while(  digitalRead(grapeTOP)==LOW ) {;}
+    Serial.println("\ngrape on TOP");
+    grapeOnTop = true; 
+    grapeOnBot = false; 
+    // command = 0x02;
+    //grapeUp();
+  } else    digitalWrite(grapeUP, LOW);
+  
+  if (digitalRead(remote2)==LOW &&  grapeOnBot == false) {           // manual  control by radio remote control
+    Serial.println("\nRemote control (2) grape down");
+    digitalWrite(grapeDN, HIGH);
+    while(  digitalRead(grapeBOT)==LOW ) {;}
+    Serial.println("\nGrape is down"); 
+    grapeOnTop = false;
+    //command = 0x04;
     //grapeDown();
-  }
+  } else     digitalWrite(grapeDN, LOW);
+
+
+//Column UP auto
+  if (digitalRead(remote3)==LOW &&  columnOnTop == false) {            // manual  control by radio remote control
+    Serial.println("\nRemote control (3) column up");
+    digitalWrite(columnUP, HIGH);
+    while(  digitalRead(columnTOP)==LOW ) {;}
+    Serial.println("\nColumn on TOP");
+    columnOnTop = true; 
+    columnOnBot = false;   
+    // command = 0x0x;
+  } else    digitalWrite(columnUP, LOW);
+
+
+
+
+
+  if (digitalRead(remote4)==LOW &&  columnOnBot == false) {           // manual  control by radio remote control
+    Serial.println("\nRemote control (4) column down");
+    digitalWrite(columnDN, HIGH);
+    while(  digitalRead(columnBOT)==LOW ) {;}
+    columnOnBot = true; 
+    columnOnTop = false;  
+    //command = 0x0x;
+    
+  } else     digitalWrite(columnDN, LOW);
 
 
   if (command == 0x10)
