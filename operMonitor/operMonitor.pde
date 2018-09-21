@@ -1,211 +1,273 @@
 import processing.serial.*;
 Serial arduino;
+PrintWriter data;
+
 boolean game;
+boolean endGame = false;
 boolean connected;
 String portName;
-PFont timerFont, enterFont, panelFont;
-float scrH, scrW;
-float panelW, panelH;
-float panelItemW, panelItemH;
-float panelxMar, panelyMar;
-float triH, triW;
-float timerW, timerX, timerY;
-float cntrlW, cntrlH; 
-float tMaxWidth;
-float vertOffset = 10;
+PFont timerFont, topFont, enterFont, gadgetFont;
+String alpha = "abcdefghijklmnopqrstuvwxyzABCDEFGJHIJKLMNOPQRSTUVWXYZ1234567890";
+char[] teamName;
+String teamNameStr;
+int nameLen = 0;
+float scrW = 1000;
+float scrH = 0;
+float gadButW, gadButH;
+float gadMarX, gadMarY;
+float timerW, timerH, timerX, timerY;
+float timerTextW;
+float scoreW, scoreH, scoreX, scoreY;
+float topH;
+float triH, triW; // for Triangle of up and down hit count. Remove if unused...
+
+int enterTextSize = 0;
 int textSize = 0;
+
 color green = color(0, 200, 0);
 color red = color(200, 0, 0);
 color background = color(230);
-color text = color(100, 2, 111, 30);
+color textCol = color(100, 2, 111, 80);
+color butCol = color(100, 2, 111, 40);
+
 boolean prevMouseState = false;
 boolean currMouseState = false;
-boolean[] inputGadgetStates = {false,false,false,false,false,false,false,false,false,false,false,false};
-boolean[] currGadgetStates = {false,false,false,false,false,false,false,false,false,false,false,false};
-boolean[] gadgetHinted = {false,false,false,false,false,false,false,false,false,false,false,false};
-long[] gadgetPassedTimes = {0,0,0,0,0,0,0,0,0,0,0,0};
-int[] gadgetPassedOrder = {0,0,0,0,0,0,0,0,0,0,0,0};
-boolean useHint = false;
-StopWatchTimer t;
-long totalSeconds = 0;
-int startScores = 10000;
-int hintDec = 500;
-int hintCount = 0;
-int checkSum = 0;
-int playersCount = 0;
+boolean calculated = false;
 
+int[] levGadCount = {3, 9, 7, 6, 5, 1};
+String[] levelNames = {"START", "THUNDER", "SHIELDS", "SEALS", "UNDERGROUND", "END"};
+String[] gadgetNames = {"Baloon", "Press", "Gate", "Hercules", "Poseidon", "Trident", "Demetra-1", "Rain", "Vine", "Dionis-1", "Narcis", "Thunder", "Afina-1", "Afina-2", "Time", "Octopus", "Note", "Wind", "Ghera-1", "Fire", "Flower-1", "Flower-2", "Arpha", "Dionis-2", "Ghera-2", "Zodiak", "Minot", "Gorgona", "Cristals", "Light", "End"};
+boolean[] passedGadgets = {true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false};
+boolean[] hintedGadgets = {true, true, true, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true};
+int[] passedTimes = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+int passTimesIndex = 0;
+
+int[] gadgetPassedOrder = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int passOrdIndex = 0;
+
+StopWatchTimer t;
 int timerHours = 0;
 int timerMinutes = 0;
 int timerSeconds = 0;
+long totalSeconds = 0;
+
+int startScores = 10000;
+int currScores = 10000;
+int hintDec = 500;
+
+int hintCount = 0;
+int playersCount = 0;
 
 void setup()
 {
-  size(1000, 700);
+  size(1200, 675);
   //fullScreen();
   fill(255);
-  
+  teamName = new char[15];
   game = false;//DEBUG
-  timerFont = createFont("Silom", 14);
+  timerFont = createFont("Arial", 10);//Silom
+  topFont = createFont("MyanmarMN", 14);
   enterFont = createFont("MyanmarMN", 14);
-  panelFont = createFont("Silom", 16);
+  gadgetFont = createFont("Silom", 16);
   scrW = width;
   scrH = height;
-  panelH = 0.9 * scrH;
-  panelW = scrW - (scrH - panelH)/2;
-  float yK = 7;
-  float xK = 8;
-  panelxMar = panelW/(xK*3 + 2);
-  panelyMar = panelH/(yK*5 + 4);
-  panelItemH = panelyMar*yK;
-  panelItemW = panelxMar*xK;
-  triH = panelItemH/3;
-  tMaxWidth = panelW - panelItemW*4/3 - 2*panelxMar;
+  topH = scrH/9;
+  textFont(timerFont);
+  timerW = scrW/4;
+  timerH = topH * 0.7;//calcTSize("00:00:00", timerW);
+  timerY = topH * 0.85;
+  scoreW = scrW/3;
+  scoreH = timerH;
+  scoreY = timerY;
+
+  gadMarX = scrW/55;
+  gadMarY = (scrH-topH)/24;
+  gadButW = gadMarX*5-5;
+  gadButH = gadMarY*3-2;
+
   t = new StopWatchTimer();
-  t.setStartTime(0,1,30);
+  t.setStartTime(0, 1, 30);
   totalSeconds = 0 + 1 * 60 + 30;
-  arduinoConnect();
+  //arduinoConnect();
+  for (int c = 0; c < 15; c++) teamName[c] = ' ';
 }
 void draw()
 {
   currMouseState = mousePressed;
   if (game)
   {
-    String data = getInput();
-    if(data.length() > 10)
-    {
-      //println(data);
-      
-      for(int d = 0; d < 12; d++)
-      {
-        String currState = data.substring(d,d+1);
-        //println("state "+ str(d) + ":" + currState);
-        if(currState.equals("1")) inputGadgetStates[d] = true;
-        else inputGadgetStates[d] = false;
-        //println("input:"+str(inputGadgetStates[d]) + ",current:"+str(currGadgetStates[d]));
-        if(inputGadgetStates[d] && !currGadgetStates[d])
-        {
-          gadgetPassedOrder[checkSum] = d;
-          checkSum++;
-          println("Gadget "+str(d+1) + " passed");
-          gadgetPassedTimes[d] = t.passedTime();
-          currGadgetStates[d] = inputGadgetStates[d];
-          if(useHint) 
-          {
-            gadgetHinted[d] = true;
-            useHint = false;
-          }
-        }
-      }
-      if(checkSum == 12)
-      {
-        for(int z = 0; z < 12; z++)
-        {
-          String end = ".";
-          if(gadgetHinted[z]) end = " with hint.";
-          println("Gadget "+str(gadgetPassedOrder[z])+" solved at "+str(gadgetPassedTimes[gadgetPassedOrder[z]]) + end);
-          noLoop();
-        }
-      }
-    }
     background(background);
-    fill(background);
-    // hintCountRect
-    strokeWeight(1);
-    rect(scrW/2 - panelW/2, scrH/2 - panelH/2, 2*panelItemW/3, panelItemH); //hintRect
-    rect(scrW/2 + panelW/2 - 2*panelItemW/3, scrH/2 - panelH/2, 2*panelItemW/3, panelItemH);
-    //inrects + - 
-    strokeWeight(0);
-    fill(text);
-    float cTextSize = calcTSize("PLAYERS IN GAME", 4 * panelItemW / 9);
-    textFont(panelFont, cTextSize);
-    float lefttextWidth = textWidth("HINT COUNT");
-    text("HINT COUNT", scrW/2 - panelW/2 + panelItemW / 3 - lefttextWidth / 2, scrH/2 - panelH/2 + cTextSize);
-    text("PLAYERS IN GAME", scrW/2 + panelW/2 -2*panelItemW/3 + panelItemW/9, scrH/2 - panelH/2 + cTextSize); 
-    
-    float xTimerPos = scrW/2 - panelW/2 + 2*panelItemW/3 + panelxMar;
-    float yTimerPos = scrH/2 - panelH/2 + panelItemH - textSize/3;
+    //Timer
     String currTime = getTime(t.hour(), t.minute(), t.second());
-    textSize = calcTSize(currTime, tMaxWidth);
-    textFont(timerFont, textSize);
-    text(currTime, xTimerPos, yTimerPos);
-    textSize = calcTSize(currTime, tMaxWidth/2);
-    textFont(timerFont, textSize);
-    float txtWidth = textWidth(str(playersCount));
-    text(str(playersCount), scrW/2 + panelW/2 -2*panelItemW/3 + 2*panelItemW/6 - txtWidth/2, scrH/2 - panelH/2 + panelItemH/2 + triH/2);
-    txtWidth = textWidth(str(hintCount));
-    text(str(hintCount), scrW/2 - panelW/2 + 2*panelItemW/6 - txtWidth/2, scrH/2 - panelH/2 + panelItemH/2 + triH/2);
-    if(!prevMouseState && currMouseState) //hint++
+    textFont(timerFont, timerH);
+    timerTextW = textWidth(currTime);
+    fill(textCol);
+    text(currTime, 0, timerY);
+    float scoreTextW = textWidth(str(currScores));
+    text(currScores, scrW - scoreTextW, timerY);
+
+    textFont(timerFont, timerH * 0.35);
+    text("ELAPSED TIME", 5, timerH * 0.35);
+    float scoresTextW = textWidth("SCORES");
+    text("SCORES", scrW - scoresTextW - 5, timerH * 0.35);
+
+    float playersTextW = textWidth("PLAYERS: "+ str(playersCount) + " TEAM:" + teamNameStr);
+    text("PLAYERS: "+ str(playersCount) + " TEAM:" + teamNameStr, scrW/2 - playersTextW/2, timerH * 0.35);
+
+    // HINT DRAW
+    textFont(timerFont, timerH);
+    float hintTextW = textWidth("HINTS: "+ str(hintCount));
+    text("HINTS: "+ str(hintCount), scrW/2 - hintTextW/2, timerY);
+    fill(butCol);
+    strokeWeight(0);
+    ellipse(scrW/2 - hintTextW/2 - 30, timerY - timerH/2 + 6, 50, 50); // minus circle
+    ellipse(scrW/2 + hintTextW/2 + 30, timerY - timerH/2 + 6, 50, 50); // plus circle
+
+    fill(background);
+    rect(scrW/2 - hintTextW/2 - 48, timerY - timerH/2 + 4, 36, 4); // minus for minus
+    rect(scrW/2 + hintTextW/2 + 12, timerY - timerH/2 + 4, 36, 4); // minus for plus
+    rect(scrW/2 + hintTextW/2 + 28, timerY - timerH/2 - 12, 4, 36); // plus vertical
+
+    // Hint Inc and Dec Mouse Click
+    if (!prevMouseState && currMouseState) //hint + -
     {
       //hint minus
-      if(mouseX > scrW/2 - panelW/2 && mouseX < scrW/2 - panelW/2 + 2*panelItemW/9 && mouseY > scrH/2 - panelH/2 && mouseY < scrH/2 - panelH/2 + panelItemH)
+      if (mouseX > (scrW/2 - hintTextW/2 - 55) && mouseX < scrW/2 - hintTextW/2 - 5  && mouseY > timerY - timerH/2 - 44 && mouseY < timerY - timerH/2 + 56)
       {
         hintCount--;
-        if(hintCount < 0) hintCount = 0;
+        if (hintCount < 0) hintCount = 0;
       }
-      if(mouseX > scrW/2 - panelW/2 + 4*panelItemW/9 && mouseX < scrW/2 - panelW/2 + 2*panelItemW/3 && mouseY > scrH/2 - panelH/2 && mouseY < scrH/2 - panelH/2 + panelItemH)
+      if (mouseX > (scrW/2 + hintTextW/2 + 5) && mouseX < scrW/2 + hintTextW/2 + 55  && mouseY > timerY - timerH/2 - 44 && mouseY < timerY - timerH/2 + 56)
       {
         hintCount++;
-        useHint = true;
       }
-      //if(mouseX > scrW/2 - 140 && mouseX < scrW/2 - 100 && mouseY > scrH/2 - 70 && mouseY < scrH/2 - 40)
     }
-    
-    fill(background);
-    //rect(scrW/2 - panelW/2, scrH/2 - panelH/2 + 1, 2*panelItemW/9, panelItemH - 2); //-
-    triangle(scrW/2 - panelW/2 + 2*panelItemW/54, scrH/2 - panelH/2 + panelItemH/2 - triH/2,
-             scrW/2 - panelW/2 + 2*5*panelItemW/54, scrH/2 - panelH/2 + panelItemH/2 - triH/2,
-             scrW/2 - panelW/2 + panelItemW/9, scrH/2 - panelH/2 + panelItemH/2 + triH/2); 
-    //rect(scrW/2 - panelW/2 + 4*panelItemW/9, scrH/2 - panelH/2 + 1, 2*panelItemW/9, panelItemH - 2); //+
-    triangle(scrW/2 - panelW/2 + 26*panelItemW/54, scrH/2 - panelH/2 + panelItemH/2 + triH/2,
-             scrW/2 - panelW/2 + 34*panelItemW/54, scrH/2 - panelH/2 + panelItemH/2 + triH/2,
-             scrW/2 - panelW/2 + 5*panelItemW/9, scrH/2 - panelH/2 + panelItemH/2 - triH/2); 
-    strokeWeight(1);
-    // gadgets rects
-    for (int i = 0; i < 12; i++) 
+
+    //GADGETS
+    stroke(textCol);
+    int gadCount = 0;
+
+    for (int lev = 0; lev < 6; lev++)
     {
-      if(currGadgetStates[i]) fill(green);
-      else fill(background);
-      rect(scrW/2 - panelW/2 + (i%3)*(panelItemW+panelxMar), scrH/2 - panelH/2 + (panelItemH + panelyMar)*(i/3 + 1), panelItemW, panelItemH);
-      txtWidth = textWidth(str(i+1));
-      fill(text);
-      text(str(i+1),scrW/2 - panelW/2 + (i%3)*(panelItemW+panelxMar) + panelItemW/2 - txtWidth/2, scrH/2 - panelH/2 + (panelItemH + panelyMar)*(i/3 + 1) + panelItemH - (panelItemH-textSize)/2);
+      textFont(topFont, timerH * 0.35);
+      fill(textCol);
+      text(levelNames[lev], gadMarX, topH + gadMarY*(lev+1) + gadButH*lev - 2);
+      for (int g = 0; g < levGadCount[lev]; g++)
+      {
+        if (!prevMouseState && currMouseState)
+        {
+          if (mouseX > ((g+1) * gadMarX + gadButW * g) && mouseX < ((g+1) * (gadMarX + gadButW))  && mouseY > (topH + gadMarY * (lev+1) + gadButH*lev) && mouseY < (topH + (lev+1) * (gadMarY + gadButH)))
+          { 
+            hintedGadgets[gadCount] = true;
+            passedTimes[gadCount] = getSecs(t.hour(), t.minute(), t.second());
+          }
+        }
+        fill(butCol);
+        if (hintedGadgets[gadCount]) fill(color(255, 180, 130, 60));
+        if (passedGadgets[gadCount]) fill(color(0, 200, 100, 60));
+        rect((g+1) * gadMarX + gadButW * g, topH + gadMarY*(lev+1) + gadButH*lev, gadButW, gadButH);
+        textFont(topFont, timerH * 0.3);
+        float gtxtW = textWidth(gadgetNames[gadCount]);
+        fill(textCol);
+        text(gadgetNames[gadCount], (g+1) * gadMarX + gadButW * g + gadButW/2 - gtxtW/2, topH + gadMarY*(lev+1) + gadButH*(lev+0.6) - 2);
+        gadCount++;
+      }
+      strokeWeight(2);
+      fill(textCol);
+      line(gadMarX, topH + gadMarY*(lev+1) + gadButH*lev, (levGadCount[lev]) * (gadMarX + gadButW), topH + gadMarY*(lev+1) + gadButH*lev);
+      strokeWeight(1);
     }
-  }
-  else
+    boolean allDone = true;
+    for (int g = 0; g < gadCount; g++)
+    {
+      if (!hintedGadgets[g] && !passedGadgets[g]) allDone = false;
+    }
+    if (allDone) 
+    {
+      game = false;
+      endGame = true;
+    }
+  } else // Enter params to enter the game
   {
-    background(0);
-    float cTextSize = calcTSize("PLAY", 90);
-    textFont(enterFont, cTextSize);
-    fill(255);
-    if(playersCount > 0) text("PLAY",scrW/2 - 40, scrH/2 + 60);
-    fill(200);
-    strokeWeight(0);
-    rect(scrW/2 - 135, scrH/2 - 52, 28, 4); // minus
-    rect(scrW/2 + 105, scrH/2 - 52, 28, 4); // plus horiz
-    rect(scrW/2 + 117, scrH/2 - 64, 4, 28); // plus vertical
-    cTextSize = calcTSize(str(playersCount) + " players", 190);
-    textFont(enterFont, cTextSize);
-    float cTextWidth = textWidth(str(playersCount) + " players");
-    text(str(playersCount) + " players", scrW/2 - cTextWidth/2, scrH/2 - 50 + cTextSize/3);
-    
-    if(!prevMouseState && currMouseState)
+    if (endGame)
     {
-      if(mouseX > scrW/2 - 140 && mouseX < scrW/2 - 100 && mouseY > scrH/2 - 70 && mouseY < scrH/2 - 40)
+      background(0);
+      fill(color(200,200,200));
+      textFont(topFont, scrH/20);
+      float statTextWidth = textWidth("STATISTICS");
+      text("STATISTICS", scrW/2 - statTextWidth/2, scrH/19);
+      textFont(topFont, 17*scrH/(32*18));
+      data = createWriter("data.txt");
+      data.println("Date: "+str(year()) +"."+str(month())+"."+str(day()));
+      data.println("Time: "+str(hour()) +":"+str(minute())+":"+str(second()));
+      data.println("Team Name: " + teamNameStr);
+      data.println("Players: " + str(playersCount));
+      for(int g = 0; g < passedTimes.length; g++)
       {
-        playersCount--;
-        if(playersCount < 0) playersCount = 0;
+        String result = str(g+1) + ". " + gadgetNames[g] + " passed by " + passedTimes[g] + " seconds";
+        if(hintedGadgets[g]) result = result + " and hinted.";
+        else result = result + ".";
+        String csvString = g+";"+gadgetNames[g]+";"+passedTimes[g]+";"+hintedGadgets[g]+";";
+        data.println(csvString);
+        text(result, scrW/2 - textWidth(result)/2, scrH/19+(g+1)*17*scrH/(32*18));
       }
-      if(mouseX > scrW/2 + 100 && mouseX < scrW/2 + 135 && mouseY > scrH/2 - 70 && mouseY < scrH/2 - 40)
+      data.flush();
+      data.close();
+      if (!prevMouseState && currMouseState) 
       {
-        playersCount++;
+        endGame = false;
+        //RESET GAME
       }
-      //Play button 
-      if(mouseX > scrW/2 - 45 && mouseX < scrW/2 - 40 + cTextWidth && mouseY > scrH/2 + 63 - cTextSize && mouseY < scrH/2 + 63 && playersCount > 0)
+    } else
+    {
+      background(0);
+      fill(200);
+      strokeWeight(2);
+      fill(0);
+      stroke(255);
+      ellipse(scrW/2 - 122, scrH/2 - 51, 40, 40); // minus circle
+      ellipse(scrW/2 + 118, scrH/2 - 51, 40, 40); // minus circle
+      fill(200);
+      strokeWeight(0);
+      rect(scrW/2 - 135, scrH/2 - 52, 28, 4); // minus
+
+      rect(scrW/2 + 105, scrH/2 - 52, 28, 4); // plus horiz
+      rect(scrW/2 + 117, scrH/2 - 64, 4, 28); // plus vertical
+      enterTextSize = calcTSize(str(playersCount) + " PLAYERS", 190);
+      textFont(enterFont, enterTextSize);
+      float playersTextWidth = textWidth(str(playersCount) + " PLAYERS");
+      text(str(playersCount) + " PLAYERS", scrW/2 - playersTextWidth/2, scrH/2 - 50 + enterTextSize/3);
+
+      teamNameStr = new String(teamName);
+      teamNameStr = teamNameStr.substring(0, nameLen);
+      float nameTextWidth = textWidth("TEAM NAME: " + teamNameStr);
+      text("TEAM NAME: "+ teamNameStr, scrW/2 - nameTextWidth/2, scrH/2 + enterTextSize/3);
+
+      enterTextSize = calcTSize("PLAY", 90);
+      textFont(enterFont, enterTextSize);
+      fill(255);
+      if (playersCount > 0) text("PLAY", scrW/2 - 40, scrH/2 + 60);
+
+      if (!prevMouseState && currMouseState)
       {
-        game = true;
-        strokeWeight(1);
-        stroke(0);
-        t.start();
+        if (mouseX > scrW/2 - 140 && mouseX < scrW/2 - 100 && mouseY > scrH/2 - 70 && mouseY < scrH/2 - 40)
+        {
+          playersCount--;
+          if (playersCount < 0) playersCount = 0;
+        }
+        if (mouseX > scrW/2 + 100 && mouseX < scrW/2 + 135 && mouseY > scrH/2 - 70 && mouseY < scrH/2 - 40)
+        {
+          playersCount++;
+        }
+        //Play button 
+        if (mouseX > scrW/2 - 45 && mouseX < scrW/2 - 40 + playersTextWidth && mouseY > scrH/2 + 63 - enterTextSize && mouseY < scrH/2 + 63 && playersCount > 0)
+        {
+          game = true;
+          strokeWeight(1);
+          stroke(0);
+          t.start();
+        }
       }
     }
   }
@@ -276,8 +338,37 @@ int calcTSize(String txt, float maxWidth)
 
 String getTime(int h, int m, int s)
 {
-  String h_str = h > 9 ? str(h) : "0" + str(h);
-  String m_str = m > 9 ? str(m) : "0" + str(m);
-  String s_str = s > 9 ? str(s) : "0" + str(s);
+  String h_str = str(h);
+  if (h < 10) h_str= "0" + str(h);
+  //String m_str = m > 9 ? str(m) : "0" + str(m);
+  String m_str = str(m);
+  if (m < 10) m_str= "0" + str(m);
+  //String s_str = s > 9 ? str(s) : "0" + str(s);
+  String s_str = str(s);
+  if (s < 10) s_str= "0" + str(s);
+  if ( s == 1 && m == 0 && h == 0) t.stop();
+  //print(h_str+":"+m_str+":"+s_str);
   return h_str+":"+m_str+":"+s_str;
+}
+
+Integer getSecs(int h, int m, int s)
+{
+  return (h*3600 + m*60 + s);
+}
+void keyPressed()
+{
+  if (keyCode == 27) key = 0;
+  int index = alpha.indexOf(key);
+  if (index >=0 && keyCode != 8 && nameLen < 15)
+  {
+    teamName[nameLen] = key;
+    nameLen++;
+    println(teamName);
+  }
+  if (keyCode == 8 && nameLen > 0)
+  {
+    nameLen--;
+    teamName[nameLen] = ' ';
+    println(teamName);
+  }
 }

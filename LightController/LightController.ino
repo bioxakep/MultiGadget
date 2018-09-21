@@ -191,6 +191,7 @@ void loop() {
     randomWind = false;
     windState = false;
     digitalWrite(wind, windState);
+    // какой свет включаем ?
   }
   else if (command == 0x80) // Wind Blow 10 secs
   {

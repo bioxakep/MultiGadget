@@ -187,21 +187,32 @@ void loop() {
     Serial.println("Done.");
   }
 
-  if (command == 0x30)
+  //level 30 without command
+  
+  if (command == 0x40)
   { 
     Serial.print("\nGate UP start...");
     gateUp();
     Serial.println("Done.");
   }
-  
-  if (command == 0x40)
-  { 
-    // wait comand from you, after PoseiIN signal received
-  }
 
   if (command == 0x50)
   {
     Serial.print("\nGrape UP start...");
+    grapeUp();
+    Serial.println("Done.");
+  }
+  
+  if (command == 0x51) // Trident
+  {
+    Serial.print("\nColumn Down start...");
+    columnDown();
+    Serial.println("Done.");
+  }
+
+  if (command == 0x52) // Grape Grow
+  {
+    Serial.print("\nColumn Down start...");
     grapeUp();
     Serial.println("Done.");
   }

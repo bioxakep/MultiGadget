@@ -378,6 +378,7 @@ void loop()
       send250ms(gheraOUT);  // ghera start speaking, 'molnii' level
       level = 50;
       Serial.println("Go to level 50");
+      //START MP3 FILE
     }// if players never find the key, operator can skip it here > gateOpen = true;
   }
   else if (level == 50)
@@ -394,7 +395,7 @@ void loop()
       if (getRainRFID() && rainRFWait)
       {
         Serial.println("Rain RFID Recieved");
-        sendToSlave(motorConAddr, 0x50); // send signal to motor_controller > grapeUp..
+        sendToSlave(motorConAddr, 0x52); // send signal to motor_controller > grapeGrow
         rainRFWait = false;
       }
 
@@ -416,9 +417,15 @@ void loop()
         Serial.println("Poseidon Done");
         passGStates[poseidon] = true;
         if (operGStates[poseidon]) send250ms(poseiOUT);
-        sendToSlave(motorConAddr, 0x60); // send signal to motor_controller
         digitalWrite(poseiHD, LOW); // Открываем тайник Посейдона, даем игрокам трезубец
       }
+      
+      if ((!digitalRead(triPin) || operGStates[trident]) && !passGStates[trident] && passGStates[poseidon])
+      {
+        sendToSlave(motorConAddr, 0x51); // Column Down
+        // START MP3 - FILE
+      }
+      
       if (!digitalRead(firePin) && !fireState)
       {
         sendToSlave(motorConAddr, 0x65); // send signal to motor_controller Column Down
@@ -455,6 +462,7 @@ void loop()
           // dioniHD1 opens > players gets second part molnii
           passGStates[dionis] = true;
           digitalWrite(dioniHD1, LOW); // open first dionis vault
+          // MP3 FILE
           // shoud be skippable from master console
           Serial.println("Demetra Done");
           demediolevel++;
