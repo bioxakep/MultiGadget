@@ -26,16 +26,16 @@ boolean fireState = false;
 int firePin = 3;
 
 //Итого:  , worldAdd (факел) = 3
-ArdCPZ *cpz1; //Wind
+
 ArdCPZ *cpz2; //Under
-ArdCPZ *cpz4; //Rain
+
 
 int windBeacon = 499;
 int underBeacon = 328;
 int rainBeacon  = 410;
 
-boolean windRFWait = true;
-boolean rainRFWait = true;
+
+
 boolean underRFWait = true;
 
 int curHighPin = -1;
@@ -45,116 +45,190 @@ int motorConAddr = 21;
 int worldConAddr = 22;
 
 //Gadget states
-boolean operGStates[21] = {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false};
-boolean passGStates[21] = {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false};
+boolean operGStates[32];
+boolean passGStates[32];
 
 // lev 0
 //
+/*
+1 Balloon
+2 Press
+3 Gate
+4 Poseidon
+5 Trident
+6 Demetra
+7 Rain
+8 Vine
+9 Dionis-1
+10 Hercules
+11 Narcis
+12 Thunder
+13 Afina-1
+14 Afina-2
+15 Time
+16 Octopus
+17 Note-1
+18 Wind
+19 Ghera-1
+20 Fire
+21 Flower-1
+22 Flower-2
+23 Dionis-2
+24 Ghera-2
+25 Arpha
+26 Zodiak
+27 Minot
+28 Gorgona
+29 Crystals
+31 Light ??
+32 WIN??
+ */
+//START
 byte start = 0;
 int startPin = 8;
 boolean startStates[2] = {HIGH, HIGH};
 
+//BALOON
 byte baloon = 1;
 int balloIN  = 50;   // a.
 int balloOUT = 44;
 
+//PRESS
 byte presss = 2;
 int pressIN  = 48;   // b.
 int pressOUT = 42;
 
+//GATE
 byte gate = 3;
 int gateRFPin   = 10;   // RFID key to gate
 int gateBeacon  = 384;
-boolean gateRFWait = true;
 ArdCPZ *cpz3; //Gate
+boolean gateRFWait = true;
 
+//POSEIDON
 byte poseidon = 4;
 int poseiIN  = 53;   // h.
 int poseiOUT = 43;
 int poseiHD = 21; // CHOOSE PIN
 
-byte demetra = 5;
+//TRIDENT
+byte trident = 5;
+
+//DEMETRA
+byte demetra = 6;
 int demetIN  = 26;   // d.
 int demetOUT = 38;
 int demetHD  = A1;
 
-byte vine = 6;
+//RAIN
+byte rain = 7;
+ArdCPZ *cpz4; //Rain
+boolean rainRFWait = true;
+
+//VINE
+byte vine = 8;
 int vinemIN  = 24;   //e.
 int vinemOUT = 36;
 
-byte dionis = 7;
+//DIONIS
+byte dionis1 = 9;
+byte dionis2 = 23;
 int dioniIN  = 22;   //f.
 int dioniOUT = 34;
 int dioniHD1 = A2;   // piston
 int dioniHD2 = A3;
 
-byte hercul = 8;
+//HERCULES
+byte hercul = 10;
 int hercuIN  = 7;
 int hercuHD  = A4;
 
-byte narcis = 9;
-
-byte molniya = 10;
-int molniIN  = 52;   // g.
-int molniOUT = 32;
-
+//NARCIS
+byte narcis = 11;
 int narciIN  = 51;   // i.  /// video seen
 int narciOUT = 41;          /// launch video
 
-// lev 3
+//THUNDER
+byte thunder = 12;
+int thundIN  = 52;   // g.
+int thundOUT = 32;
 
-int noteIN   = 49;   // j.
-int noteOUT  = 39;
-int noteHD   = A6;
-
-byte afina1 = 11;
-byte afina2 = 11;
+//AFINA
+byte afina1 = 13;
+byte afina2 = 14;
 int afinaIN  = 27;   // m.
 int afinaOUT = 35;   //
 int afinaHD1 = A7;
 int afinaHD2 = A8;
 
-byte octop = 12;
+//TIME
+byte Time = 15;
+int timeOUT = A5;
+
+//OCTOPUS
+byte octopus = 16;
 int octopIN  = 47;   // k.
 int octopOUT = 37;
 
-byte note1 = 13;
-byte note2 = 14;
+//NOTE
+byte note1 = 17;
+int noteIN   = 49;   // j.
+int noteOUT  = 39;
+int noteHD   = A6;
 
-int timeOUT = A5;
+//WIND
+byte wind = 18;
+ArdCPZ *cpz1; //Wind
+boolean windRFWait = true;
 
+//MUSES
 int musesIN  = 23;   // o. to change their messages
 int musesOUT = 31;   // correct pattern
 
-byte ghera = 15;
+//GHERA
+byte ghera1 = 19;
+byte ghera2 = 24;
 int gheraIN   = 4;
 int gheraOUT  = 2;
 
-byte flower1 = 16;
-byte flower2 = 17;
+//FIRE
+byte fire = 20;
+
+//FLOWERS
+byte flower1 = 21;
+byte flower2 = 22;
 int flowrIN  = 25;
 int flowrOUT = 33;   //n.
 int flowrHD  = A13;
 
-int gorgoIN  = 28;   // A.
-int gorgoOUT = 30;
-int gorgoHD  = A12;
-
-byte dionis2 = 18;
-
-byte arpha = 19;
+//ARPHA
+byte arpha = 25;
 int arphaIN  = 6;
 int arphaHD  = A9;
 
-byte zodiak = 20;
+//ZODIAK
+byte zodiak = 26;
 int zodiaIN  = 5;
 int zodiaHD  = A11;
 
-byte minot = 21;
+//MINOT
+byte minot = 27;
 int minotIN  = 29;   // B.
 int minotOUT = 45;
 int minotHD  = A10;
 
+//GORGONA
+byte gorgona = 28;
+int gorgoIN  = 28;   // A.
+int gorgoOUT = 30;
+int gorgoHD  = A12;
+
+//CRISTALS
+byte cristals = 29;
+boolean crist1 = false;
+boolean crist2 = false;
+boolean crist3 = false;
+boolean cristaDone = false;
 
 int freeIN = 46;
 int freeOUT = 40;
@@ -167,18 +241,12 @@ byte notelevel = 0;
 //boolean gateOpen   = false; need?
 boolean shieldDone = false;
 boolean sealsDone  = false;
-boolean molniyaDone = false;
-
+boolean thunderDone = false;
 boolean tridentWait = true;
 
 boolean seal1  = false;
 boolean seal2  = false;
 boolean seal3  = false;
-
-boolean crist1 = false;
-boolean crist2 = false;
-boolean crist3 = false;
-boolean cristaDone = false;
 
 boolean zodiaState = false;
 boolean minotState = false;
@@ -227,8 +295,8 @@ void setup() {
   pinMode( hercuIN  , INPUT_PULLUP);
   pinMode( hercuHD  , OUTPUT);
 
-  pinMode( molniIN  , INPUT_PULLUP);
-  pinMode( molniOUT , OUTPUT);
+  pinMode( thundIN  , INPUT_PULLUP);
+  pinMode( thundOUT , OUTPUT);
 
   pinMode( poseiIN  , INPUT_PULLUP);
   pinMode( poseiOUT , OUTPUT);
@@ -281,6 +349,12 @@ void setup() {
   cpz3 = new ArdCPZ(gateRFPin);
   cpz4 = new ArdCPZ(rainRFPin);
 
+  for(int g = 0; g < 32; g++)
+  {
+    operGStates[g] = false;
+    passGStates[g] = false;
+  }
+  
   pinMode(SSerialTxControl, OUTPUT);
   digitalWrite(SSerialTxControl, LOW);  // Init Recieve RS485
   //I2C Start
@@ -375,7 +449,7 @@ void loop()
     {
       passGStates[gate] = true;
       sendToSlave(motorConAddr, 0x40); // send signal to motor_controller >openGate
-      send250ms(gheraOUT);  // ghera start speaking, 'molnii' level
+      send250ms(gheraOUT);  // ghera start speaking, 'thunder' level
       level = 50;
       Serial.println("Go to level 50");
       //START MP3 FILE
@@ -391,12 +465,12 @@ void loop()
       if (getUnderRFID() && underRFWait) underRFWait = false;
     }
     // --------------------
-    // ---------molnii--------------
-    if (!molniyaDone)
+    // ---------thundi--------------
+    if (!thunderDone)
     {
       if ((!digitalRead(poseiIN) || operGStates[poseidon]) && !passGStates[poseidon])
       { // signal from poseidon
-        // posei > command via (i2c) to motor_controller activate falling column > players get first part molnii
+        // posei > command via (i2c) to motor_controller activate falling column > players get first part thundi
         // shoud be skippable from master console
         passGStates[poseidon] = true;
         if (operGStates[poseidon]) send250ms(poseiOUT);
@@ -438,13 +512,13 @@ void loop()
         Serial.println("Demetra 2 part Done");
       }
 
-      if ((!digitalRead(dioniIN) || operGStates[dionis]) && !passGStates[dionis] && passGStates[vine])
+      if ((!digitalRead(dioniIN) || operGStates[dionis1]) && !passGStates[dionis1] && passGStates[vine])
       { // shoud be skippable from master console
         // if players gives dionis empty bottle
         // he will tell them that he dont like empty bottles
         // if signal from full bottle is received >
-        // dioniHD1 opens > players gets second part molnii
-        passGStates[dionis] = true;
+        // dioniHD1 opens > players gets second part thundi
+        passGStates[dionis1] = true;
         digitalWrite(dioniHD1, LOW); // open first dionis vault
         // MP3 FILE
         Serial.println("Demetra Done");
@@ -457,7 +531,7 @@ void loop()
 
       if ((!digitalRead(hercuIN) || operGStates[hercul]) && !passGStates[hercul])
       { // shoud be skippable from master console
-        // hercu > players gets third part of molnii
+        // hercu > players gets third part of thundi
         passGStates[hercul] = true;
         digitalWrite(hercuHD, LOW);
         Serial.println("Hercules Done");
@@ -472,15 +546,15 @@ void loop()
         Serial.println("Narcis Done");
       }
 
-      if ((!digitalRead(molniIN) || operGStates[molniya]) && !passGStates[narcis])
+      if ((!digitalRead(thundIN) || operGStates[thunder]) && !passGStates[narcis])
       {// shoud be triggerable from master console
         // may add some extra storm effects thru light_controller
-        //if all molnii are done >   // gheraLevel = 2 >  speaks > opend HD2 (shields)
+        //if all thundi are done >   // gheraLevel = 2 >  speaks > opend HD2 (shields)
         send250ms(gheraOUT);  // moves ghera to 'shields' level, ALWAYS OR BY OPERATOR?
-        passGStates[molniya] = true;
-        Serial.println("MOLNII Done");
+        passGStates[thunder] = true;
+        Serial.println("Thunder Done");
       }
-    }// eof.molniiDone
+    }// eof.thundiDone
 
     //-------- shields ------
     if (!shieldDone)
@@ -527,11 +601,11 @@ void loop()
         Serial.println("Note 1 part Done");
         passGStates[note1] = true;
       }
-      if ((!windRFWait || operGStates[note2]) && !passGStates[note2] && passGStates[note1])
+      if ((!windRFWait || operGStates[wind]) && !passGStates[wind] && passGStates[note1])
       {
         sendToSlave(lightConAddr, 0x70); // send signal to lightController FastLED ON
         sendToSlave(motorConAddr, 0x70); // send signal to start blow wind and cloud down
-        passGStates[note2] = true;
+        passGStates[wind] = true;
         Serial.println("Wind RFID Recieved");
         // MP3 FILE
         //FastLED, CloudDOWN, WindBlow
