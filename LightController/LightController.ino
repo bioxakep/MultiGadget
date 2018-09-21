@@ -167,11 +167,11 @@ void loop() {
         Serial.print(String(places[p]) + " is " + String(colors[currCol]));
         if (prevCol > currCol)
         {
-          for (int r = 255; r > 0; r = r - lStep) analogWrite(colorPins[p][prevColor], r);
+          for (int r = 255; r > 0; r = r - lStep) analogWrite(colorPins[p][prevCol], r);
         }
         else
         {
-          for (int r = 0; r > 255; r = r + lStep) analogWrite(colorPins[p][currColor], r);
+          for (int r = 0; r > 255; r = r + lStep) analogWrite(colorPins[p][currCol], r);
         }
       }
       //Flowers Control

@@ -119,56 +119,59 @@ void loop() {
   digitalWrite(cloudUP, LOW);
   digitalWrite(cloudDN, LOW);
 
-  // receives command from master via i2c
-
-  if (digitalRead(remote1)==LOW &&  grapeOnTop == false) {            // manual  control by radio remote control
+  // MANUAL GRAPE UP
+  if (!digitalRead(remote1) && !grapeOnTop) 
+  {// manual  control by radio remote control
     Serial.println("\nRemote control (1) grape up");
     digitalWrite(grapeUP, HIGH);
-    while(  digitalRead(grapeTOP)==LOW ) {;}
+    while(!digitalRead(grapeTOP)) {;}
     Serial.println("\ngrape on TOP");
     grapeOnTop = true; 
     grapeOnBot = false; 
     // command = 0x02;
     //grapeUp();
-  } else    digitalWrite(grapeUP, LOW);
-  
-  if (digitalRead(remote2)==LOW &&  grapeOnBot == false) {           // manual  control by radio remote control
+  } 
+  else digitalWrite(grapeUP, LOW);
+
+  // MANUAL GRAPE DOWN
+  if (!digitalRead(remote2) && !grapeOnBot) 
+  { // manual  control by radio remote control
     Serial.println("\nRemote control (2) grape down");
     digitalWrite(grapeDN, HIGH);
-    while(  digitalRead(grapeBOT)==LOW ) {;}
+    while(!digitalRead(grapeBOT)) {;}
     Serial.println("\nGrape is down"); 
     grapeOnTop = false;
     //command = 0x04;
     //grapeDown();
-  } else     digitalWrite(grapeDN, LOW);
+  } 
+  else digitalWrite(grapeDN, LOW);
 
-
-//Column UP auto
-  if (digitalRead(remote3)==LOW &&  columnOnTop == false) {            // manual  control by radio remote control
+   // MANUAL COLUMN UP
+  if (!digitalRead(remote3) && !columnOnTop) 
+  {// manual control by radio remote control
     Serial.println("\nRemote control (3) column up");
     digitalWrite(columnUP, HIGH);
-    while(  digitalRead(columnTOP)==LOW ) {;}
+    while(!digitalRead(columnTOP)) {;}
     Serial.println("\nColumn on TOP");
     columnOnTop = true; 
     columnOnBot = false;   
     // command = 0x0x;
-  } else    digitalWrite(columnUP, LOW);
+  } 
+  else digitalWrite(columnUP, LOW);
 
-
-
-
-
-  if (digitalRead(remote4)==LOW &&  columnOnBot == false) {           // manual  control by radio remote control
+  // MANUAL COLUMN DOWN
+  if (!digitalRead(remote4) && !columnOnBot) 
+  {// manual control by radio remote control
     Serial.println("\nRemote control (4) column down");
     digitalWrite(columnDN, HIGH);
-    while(  digitalRead(columnBOT)==LOW ) {;}
+    while(!digitalRead(columnBOT)) {;}
     columnOnBot = true; 
     columnOnTop = false;  
     //command = 0x0x;
-    
-  } else     digitalWrite(columnDN, LOW);
+  } 
+  else digitalWrite(columnDN, LOW);
 
-
+  // receives command from master via i2c
   if (command == 0x10)
   { 
     Serial.print("\nOpen the gate start...");
@@ -213,20 +216,6 @@ void loop() {
   if (command == 0x52) // Grape Grow
   {
     Serial.print("\nColumn Down start...");
-    grapeUp();
-    Serial.println("Done.");
-  }
-
-  if (command == 0x60)
-  {
-    Serial.print("\nGrape UP start...");
-    grapeUp();
-    Serial.println("Done.");
-  }
-
-  if (command == 0x70)
-  {
-    Serial.print("\nGrape UP start...");
     grapeUp();
     Serial.println("Done.");
   }

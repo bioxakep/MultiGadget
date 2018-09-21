@@ -8,7 +8,7 @@ void openLocks() {
   digitalWrite(dioniHD1, LOW);
   digitalWrite(dioniHD2, LOW);
   digitalWrite(hercuHD,  LOW);
-  digitalWrite(molniOUT, LOW);
+  digitalWrite(thundOUT, LOW);
   digitalWrite(poseiOUT, LOW);
   digitalWrite(narciOUT, LOW);
   digitalWrite(noteOUT,  LOW);
@@ -42,7 +42,7 @@ void closeLocks() {
   digitalWrite(dioniHD1, LOW);
   digitalWrite(dioniHD2, LOW);
   digitalWrite(hercuHD,  LOW);
-  digitalWrite(molniOUT, LOW);
+  digitalWrite(thundOUT, LOW);
   digitalWrite(poseiOUT, LOW);
   digitalWrite(narciOUT, LOW);
   digitalWrite(noteOUT,  LOW);

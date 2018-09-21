@@ -27,17 +27,6 @@ int firePin = 3;
 
 //Итого:  , worldAdd (факел) = 3
 
-ArdCPZ *cpz2; //Under
-
-
-int windBeacon = 499;
-int underBeacon = 328;
-int rainBeacon  = 410;
-
-
-
-boolean underRFWait = true;
-
 int curHighPin = -1;
 //address i2c
 int lightConAddr = 20;
@@ -113,6 +102,7 @@ int poseiHD = 21; // CHOOSE PIN
 
 //TRIDENT
 byte trident = 5;
+boolean tridentWait = true;
 
 //DEMETRA
 byte demetra = 6;
@@ -123,6 +113,7 @@ int demetHD  = A1;
 //RAIN
 byte rain = 7;
 ArdCPZ *cpz4; //Rain
+int rainBeacon  = 410;
 boolean rainRFWait = true;
 
 //VINE
@@ -164,6 +155,7 @@ int afinaHD2 = A8;
 //TIME
 byte Time = 15;
 int timeOUT = A5;
+int timeIN = 46;
 
 //OCTOPUS
 byte octopus = 16;
@@ -179,6 +171,7 @@ int noteHD   = A6;
 //WIND
 byte wind = 18;
 ArdCPZ *cpz1; //Wind
+int windBeacon = 499;
 boolean windRFWait = true;
 
 //MUSES
@@ -230,29 +223,32 @@ boolean crist2 = false;
 boolean crist3 = false;
 boolean cristaDone = false;
 
+//UNDERGROUND
+ArdCPZ *cpz2; //Under
+int underBeacon = 328;
+boolean underRFWait = true;
+
+int totalGadgets = 29;
+
 int freeIN = 46;
 int freeOUT = 40;
 //int worldIN   = 12; free
 //int worldOUT  = 11; free
 
 byte level = 10;
-byte demediolevel = 0;
-byte notelevel = 0;
 //boolean gateOpen   = false; need?
 boolean shieldDone = false;
-boolean sealsDone  = false;
 boolean thunderDone = false;
-boolean tridentWait = true;
 
 boolean seal1  = false;
 boolean seal2  = false;
 boolean seal3  = false;
+boolean sealsDone  = false;
 
 boolean zodiaState = false;
 boolean minotState = false;
 boolean gorgoState = false;
 
-boolean flowerFirst = false;
 unsigned long startHighPin = 0;
 
 void setup() {
@@ -361,7 +357,6 @@ void setup() {
   Wire.begin();
   Serial.println("I2C Started.");
   delay(10);
-
   Serial.println("RS485 Started.");
   delay(10);
   checkInputs();
@@ -420,9 +415,10 @@ void loop()
       if (operGStates[baloon]) send250ms(balloOUT);
       Serial.println("Ballon signal recieved. Turn on the lights ad roll up the curtain");
       // send (i2c) signal to motor_controller >rollUp and light_controller  >lights and stop wind
-      sendToSlave(lightConAddr, 0x20); // random Wind
-      delay(10);
+      sendToSlave(lightConAddr, 0x20); // wind off
+      delay(10); // replace between
       sendToSlave(motorConAddr, 0x20);
+      send250ms(pressOUT);
       level = 30;
       Serial.println("Go to level 30");
     }
@@ -449,7 +445,8 @@ void loop()
     {
       passGStates[gate] = true;
       sendToSlave(motorConAddr, 0x40); // send signal to motor_controller >openGate
-      send250ms(gheraOUT);  // ghera start speaking, 'thunder' level
+      //send250ms(gheraOUT);  // ghera start speaking, 'thunder' level
+      //door1 10s отдельно
       level = 50;
       Serial.println("Go to level 50");
       //START MP3 FILE
@@ -465,7 +462,7 @@ void loop()
       if (getUnderRFID() && underRFWait) underRFWait = false;
     }
     // --------------------
-    // ---------thundi--------------
+    // ---------thunder--------------
     if (!thunderDone)
     {
       if ((!digitalRead(poseiIN) || operGStates[poseidon]) && !passGStates[poseidon])
@@ -484,18 +481,13 @@ void loop()
         // START MP3 - FILE
       }
 
-      if (!digitalRead(firePin) && !fireState)
-      {
-        sendToSlave(motorConAddr, 0x52); // send signal to motor_controller Column Down
-        fireState = true;
-      }
-
+     
       if ((!digitalRead(demetIN) || operGStates[demetra]) && !passGStates[demetra])
       { // shoud be skippable from master console
         // signal from demetra    ?????????????????????????????
         passGStates[demetra] = true;
         if (operGStates[demetra]) send250ms(demetOUT);
-        digitalWrite(demetHD , LOW); // open demetra HD
+        digitalWrite(demetHD, LOW); // open demetra HD
         Serial.println("Demetra 1 part Done");
       }
 
@@ -505,7 +497,7 @@ void loop()
         // MP3 FILE
       }
 
-      if ((!digitalRead(vinemIN) || operGStates[vine]) && !passGStates[vine] && passGStates[demetra])
+      if ((!digitalRead(vinemIN) || operGStates[vine]) && !passGStates[vine] && passGStates[demetra] && passGStates[rain])
       {
         passGStates[vine] = true;
         send250ms(dioniOUT);
@@ -546,13 +538,14 @@ void loop()
         Serial.println("Narcis Done");
       }
 
-      if ((!digitalRead(thundIN) || operGStates[thunder]) && !passGStates[narcis])
+      if ((!digitalRead(thundIN) || operGStates[thunder]) && !passGStates[thunder])
       {// shoud be triggerable from master console
         // may add some extra storm effects thru light_controller
         //if all thundi are done >   // gheraLevel = 2 >  speaks > opend HD2 (shields)
         send250ms(gheraOUT);  // moves ghera to 'shields' level, ALWAYS OR BY OPERATOR?
         passGStates[thunder] = true;
-        Serial.println("Thunder Done");
+        thunderDone = true;
+        Serial.println("thunder Done");
       }
     }// eof.thundiDone
 
@@ -562,8 +555,6 @@ void loop()
       if ((!digitalRead(afinaIN) || operGStates[afina1]) && !passGStates[afina1])
       { // afina first signal opens afinaHD1
         digitalWrite(afinaHD1, LOW); // here afina gives players a key to open next vault
-        while (!digitalRead(afinaIN)) {;}
-        delay(300);
         passGStates[afina1] = true;
         Serial.println("Afina 1 part Done");
       }
@@ -582,12 +573,13 @@ void loop()
         Serial.println("Time part Done");
       }
 
-      if ((!digitalRead(octopIN) || operGStates[octop]) && !passGStates[octop])
+      if ((!digitalRead(octopIN) || operGStates[octopus]) && !passGStates[octopus] && passGStates[Time])
       { // octop done > players get escu2
         // octopus has its own hideout, so nothing happens here
         // octopus gives players another part of the shield
+        //if (operGStates[Time]) send250ms(timeOUT); Like this
         digitalWrite(octopOUT, HIGH);
-        operGStates[octop] = true;
+        operGStates[octopus] = true;
         Serial.println("Octopus Done");
         //digitalWrite(octopHD, HIGH); ??
       }
@@ -596,27 +588,29 @@ void loop()
       {
         // note > players get escu3
         if (operGStates[note1]) send250ms(noteOUT);
-        digitalWrite(noteHD, LOW);
         // MP3 FILE
         Serial.println("Note 1 part Done");
         passGStates[note1] = true;
+        //run wind, cloud down
       }
-      if ((!windRFWait || operGStates[wind]) && !passGStates[wind] && passGStates[note1])
+      
+      if ((!windRFWait || operGStates[wind]) && !passGStates[wind] && passGStates[note1]) //disc
       {
-        sendToSlave(lightConAddr, 0x70); // send signal to lightController FastLED ON
-        sendToSlave(motorConAddr, 0x70); // send signal to start blow wind and cloud down
         passGStates[wind] = true;
         Serial.println("Wind RFID Recieved");
+        digitalWrite(noteHD, LOW);
+        // where HD
         // MP3 FILE
-        //FastLED, CloudDOWN, WindBlow
+        // FastLED, CloudDOWN, WindBlow
         // отдать 3 часть щита
       }
 
-      if ((!digitalRead(gheraIN) || operGStates[ghera]) && !passGStates[ghera])
+      if ((!digitalRead(gheraIN) || operGStates[ghera1]) && !passGStates[ghera1])
       { //if all shields in ghera place (gheraLevel = 3 ) gera speaks - open HD3 (seals)
         // ghera is on 'seals' level
-        passGStates[ghera] = true;
+        passGStates[ghera1] = true;
         send250ms(musesOUT);
+        send250ms(gheraOUT);
         Serial.println("SHIELD Done");
       }
     }
@@ -632,23 +626,23 @@ void loop()
     //---------seals --------печати (ДОПИСЫВАТЬ ОТСЮДА)
     if (!sealsDone)
     {
+      if (!digitalRead(firePin) && !fireState)
+      {
+        // turner start
+        fireState = true;
+      }
+      
       if ((!digitalRead(flowrIN) || operGStates[flower1]) && !passGStates[flower1])
       { // first level of flower
-        while (!digitalRead(flowrIN)) {
-          ;
-        }
-        delay(50);
         if (operGStates[flower1]) send250ms(flowrOUT);
         passGStates[flower1] = true;
       }
 
       if ((!digitalRead(flowrIN) || operGStates[flower1]) && passGStates[flower1] && !passGStates[flower2])
       { // second level of flower
-        while (!digitalRead(flowrIN)) {
-          ;
-        }
         delay(50);
         digitalWrite(flowrHD, LOW); // players get seal 1
+        // turner off, light switch
         if (operGStates[flower2]) send250ms(flowrOUT);
         passGStates[flower2] = true;
       }
@@ -661,16 +655,16 @@ void loop()
 
       if ((!digitalRead(arphaIN) || operGStates[arpha]) && !passGStates[arpha])
       { //  signal from arpha received
-        send250ms(musesOUT);  // send signal to shut up the muses
+        send250ms(musesOUT); // send signal to shut up the muses
         digitalWrite(arphaHD, LOW);  // give players seal 3
         passGStates[arpha] = true;
       }
       if (passGStates[flower2] && passGStates[arpha] && passGStates[dionis2])
       {
         sealsDone = true;
-        sendToSlave(motorConroller, 0x80); // master send signal to motor_controller(COLUMNS_UP) to shift columns up
         //how to open HD4 - what pin?
       }
+      //OPEN UNDER
       // if all seals are in ghera place  > gheraLevel send signal to master  >>   sealsDone = true;
       // ((((  ghera speaks > open HD4 (key for underground) ))))
     }// eof_seals
@@ -699,7 +693,6 @@ void loop()
         passGStates[gorgona] = true;
       }
 
-
       /// missing part -- missing pins  -- run on 3 RFIDs on motor_citr or light_contr
       /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       /// they just received the cristals , now they have to install them in a correct place all three
@@ -711,6 +704,7 @@ void loop()
       if (passGStates[zodiak] && passGStates[minot] && passGStates[gorgona])
       { //if all crystals are in place > give shoe  >>> final
         level = 100;
+        //column up motor add!!!!!
         cristaDone = true;
         send250ms(gheraOUT);
       }
