@@ -299,9 +299,9 @@ void setup() {
 
 void loop()
 {
-  if(curHighPin > 0)
+  if (curHighPin > 0)
   {
-    if(millis() - startHighPin > 250)
+    if (millis() - startHighPin > 250)
     {
       digitalWrite(curHighPin, LOW);
       curHighPin = -1;
@@ -386,25 +386,9 @@ void loop()
     //Big request to World
     if (millis() % 100 == 0)
     {
-      if (getWindRFID() && windRFWait)
-      {
-        Serial.println("Wind RFID Recieved");
-        windRFWait = false;
-      }
-
-      if (getRainRFID() && rainRFWait)
-      {
-        Serial.println("Rain RFID Recieved");
-        sendToSlave(motorConAddr, 0x52); // send signal to motor_controller > grapeGrow
-        rainRFWait = false;
-      }
-
-      if (getUnderRFID() && underRFWait)
-      {
-        Serial.println("Rain RFID Recieved");
-        sendToSlave(motorConAddr, 0x55); // send signal to motor_controller > grapeUp..
-        rainRFWait = false;
-      }
+      if (getWindRFID() && windRFWait) windRFWait = false;
+      if (getRainRFID() && rainRFWait) rainRFWait = false;
+      if (getUnderRFID() && underRFWait) underRFWait = false;
     }
     // --------------------
     // ---------molnii--------------
@@ -414,88 +398,87 @@ void loop()
       { // signal from poseidon
         // posei > command via (i2c) to motor_controller activate falling column > players get first part molnii
         // shoud be skippable from master console
-        Serial.println("Poseidon Done");
         passGStates[poseidon] = true;
         if (operGStates[poseidon]) send250ms(poseiOUT);
         digitalWrite(poseiHD, LOW); // Открываем тайник Посейдона, даем игрокам трезубец
+        Serial.println("Poseidon Done");
       }
-      
+
       if ((!digitalRead(triPin) || operGStates[trident]) && !passGStates[trident] && passGStates[poseidon])
       {
         sendToSlave(motorConAddr, 0x51); // Column Down
         // START MP3 - FILE
       }
-      
+
       if (!digitalRead(firePin) && !fireState)
       {
-        sendToSlave(motorConAddr, 0x65); // send signal to motor_controller Column Down
+        sendToSlave(motorConAddr, 0x52); // send signal to motor_controller Column Down
         fireState = true;
       }
-      if (demediolevel == 0)
-      {
-        if ((!digitalRead(demetIN) || operGStates[demetra]) && !passGStates[demetra])
-        { // signal from demetra    ?????????????????????????????
-          passGStates[demetra] = true;
-          if (operGStates[demetra]) send250ms(demetOUT);
-          digitalWrite(demetHD , LOW); // open demetra HD
-          // shoud be skippable from master console
-          Serial.println("Demetra 1 part Done");
-          demediolevel++;
-        }
+
+      if ((!digitalRead(demetIN) || operGStates[demetra]) && !passGStates[demetra])
+      { // shoud be skippable from master console
+        // signal from demetra    ?????????????????????????????
+        passGStates[demetra] = true;
+        if (operGStates[demetra]) send250ms(demetOUT);
+        digitalWrite(demetHD , LOW); // open demetra HD
+        Serial.println("Demetra 1 part Done");
       }
-      else if (demediolevel == 1)
+
+      if ((!rainRFWait || operGStates[rain]) && !passGStates[rain] && passGStates[demetra])
       {
-        if ((!digitalRead(vinemIN) || operGStates[vine]) && !passGStates[vine])
-        {
-          send250ms(dioniOUT);
-          passGStates[vine] = true;
-          Serial.println("Demetra 2 part Done");
-          demediolevel++;
-        }
+        sendToSlave(motorConAddr, 0x53); // send signal to motor_controller > grapeGrow
+        // MP3 FILE
       }
-      else if (demediolevel == 2)
+
+      if ((!digitalRead(vinemIN) || operGStates[vine]) && !passGStates[vine] && passGStates[demetra])
       {
-        if ((!digitalRead(dioniIN) || operGStates[dionis]) && !passGStates[dionis])
-        { // if players gives dionis empty bottle
-          // he will tell them that he dont like empty bottles
-          // if signal from full bottle is received >
-          // dioniHD1 opens > players gets second part molnii
-          passGStates[dionis] = true;
-          digitalWrite(dioniHD1, LOW); // open first dionis vault
-          // MP3 FILE
-          // shoud be skippable from master console
-          Serial.println("Demetra Done");
-          demediolevel++;
-        }
+        passGStates[vine] = true;
+        send250ms(dioniOUT);
+        Serial.println("Demetra 2 part Done");
       }
+
+      if ((!digitalRead(dioniIN) || operGStates[dionis]) && !passGStates[dionis] && passGStates[vine])
+      { // shoud be skippable from master console
+        // if players gives dionis empty bottle
+        // he will tell them that he dont like empty bottles
+        // if signal from full bottle is received >
+        // dioniHD1 opens > players gets second part molnii
+        passGStates[dionis] = true;
+        digitalWrite(dioniHD1, LOW); // open first dionis vault
+        // MP3 FILE
+        Serial.println("Demetra Done");
+      }
+
       // demetra gives players the water > they should put it int the World
       // that will activate Grape grow , if players take grape an put it in the  - vineMkr
       // players will get vine wich they can use to fill bottle for dionis
       // world send signal (i2c) to motor_controller to grape grow
 
       if ((!digitalRead(hercuIN) || operGStates[hercul]) && !passGStates[hercul])
-      { // hercu > players gets third part of molnii
+      { // shoud be skippable from master console
+        // hercu > players gets third part of molnii
         passGStates[hercul] = true;
-        Serial.println("Hercules Done");
         digitalWrite(hercuHD, LOW);
-        // shoud be skippable from master console
+        Serial.println("Hercules Done");
       }
 
       if ((!digitalRead(narciIN) || operGStates[narcis]) && !passGStates[narcis])
       { // narci > pattern information for players
         // nothing happen - narcis only give players information
         // shoud be triggerable from master console
+        if (operGStates[narcis]) send250ms(narciOUT);
+        passGStates[narcis] = true;
         Serial.println("Narcis Done");
       }
 
-      if (!digitalRead(molniIN) || operGStates[molniya])
-      {
+      if ((!digitalRead(molniIN) || operGStates[molniya]) && !passGStates[narcis])
+      {// shoud be triggerable from master console
+        // may add some extra storm effects thru light_controller
         //if all molnii are done >   // gheraLevel = 2 >  speaks > opend HD2 (shields)
-        send250ms(gheraOUT);  // moves ghera to 'shields' level
+        send250ms(gheraOUT);  // moves ghera to 'shields' level, ALWAYS OR BY OPERATOR?
         passGStates[molniya] = true;
         Serial.println("MOLNII Done");
-        // may add some extra storm effects thru light_controller
-        // shoud be triggerable from master console
       }
     }// eof.molniiDone
 
@@ -505,9 +488,7 @@ void loop()
       if ((!digitalRead(afinaIN) || operGStates[afina1]) && !passGStates[afina1])
       { // afina first signal opens afinaHD1
         digitalWrite(afinaHD1, LOW); // here afina gives players a key to open next vault
-        while (!digitalRead(afinaIN)) {
-          ;
-        }
+        while (!digitalRead(afinaIN)) {;}
         delay(300);
         passGStates[afina1] = true;
         Serial.println("Afina 1 part Done");
@@ -516,7 +497,15 @@ void loop()
       if ((!digitalRead(afinaIN) || operGStates[afina1]) && !passGStates[afina2] && passGStates[afina1])
       { // afina  second signal > open afinaHD2  > players get escu1
         digitalWrite(afinaHD2, LOW); // here afina gives players another part of the shield
+        passGStates[afina2] = true;
         Serial.println("Afina 2 part Done");
+      }
+
+      if ((!digitalRead(timeIN) || operGStates[Time]) && !passGStates[Time])
+      {
+        if (operGStates[Time]) send250ms(timeOUT);
+        passGStates[Time] = true;
+        Serial.println("Time part Done");
       }
 
       if ((!digitalRead(octopIN) || operGStates[octop]) && !passGStates[octop])
@@ -524,6 +513,7 @@ void loop()
         // octopus has its own hideout, so nothing happens here
         // octopus gives players another part of the shield
         digitalWrite(octopOUT, HIGH);
+        operGStates[octop] = true;
         Serial.println("Octopus Done");
         //digitalWrite(octopHD, HIGH); ??
       }
@@ -533,6 +523,7 @@ void loop()
         // note > players get escu3
         if (operGStates[note1]) send250ms(noteOUT);
         digitalWrite(noteHD, LOW);
+        // MP3 FILE
         Serial.println("Note 1 part Done");
         passGStates[note1] = true;
       }
@@ -541,15 +532,17 @@ void loop()
         sendToSlave(lightConAddr, 0x70); // send signal to lightController FastLED ON
         sendToSlave(motorConAddr, 0x70); // send signal to start blow wind and cloud down
         passGStates[note2] = true;
+        Serial.println("Wind RFID Recieved");
+        // MP3 FILE
         //FastLED, CloudDOWN, WindBlow
         // отдать 3 часть щита
       }
 
       if ((!digitalRead(gheraIN) || operGStates[ghera]) && !passGStates[ghera])
       { //if all shields in ghera place (gheraLevel = 3 ) gera speaks - open HD3 (seals)
+        // ghera is on 'seals' level
         passGStates[ghera] = true;
         send250ms(musesOUT);
-        // ghera is on 'seals' level
         Serial.println("SHIELD Done");
       }
     }
@@ -562,7 +555,7 @@ void loop()
 
     //eof_shields
 
-    //---------seals --------печати
+    //---------seals --------печати (ДОПИСЫВАТЬ ОТСЮДА)
     if (!sealsDone)
     {
       if ((!digitalRead(flowrIN) || operGStates[flower1]) && !passGStates[flower1])
@@ -571,7 +564,7 @@ void loop()
           ;
         }
         delay(50);
-        if(operGStates[flower1]) send250ms(flowrOUT);
+        if (operGStates[flower1]) send250ms(flowrOUT);
         passGStates[flower1] = true;
       }
 
@@ -582,7 +575,7 @@ void loop()
         }
         delay(50);
         digitalWrite(flowrHD, LOW); // players get seal 1
-        if(operGStates[flower2]) send250ms(flowrOUT);
+        if (operGStates[flower2]) send250ms(flowrOUT);
         passGStates[flower2] = true;
       }
 
@@ -675,7 +668,7 @@ void send250ms(int pin)
 
 void send250ms2(int pin)
 {
-  if(curHighPin > 0) return;
+  if (curHighPin > 0) return;
   curHighPin = pin;
   digitalWrite(curHighPin, HIGH);
   startHighPin = millis();
