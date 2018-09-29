@@ -40,38 +40,38 @@ boolean passGStates[32];
 // lev 0
 //
 /*
-1 Balloon
-2 Press
-3 Gate
-4 Poseidon
-5 Trident
-6 Demetra
-7 Rain
-8 Vine
-9 Dionis-1
-10 Hercules
-11 Narcis
-12 Thunder
-13 Afina-1
-14 Afina-2
-15 Time
-16 Octopus
-17 Note-1
-18 Wind
-19 Ghera-1
-20 Fire
-21 Flower-1
-22 Flower-2
-23 Dionis-2
-24 Ghera-2
-25 Arpha
-26 Zodiak
-27 Minot
-28 Gorgona
-29 Crystals
-31 Light ??
-32 WIN??
- */
+  1 Balloon
+  2 Press
+  3 Gate
+  4 Poseidon
+  5 Trident
+  6 Demetra
+  7 Rain
+  8 Vine
+  9 Dionis-1
+  10 Hercules
+  11 Narcis
+  12 Thunder
+  13 Afina-1
+  14 Afina-2
+  15 Time
+  16 Octopus
+  17 Note-1
+  18 Wind
+  19 Ghera-1
+  20 Fire
+  21 Flower-1
+  22 Flower-2
+  23 Dionis-2
+  24 Ghera-2
+  25 Arpha
+  26 Zodiak
+  27 Minot
+  28 Gorgona
+  29 Crystals
+  31 Light ??
+  32 WIN??
+*/
 //START
 byte start = 0;
 int startPin = 8;
@@ -217,11 +217,9 @@ int gorgoOUT = 30;
 int gorgoHD  = A12;
 
 //CRISTALS
-byte cristals = 29;
-boolean crist1 = false;
-boolean crist2 = false;
-boolean crist3 = false;
-boolean cristaDone = false;
+byte crystals = 29;
+boolean crystStates[3] = {false,false,false};
+boolean crystDone = false;
 
 //UNDERGROUND
 ArdCPZ *cpz2; //Under
@@ -345,12 +343,12 @@ void setup() {
   cpz3 = new ArdCPZ(gateRFPin);
   cpz4 = new ArdCPZ(rainRFPin);
 
-  for(int g = 0; g < 32; g++)
+  for (int g = 0; g < 32; g++)
   {
     operGStates[g] = false;
     passGStates[g] = false;
   }
-  
+
   pinMode(SSerialTxControl, OUTPUT);
   digitalWrite(SSerialTxControl, LOW);  // Init Recieve RS485
   //I2C Start
@@ -481,7 +479,7 @@ void loop()
         // START MP3 - FILE
       }
 
-     
+
       if ((!digitalRead(demetIN) || operGStates[demetra]) && !passGStates[demetra])
       { // shoud be skippable from master console
         // signal from demetra    ?????????????????????????????
@@ -539,7 +537,7 @@ void loop()
       }
 
       if ((!digitalRead(thundIN) || operGStates[thunder]) && !passGStates[thunder])
-      {// shoud be triggerable from master console
+      { // shoud be triggerable from master console
         // may add some extra storm effects thru light_controller
         //if all thundi are done >   // gheraLevel = 2 >  speaks > opend HD2 (shields)
         send250ms(gheraOUT);  // moves ghera to 'shields' level, ALWAYS OR BY OPERATOR?
@@ -591,17 +589,19 @@ void loop()
         // MP3 FILE
         Serial.println("Note 1 part Done");
         passGStates[note1] = true;
+        //digitalWrite(noteHD, LOW);
+        //or
+        //send250ms(noteOUT);
         //run wind, cloud down
       }
-      
+      //Из тайника игроки получают рфид ветра.и когда вставляют его в приемник рфида ветра то включаем ветер на 10-15 секунд, мр3 файл и спускаем облакоИз тайника игроки получают рфид ветра.и когда вставляют его в приемник рфида ветра то включаем ветер на 10-15 секунд, мр3 файл и спускаем облако
       if ((!windRFWait || operGStates[wind]) && !passGStates[wind] && passGStates[note1]) //disc
       {
         passGStates[wind] = true;
         Serial.println("Wind RFID Recieved");
-        digitalWrite(noteHD, LOW);
-        // where HD
+        sendToSlave(motorConAddr, 0x61); // CloudDown
+        sendToSlave(lightConAddr, 0x61); // windBlow 10-15 secs
         // MP3 FILE
-        // FastLED, CloudDOWN, WindBlow
         // отдать 3 часть щита
       }
 
@@ -631,7 +631,7 @@ void loop()
         // turner start
         fireState = true;
       }
-      
+
       if ((!digitalRead(flowrIN) || operGStates[flower1]) && !passGStates[flower1])
       { // first level of flower
         if (operGStates[flower1]) send250ms(flowrOUT);
@@ -670,7 +670,7 @@ void loop()
     }// eof_seals
 
     //---------cristals------
-    if (!cristaDone)
+    if (!passGStates[crystals])
     { // underground level
       if ((!digitalRead(zodiaIN) || operGStates[zodiak]) && !passGStates[zodiak])
       { // if zodia done > players get cryst1
@@ -692,7 +692,19 @@ void loop()
         // click lock
         passGStates[gorgona] = true;
       }
-
+      Wire.requestFrom(lightConAddr, 1);
+      byte lightUnsw = Wire.requestFrom(lightConAddr, 1, false);
+      boolean crystSum = true;
+      if (lightUnsw == 1)
+      {
+        byte unswer = Wire.read();
+        for (int u = 0; u < 3; u++)
+        {
+          crystStates[u] = 1 & (unswer >> 2*u);
+          crystSum &= crystStates[u];
+        }
+        if (crystSum) passGStates[crystals] = true;
+      }
       /// missing part -- missing pins  -- run on 3 RFIDs on motor_citr or light_contr
       /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       /// they just received the cristals , now they have to install them in a correct place all three
@@ -705,7 +717,6 @@ void loop()
       { //if all crystals are in place > give shoe  >>> final
         level = 100;
         //column up motor add!!!!!
-        cristaDone = true;
         send250ms(gheraOUT);
       }
 

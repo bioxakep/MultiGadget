@@ -34,9 +34,8 @@ int wind      = A8; //  AC relay to control Wind blower
 int mainLight = A2; //  main light in game, will turn on after ballon
 int underLight = A7; //  (U light)relay to control underground lighting (not used in game but remotely by operator)
 int extraLight = 41;
-int cryst1    = 23;
-int cryst2    = 24;
-int cryst3    = 25;
+
+int crystPins[3] = {23,24,25};
 
 int flowerR   = 53;
 int flowerB   = 51;
@@ -62,7 +61,7 @@ unsigned long blowTime = 10000;
 boolean windState = false;
 boolean randomWind = false;
 
-boolean cristStates[3] = {false, false, false};
+boolean crystStates[3] = {false, false, false};
 boolean flowerBState = false;
 int turnCount = 0;
 byte dir = 0;
@@ -115,18 +114,21 @@ void setup()
   digitalWrite(underLight, HIGH);
   digitalWrite(extraLight, LOW);
 
-  pinMode(cryst1, INPUT_PULLUP);
-  pinMode(cryst2, INPUT_PULLUP);
-  pinMode(cryst3, INPUT_PULLUP);
+  for(int c = 0; c < 3; c++)
+  {
+    pinMode(crystPins[c], INPUT_PULLUP);
+  }
 
   Serial.println("\nLight Controller v1  \nSep_2018 ");
   Serial.println("Hardware = Mega\n");
 
   testing();
 
-  Serial.println("Crystal 1  = " + String(digitalRead(cryst1)));
-  Serial.println("Crystal 2  = " + String(digitalRead(cryst2)));
-  Serial.println("Crystal 3  = " + String(digitalRead(cryst3)));
+  for(int c = 0; c < 3; c++)
+  {
+    Serial.println("Crystal "+String(c)+"  = " + String(digitalRead(crystPins[c])));
+  }
+  
   Serial.println("turner     = " + String(digitalRead(turner)));
   randomSeed(A0);
 
@@ -192,6 +194,8 @@ void loop() {
     windState = false;
     digitalWrite(wind, windState);
     // какой свет включаем ?
+    // master light
+    // okna 50 % all
   }
   else if (command == 0x80) // Wind Blow 10 secs
   {
@@ -214,6 +218,17 @@ void loop() {
     }
   }
 
+  for(int c = 0; c < 3; c++)
+  {
+    if(!digitalRead(crystPins[c]))
+    {
+      delay(5);
+      if(!digitalRead(crystPins[c]))
+      {
+        crystStates[c] = true;
+      }
+    }
+  }
 
 
   /*
@@ -304,7 +319,7 @@ void requestEvent()
   byte ans = 0x00;
   for (int i = 0; i < 3; i++)
   {
-    if (cristStates[i]) ans |= (1 << i);
+    if (crystStates[i]) ans |= (1 << i*2);
   }
   Wire.write(ans);
 }
