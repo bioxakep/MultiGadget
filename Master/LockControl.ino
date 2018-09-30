@@ -68,13 +68,11 @@ void closeLocks() {
 }
 
 void openOpened()  {
-  if (zodiaState) digitalWrite(zodiaHD, HIGH);
-  if (minotState) digitalWrite(minotHD, HIGH);
-  if (gorgoState) digitalWrite(gorgoHD, HIGH);
+  if (passGStates[zodiak]) digitalWrite(zodiaHD, HIGH);
+  if (passGStates[minot]) digitalWrite(minotHD, HIGH);
+  if (passGStates[gorgona]) digitalWrite(gorgoHD, HIGH);
   delay(200);
   digitalWrite(zodiaHD, LOW);
   digitalWrite(minotHD, LOW);
   digitalWrite(gorgoHD, LOW);
 }
-
-

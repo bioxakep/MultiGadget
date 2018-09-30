@@ -186,16 +186,14 @@ void loop() {
 
   if (command > 0) Serial.println("Command = " + String(command));
 
-  if (command == 0x10) lightOff(); // Выключить весь свет
+  if (command == 0x10) setLightBri(0); // Выключить весь свет
   else if (command == 0x15) randomWind = true;
   else if (command == 0x20) // Baloon passed
   {
     randomWind = false;
     windState = false;
     digitalWrite(wind, windState);
-    // какой свет включаем ?
-    // master light
-    // okna 50 % all
+    setLightBri(125); // okna 50 % all
   }
   else if (command == 0x80) // Wind Blow 10 secs
   {

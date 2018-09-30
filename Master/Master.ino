@@ -1,4 +1,4 @@
-// Ago 09 2018
+// Ago 30.01.2018
 // Master SKY  - Mega
 // I2C master - linked to Motor_Controller & Lights_Controller & World
 // RS-485 interface - Serial1 - link to Admin
@@ -31,145 +31,159 @@ int curHighPin = -1;
 //address i2c
 int lightConAddr = 20;
 int motorConAddr = 21;
-int worldConAddr = 22;
 
 //Gadget states
-boolean operGStates[32];
-boolean passGStates[32];
+boolean operGStates[31];
+boolean passGStates[31];
 
 // lev 0
 //
 /*
-  1 Balloon
-  2 Press
-  3 Gate
-  4 Poseidon
-  5 Trident
-  6 Demetra
-  7 Rain
-  8 Vine
-  9 Dionis-1
-  10 Hercules
-  11 Narcis
-  12 Thunder
-  13 Afina-1
-  14 Afina-2
-  15 Time
-  16 Octopus
-  17 Note-1
-  18 Wind
-  19 Ghera-1
-  20 Fire
-  21 Flower-1
-  22 Flower-2
-  23 Dionis-2
-  24 Ghera-2
-  25 Arpha
-  26 Zodiak
-  27 Minot
-  28 Gorgona
-  29 Crystals
-  31 Light ??
-  32 WIN??
+START (cmds 0x1x)
+Start 0x10 both, 0x11 light (no OP Control)
+0 Balloon 0x12
+1 Press none
+2 Gate 0x13
+
+LEVEL 90
+
+THUNDER (cmds 0x2x)
+3 Poseidon
+4 Trident 0x21 motor
+5 Demetra
+6 Rain 0x22 motor
+7 Vine
+8 Dionis-1
+9 Hercules
+10 Narcis
+11 Thunder
+
+SHIELDS (cmds 0x3x)
+12 Afina-1
+13 Afina-2
+14 Time
+15 Octopus
+16 Note
+17 Wind  0x31 both
+18 Ghera-1
+
+SEALS (cmds 0x4x)
+19 Fire 0x41 light turner
+20 Flower-1
+21 Flower-2 0x42 turner off
+22 Dionis-2
+23 Arpha
+24 Ghera-2
+
+UNDERGROUND (cmds 0x5x)
+25 Under (RFID wait) 0x51 motor
+26 Zodiak
+27 Minot
+28 Gorgona
+29 Crystals 0x55 light, 0x99 motor
+30 Light
+
+END (cmds 0x6x)
+31 WIN
 */
+String gadgetNames[31] = {"Baloon", "Press", "Gate", "Hercules", "Poseidon", "Trident", "Demetra-1", "Rain", "Vine", "Dionis-1", "Narcis", "Thunder", "Afina-1", "Afina-2", "Time", "Octopus", "Note", "Wind", "Ghera-1", "Fire", "Flower-1", "Flower-2", "Arpha", "Dionis-2", "Ghera-2", "Zodiak", "Minot", "Gorgona", "Cristals", "Light", "End"};
 //START
-byte start = 0;
 int startPin = 8;
 boolean startStates[2] = {HIGH, HIGH};
 
 //BALOON
-byte baloon = 1;
+byte baloon = 0;
 int balloIN  = 50;   // a.
 int balloOUT = 44;
 
 //PRESS
-byte presss = 2;
+byte presss = 1;
 int pressIN  = 48;   // b.
 int pressOUT = 42;
 
 //GATE
-byte gate = 3;
+ArdCPZ *cpz3; // Gate RFIDReader
+byte gate = 2;
 int gateRFPin   = 10;   // RFID key to gate
 int gateBeacon  = 384;
-ArdCPZ *cpz3; //Gate
 boolean gateRFWait = true;
 
 //POSEIDON
-byte poseidon = 4;
+byte poseidon = 3;
 int poseiIN  = 53;   // h.
 int poseiOUT = 43;
 int poseiHD = 21; // CHOOSE PIN
 
 //TRIDENT
-byte trident = 5;
+byte trident = 4;
 boolean tridentWait = true;
 
 //DEMETRA
-byte demetra = 6;
+byte demetra = 5;
 int demetIN  = 26;   // d.
 int demetOUT = 38;
 int demetHD  = A1;
 
 //RAIN
-byte rain = 7;
+byte rain = 6;
 ArdCPZ *cpz4; //Rain
 int rainBeacon  = 410;
 boolean rainRFWait = true;
 
 //VINE
-byte vine = 8;
+byte vine = 7;
 int vinemIN  = 24;   //e.
 int vinemOUT = 36;
 
 //DIONIS
-byte dionis1 = 9;
-byte dionis2 = 23;
+byte dionis1 = 8;
+byte dionis2 = 22;
 int dioniIN  = 22;   //f.
 int dioniOUT = 34;
 int dioniHD1 = A2;   // piston
 int dioniHD2 = A3;
 
 //HERCULES
-byte hercul = 10;
+byte hercul = 9;
 int hercuIN  = 7;
 int hercuHD  = A4;
 
 //NARCIS
-byte narcis = 11;
+byte narcis = 10;
 int narciIN  = 51;   // i.  /// video seen
 int narciOUT = 41;          /// launch video
 
 //THUNDER
-byte thunder = 12;
+byte thunder = 11;
 int thundIN  = 52;   // g.
 int thundOUT = 32;
 
 //AFINA
-byte afina1 = 13;
-byte afina2 = 14;
+byte afina1 = 12;
+byte afina2 = 13;
 int afinaIN  = 27;   // m.
 int afinaOUT = 35;   //
 int afinaHD1 = A7;
 int afinaHD2 = A8;
 
 //TIME
-byte Time = 15;
+byte Time = 14;
 int timeOUT = A5;
 int timeIN = 46;
 
 //OCTOPUS
-byte octopus = 16;
+byte octopus = 15;
 int octopIN  = 47;   // k.
 int octopOUT = 37;
 
 //NOTE
-byte note1 = 17;
+byte note = 16;
 int noteIN   = 49;   // j.
 int noteOUT  = 39;
 int noteHD   = A6;
 
 //WIND
-byte wind = 18;
+byte wind = 17;
 ArdCPZ *cpz1; //Wind
 int windBeacon = 499;
 boolean windRFWait = true;
@@ -179,25 +193,31 @@ int musesIN  = 23;   // o. to change their messages
 int musesOUT = 31;   // correct pattern
 
 //GHERA
-byte ghera1 = 19;
+byte ghera1 = 18;
 byte ghera2 = 24;
 int gheraIN   = 4;
 int gheraOUT  = 2;
 
 //FIRE
-byte fire = 20;
+byte fire = 19;
 
 //FLOWERS
-byte flower1 = 21;
-byte flower2 = 22;
+byte flower1 = 20;
+byte flower2 = 21;
 int flowrIN  = 25;
 int flowrOUT = 33;   //n.
 int flowrHD  = A13;
 
 //ARPHA
-byte arpha = 25;
+byte arpha = 23;
 int arphaIN  = 6;
 int arphaHD  = A9;
+
+//UNDERGROUND
+byte under = 25;
+ArdCPZ *cpz2; //Under
+int underBeacon = 328;
+boolean underRFWait = true;
 
 //ZODIAK
 byte zodiak = 26;
@@ -218,15 +238,15 @@ int gorgoHD  = A12;
 
 //CRISTALS
 byte crystals = 29;
-boolean crystStates[3] = {false,false,false};
+boolean crystStates[3] = {false, false, false};
 boolean crystDone = false;
+boolean crystReciever = false;
+int crystRecBut = 16;
 
-//UNDERGROUND
-ArdCPZ *cpz2; //Under
-int underBeacon = 328;
-boolean underRFWait = true;
+byte light = 30;
+byte win = 31;
 
-int totalGadgets = 29;
+int totalGadgets = 31;
 
 int freeIN = 46;
 int freeOUT = 40;
@@ -242,10 +262,6 @@ boolean seal1  = false;
 boolean seal2  = false;
 boolean seal3  = false;
 boolean sealsDone  = false;
-
-boolean zodiaState = false;
-boolean minotState = false;
-boolean gorgoState = false;
 
 unsigned long startHighPin = 0;
 
@@ -343,7 +359,7 @@ void setup() {
   cpz3 = new ArdCPZ(gateRFPin);
   cpz4 = new ArdCPZ(rainRFPin);
 
-  for (int g = 0; g < 32; g++)
+  for (int g = 0; g < totalGadgets; g++)
   {
     operGStates[g] = false;
     passGStates[g] = false;
@@ -366,7 +382,17 @@ void setup() {
 
 void loop()
 {
-  if (curHighPin > 0)
+  startStates[0] = debounce(startStates[1], startPin); // READ START BUTTON
+  
+  if(level > 10 && !startStates[0] && startStates[1]) // SKIP BY START BUTTON
+  {
+    int curGadget = 0;
+    while(passGStates[curGadget]) {curGadget++;}
+    operGStates[curGadget] = true;
+    Serial.println("Gadget #" + String(gadgetNames[curGadget]) + " passed by start button");
+  }
+  
+  if (curHighPin > 0) // WATCH FOR ACTIVE PIN
   {
     if (millis() - startHighPin > 250)
     {
@@ -374,10 +400,11 @@ void loop()
       curHighPin = -1;
     }
   }
+  
   getOperSkips();
+  
   if (level == 10) // START
   {
-    startStates[0] = debounce(startStates[1], startPin);
     if (!startStates[0] && startStates[1])
     {
       start ++;   // wait for prestart signal ( any RFID from startRF )
@@ -398,14 +425,13 @@ void loop()
         //start game
         delay(200);
         //send random wind to lightController
-        sendToSlave(lightConAddr, 0x15); // random Wind
+        sendToSlave(lightConAddr, 0x11); // random Wind
         Serial.println("Go to level 20");
-        level = 20;
+        level = 12;
       }
-    }
-    startStates[1] = startStates[0];
+    }    
   }
-  else if (level == 20)
+  else if (level == 12)
   {
     if ((!digitalRead(balloIN) || operGStates[baloon]) && !passGStates[baloon]) //signal from finished ballon received
     {
@@ -413,28 +439,28 @@ void loop()
       if (operGStates[baloon]) send250ms(balloOUT);
       Serial.println("Ballon signal recieved. Turn on the lights ad roll up the curtain");
       // send (i2c) signal to motor_controller >rollUp and light_controller  >lights and stop wind
-      sendToSlave(lightConAddr, 0x20); // wind off
+      sendToSlave(lightConAddr, 0x12); // wind off
       delay(10); // replace between
-      sendToSlave(motorConAddr, 0x20);
+      sendToSlave(motorConAddr, 0x12);
       send250ms(pressOUT);
-      level = 30;
+      level = 13;
       Serial.println("Go to level 30");
     }
     // if players never finish ballon, operator can skip it here (send signal to ballon)
   }
-  else if (level == 30)
+  else if (level == 13)
   {
     if ((!digitalRead(pressIN) || operGStates[presss]) && !passGStates[presss]) //victory signal from press received
     {
       passGStates[presss] = true;
       if (operGStates[presss]) send250ms(pressOUT);
       Serial.println("Press signal recieved. Press gave players the RFID key to the gate ");
-      level = 40;
+      level = 14;
       Serial.println("Go to level 40");
     }
     // if players never finish press, operator can skip it here (send signal to press)
   }
-  else if (level == 40)
+  else if (level == 14)
   {
     gateRFWait = !getGateRFID();
     Serial.println("gateWait = " + String(gateRFWait));
@@ -442,15 +468,15 @@ void loop()
     if ((!gateRFWait || operGStates[gate]) && !passGStates[gate])
     {
       passGStates[gate] = true;
-      sendToSlave(motorConAddr, 0x40); // send signal to motor_controller >openGate
+      sendToSlave(motorConAddr, 0x13); // send signal to motor_controller >openGate
       //send250ms(gheraOUT);  // ghera start speaking, 'thunder' level
       //door1 10s отдельно
-      level = 50;
+      level = 90;
       Serial.println("Go to level 50");
       //START MP3 FILE
     }// if players never find the key, operator can skip it here > gateOpen = true;
   }
-  else if (level == 50)
+  else if (level == 90)
   { // on level 50 all events may be done in any order/sequence
     //Big request to World
     if (millis() % 100 == 0)
@@ -475,7 +501,7 @@ void loop()
 
       if ((!digitalRead(triPin) || operGStates[trident]) && !passGStates[trident] && passGStates[poseidon])
       {
-        sendToSlave(motorConAddr, 0x51); // Column Down
+        sendToSlave(motorConAddr, 0x21); // Column Down
         // START MP3 - FILE
       }
 
@@ -491,7 +517,7 @@ void loop()
 
       if ((!rainRFWait || operGStates[rain]) && !passGStates[rain] && passGStates[demetra])
       {
-        sendToSlave(motorConAddr, 0x53); // send signal to motor_controller > grapeGrow
+        sendToSlave(motorConAddr, 0x22); // send signal to motor_controller > grapeGrow
         // MP3 FILE
       }
 
@@ -576,33 +602,29 @@ void loop()
         // octopus has its own hideout, so nothing happens here
         // octopus gives players another part of the shield
         //if (operGStates[Time]) send250ms(timeOUT); Like this
-        digitalWrite(octopOUT, HIGH);
-        operGStates[octopus] = true;
+        if(operGStates[octopus]) send250ms(octopOUT);
+        passGStates[octopus] = true;
         Serial.println("Octopus Done");
-        //digitalWrite(octopHD, HIGH); ??
       }
 
-      if ((!digitalRead(noteIN) || operGStates[note1]) && !passGStates[note1])
+      if ((!digitalRead(noteIN) || operGStates[note]) && !passGStates[note])
       {
         // note > players get escu3
-        if (operGStates[note1]) send250ms(noteOUT);
+        if (operGStates[note]) send250ms(noteOUT);
         // MP3 FILE
-        Serial.println("Note 1 part Done");
-        passGStates[note1] = true;
-        //digitalWrite(noteHD, LOW);
-        //or
-        //send250ms(noteOUT);
-        //run wind, cloud down
+        Serial.println("Note Done");
+        passGStates[note] = true;
       }
-      //Из тайника игроки получают рфид ветра.и когда вставляют его в приемник рфида ветра то включаем ветер на 10-15 секунд, мр3 файл и спускаем облакоИз тайника игроки получают рфид ветра.и когда вставляют его в приемник рфида ветра то включаем ветер на 10-15 секунд, мр3 файл и спускаем облако
-      if ((!windRFWait || operGStates[wind]) && !passGStates[wind] && passGStates[note1]) //disc
-      {
+      
+      if ((!windRFWait || operGStates[wind]) && !passGStates[wind] && passGStates[note]) //disc
+      {//Из тайника игроки получают рфид ветра.и когда вставляют его в приемник рфида ветра то включаем ветер на 10-15 секунд, 
+        //мр3 файл и спускаем облакоИз тайника игроки получают рфид ветра.и когда вставляют его в приемник рфида 
+        //ветра то включаем ветер на 10-15 секунд, мр3 файл и спускаем облако
         passGStates[wind] = true;
         Serial.println("Wind RFID Recieved");
-        sendToSlave(motorConAddr, 0x61); // CloudDown
-        sendToSlave(lightConAddr, 0x61); // windBlow 10-15 secs
+        sendToSlave(motorConAddr, 0x31); // CloudDown - отдать 3 часть щита
+        sendToSlave(lightConAddr, 0x31); // windBlow 10-15 secs
         // MP3 FILE
-        // отдать 3 часть щита
       }
 
       if ((!digitalRead(gheraIN) || operGStates[ghera1]) && !passGStates[ghera1])
@@ -629,6 +651,7 @@ void loop()
       if (!digitalRead(firePin) && !fireState)
       {
         // turner start
+        sendToSlave(lightConAddr, 0x41); //turner start
         fireState = true;
       }
 
@@ -642,7 +665,7 @@ void loop()
       { // second level of flower
         delay(50);
         digitalWrite(flowrHD, LOW); // players get seal 1
-        // turner off, light switch
+        sendToSlave(lightConAddr, 0x42); // turner off, light switch
         if (operGStates[flower2]) send250ms(flowrOUT);
         passGStates[flower2] = true;
       }
@@ -661,63 +684,83 @@ void loop()
       }
       if (passGStates[flower2] && passGStates[arpha] && passGStates[dionis2])
       {
-        sealsDone = true;
-        //how to open HD4 - what pin?
+        if ((!digitalRead(gheraIN) || operGStates[ghera2]) && !passGStates[ghera2])
+        {
+          if(operGStates[ghera2]) send250ms(gheraOUT);
+          passGStates[ghera2] = true;
+          sealsDone = true;
+          // if all seals are in ghera place  > gheraLevel send signal to master  >>   sealsDone = true;
+          // ((((  ghera speaks > open HD4 (key for underground) ))))
+        }
       }
       //OPEN UNDER
-      // if all seals are in ghera place  > gheraLevel send signal to master  >>   sealsDone = true;
-      // ((((  ghera speaks > open HD4 (key for underground) ))))
     }// eof_seals
 
     //---------cristals------
     if (!passGStates[crystals])
     { // underground level
-      if ((!digitalRead(zodiaIN) || operGStates[zodiak]) && !passGStates[zodiak])
+      
+      if ((!underRFWait || operGStates[under]) && !passGStates[under])
+      {
+        sendToSlave(motorConAddr, 0x51);
+        passGStates[under] = true;
+      }
+      
+      if ((!digitalRead(zodiaIN) || operGStates[zodiak]) && !passGStates[zodiak] && passGStates[under])
       { // if zodia done > players get cryst1
         // shoud be skippable from master console
         // click lock
         passGStates[zodiak] = true;
       }
 
-      if ((!digitalRead(minotIN) || operGStates[minot]) && !passGStates[minot])
+      if ((!digitalRead(minotIN) || operGStates[minot]) && !passGStates[minot] && passGStates[under])
       { // if minotavr done > players get cryst2
         // shoud be skippable from master console
         // click lock
         passGStates[minot] = true;
       }
 
-      if ((!digitalRead(gorgoIN) || operGStates[gorgona]) && !passGStates[gorgona])
+      if ((!digitalRead(gorgoIN) || operGStates[gorgona]) && !passGStates[gorgona] && passGStates[under])
       { // if gorgona done > players get cryst3
         // shoud be skippable from master console
         // click lock
         passGStates[gorgona] = true;
       }
-      Wire.requestFrom(lightConAddr, 1);
-      byte lightUnsw = Wire.requestFrom(lightConAddr, 1, false);
-      boolean crystSum = true;
-      if (lightUnsw == 1)
-      {
-        byte unswer = Wire.read();
-        for (int u = 0; u < 3; u++)
-        {
-          crystStates[u] = 1 & (unswer >> 2*u);
-          crystSum &= crystStates[u];
-        }
-        if (crystSum) passGStates[crystals] = true;
-      }
-      /// missing part -- missing pins  -- run on 3 RFIDs on motor_citr or light_contr
-      /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      /// they just received the cristals , now they have to install them in a correct place all three
-      //  crist1 = true;
-      //  crist2 = true;
-      //  crist3 = true;
-      /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-      if (passGStates[zodiak] && passGStates[minot] && passGStates[gorgona])
-      { //if all crystals are in place > give shoe  >>> final
-        level = 100;
-        //column up motor add!!!!!
-        send250ms(gheraOUT);
+      if (passGStates[gorgona] && passGStates[minot] && passGStates[zodiak])
+      {
+        if (crystReciever)
+        {
+          Wire.requestFrom(lightConAddr, 1);
+          byte lightUnsw = Wire.requestFrom(lightConAddr, 1, false);
+          boolean crystSum = true;
+          if (lightUnsw == 1)
+          {
+            byte unswer = Wire.read();
+            for (int u = 0; u < 3; u++)
+            {
+              crystStates[u] = 1 & (unswer >> 2 * u);
+              crystSum &= crystStates[u];
+            }
+            if (crystSum) passGStates[crystals] = true;
+          }
+          if (passGStates[crystals])
+          {
+            level = 100;
+            //column up motor add!!!!!
+            sendToSlave(motorConAddr, 0x99);
+            send250ms(gheraOUT);
+          }
+        }
+        else
+        {
+          if(!digitalRead(crystRecBut)) 
+          {
+            //Open Cryst Reciever throw lightController
+            sendToSlave(lightConAddr, 0x55);
+            crystReciever = true;
+          }
+        }
       }
 
       if (millis() % 5000 == 0) openOpened();  // open (and re-open if closed) underground locks
@@ -729,6 +772,7 @@ void loop()
     // game over - victory !
   }
   sendGStates();
+  startStates[1] = startStates[0];
 } // LOOP END
 
 void sendToSlave(int address, byte data)
@@ -752,4 +796,3 @@ void send250ms2(int pin)
   digitalWrite(curHighPin, HIGH);
   startHighPin = millis();
 }
-
