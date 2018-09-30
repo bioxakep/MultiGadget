@@ -210,8 +210,7 @@ void loop() {
   if (randomWind) randWind();
   else if (windState) // for stop wind after comand 0x80
   {
-    unsigned long tick = millis();
-    if (tick - startWind > blowTime)
+    if (millis() - startWind > blowTime)
     {
       windState = false;
       digitalWrite(wind, windState);

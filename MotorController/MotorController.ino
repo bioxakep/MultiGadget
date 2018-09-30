@@ -132,7 +132,6 @@ void loop() {
     //grapeDown();
   } else     digitalWrite(grapeDN, LOW);
 
-
 //Column UP auto
   if (digitalRead(remote3)==LOW &&  columnOnTop == false) {            // manual  control by radio remote control
     Serial.println("\nRemote control (3) column up");
@@ -143,10 +142,6 @@ void loop() {
     columnOnBot = false;   
     // command = 0x0x;
   } else    digitalWrite(columnUP, LOW);
-
-
-
-
 
   if (digitalRead(remote4)==LOW &&  columnOnBot == false) {           // manual  control by radio remote control
     Serial.println("\nRemote control (4) column down");
