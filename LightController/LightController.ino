@@ -303,10 +303,9 @@ void loop() {
 
 void receiveEvent(int howMany)
 {
-  if (Wire.available()) // пройтись по всем до последнего
+  if (Wire.available() > 0) // пройтись по всем до последнего
   {
-    byte c = Wire.read();    // принять байт как символ
-    if (c > 0x00 && c <= 0x99) command = c;
+    command = Wire.read();    // принять байт как символ
   }
   /*
      commands
