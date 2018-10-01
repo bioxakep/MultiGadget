@@ -61,6 +61,7 @@ unsigned long blowTime = 10000;
 boolean windState = false;
 boolean randomWind = false;
 
+int crystRecPin = 48;
 boolean crystStates[3] = {false, false, false};
 boolean flowerBState = false;
 int turnCount = 0;
@@ -122,7 +123,7 @@ void setup()
   Serial.println("\nLight Controller v1  \nSep_2018 ");
   Serial.println("Hardware = Mega\n");
 
-  testing();
+  //testing();
 
   for(int c = 0; c < 3; c++)
   {
@@ -185,30 +186,40 @@ void loop() {
   }
 
   if (command > 0) Serial.println("Command = " + String(command));
-  /*
+  
   if (command == 0x10) setLightBri(0); // Выключить весь свет
-  else if (command == 0x15) randomWind = true;
-  else if (command == 0x20) // Baloon passed
+  else if (command == 0x11) randomWind = true;
+  else if (command == 0x12) // Baloon passed
   {
     randomWind = false;
     windState = false;
     digitalWrite(wind, windState);
     setLightBri(125); // okna 50 % all
   }
-  else if (command == 0x80) // Wind Blow 10 secs
+  else if(command == 0x31)
   {
+    // wind for 10-15 secs
     startWind = millis();
     windState = true;
     digitalWrite(wind, windState);
   }
-  else if (command == 0x90) moonSun = true;
-  */
-  if(command = 0x31)
+  else if(command == 0x41)
   {
-    digitalWrite(wind, HIGH);
+    // wind for 10-15 secs
+    moonSun = true;
+  }
+  else if(command == 0x42)
+  {
+    // wind for 10-15 secs
+    moonSun = false;
+    setLightBri(0); // okna 50 % all
+  }
+  else if(command == 0x55)
+  {
+    digitalWrite(crystRecPin, LOW);
   }
   command = 0;
-
+  
   if (randomWind) randWind();
   else if (windState) // for stop wind after comand 0x80
   {
@@ -221,9 +232,9 @@ void loop() {
 
   for(int c = 0; c < 3; c++)
   {
-    if(!digitalRead(crystPins[c]))
+    if(!digitalRead(crystPins[c]) && !crystStates[c])
     {
-      delay(5);
+      delay(10);
       if(!digitalRead(crystPins[c]))
       {
         crystStates[c] = true;

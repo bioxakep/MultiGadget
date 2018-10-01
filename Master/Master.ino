@@ -469,7 +469,7 @@ void loop()
     if ((!gateRFWait || operGStates[gate]) && !passGStates[gate])
     {
       passGStates[gate] = true;
-      sendToSlave(motorConAddr, 0x13); // send signal to motor_controller >openGate
+      sendToSlave(motorConAddr, 0x14); // send signal to motor_controller >openGate
       //send250ms(gheraOUT);  // ghera start speaking, 'thunder' level
       //door1 10s отдельно
       level = 90;
@@ -496,7 +496,7 @@ void loop()
         // shoud be skippable from master console
         passGStates[poseidon] = true;
         if (operGStates[poseidon]) send250ms(poseiOUT);
-        digitalWrite(poseiHD, LOW); // Открываем тайник Посейдона, даем игрокам трезубец
+        sendToSlave(motorConAddr, 0x20); // Открываем тайник Посейдона, даем игрокам трезубец
         Serial.println("Poseidon Done");
       }
 
@@ -744,6 +744,7 @@ void loop()
           if (lightUnsw == 1)
           {
             byte unswer = Wire.read();
+            Serial.println("CRYST STATES= "+String(unswer, BIN));
             for (int u = 0; u < 3; u++)
             {
               crystStates[u] = 1 & (unswer >> 2 * u);

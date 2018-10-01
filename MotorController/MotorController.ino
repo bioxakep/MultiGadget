@@ -155,11 +155,8 @@ void loop() {
   } else     digitalWrite(columnDN, LOW);
 
   //TEST
-  if (command == 0x31)
-  {
-    digitalWrite(13, HIGH);
-  }
-  /*
+  
+  
   // receives command from master via i2c
   if (command == 0x10)
   { 
@@ -169,8 +166,7 @@ void loop() {
     columnUp();
     Serial.println("Done.");
   }
-  
-  if (command == 0x20)
+  else if (command == 0x12)
   { 
     Serial.print("\ncurtainUP start...");
     digitalWrite(curtainUP, HIGH);
@@ -178,28 +174,56 @@ void loop() {
     digitalWrite(curtainUP, LOW);
     Serial.println("Done.");
   }
-
-  //level 30 without command
-  
-  if (command == 0x40)
+  else if (command == 0x14)
   { 
     Serial.print("\nGate UP start...");
     gateUp();
     Serial.println("Done.");
   }
-
-  if (command == 0x50)
-  {
+  else if(command == 0x20)
+  { // Тайник посейдона
+    poseiVaultOpen();
+  }
+  else if(command == 0x21)
+  {//sendToSlave(motorConAddr, 0x21); // Column Down
+    Serial.print("\nColumn Down start...");
+    columnDown();
+    Serial.println("Done.");
+  }
+  else if(command == 0x22)
+  {//sendToSlave(motorConAddr, 0x22); // send signal to motor_controller > grapeGrow
     Serial.print("\nGrape UP start...");
     grapeUp();
     Serial.println("Done.");
   }
+  else if (command == 0x31)
+  {
+    //cloudDown
+    Serial.print("\nCloud Down start...");
+    cloudDown();
+    Serial.println("Done.");
+  }
+  else if (command == 0x51)
+  { //Under Open
+    //cloudDown
+    digitalWrite(underDoor, LOW);
+  }
+/*
+  //level 30 without command
+  
+  if (command == 0x40)
+  { 
+    
+  }
+
+  if (command == 0x50)
+  {
+    
+  }
   
   if (command == 0x51) // Trident
   {
-    Serial.print("\nColumn Down start...");
-    columnDown();
-    Serial.println("Done.");
+    
   }
 
   if (command == 0x52) // Grape Grow
