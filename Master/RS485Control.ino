@@ -6,7 +6,7 @@ void getOperSkips()
     byte inByte = Serial1.read();
     if (inByte == 0xBB)
     {
-      for (int i = 0; i < 29; i++)
+      for (int i = 0; i < 31; i++)
       {
         input[i] = Serial1.read();
         if(input[i]) operGStates[i] = true;
@@ -23,7 +23,7 @@ void sendGStates() // Проверяем прошел ли игрок какой
   byte chkSum = 0;
   digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
   Serial1.write(0xAA);
-  for (int d = 0; d < 32; d++)
+  for (int d = 0; d < 31; d++)
   {
     Serial1.write(passGStates[d]);
     if(!operGStates[d] && passGStates[d])
