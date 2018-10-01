@@ -504,6 +504,7 @@ void loop()
       {
         sendToSlave(motorConAddr, 0x21); // Column Down
         // START MP3 - FILE
+        passGStates[trident]=true;
       }
 
 
