@@ -651,11 +651,11 @@ void loop()
     //---------seals --------печати (ДОПИСЫВАТЬ ОТСЮДА)
     if (!sealsDone)
     {
-      if (!digitalRead(firePin) && !fireState)
+      if ((!digitalRead(firePin) || operGStates[fire]) && !passGStates[fire])
       {
         // turner start
         sendToSlave(lightConAddr, 0x41); //turner start
-        fireState = true;
+        passGStates[fire] = true;
       }
 
       if ((!digitalRead(flowrIN) || operGStates[flower1]) && !passGStates[flower1])
@@ -664,7 +664,7 @@ void loop()
         passGStates[flower1] = true;
       }
 
-      if ((!digitalRead(flowrIN) || operGStates[flower1]) && passGStates[flower1] && !passGStates[flower2])
+      if ((!digitalRead(flowrIN) || operGStates[flower2]) && !passGStates[flower2] && passGStates[flower1])
       { // second level of flower
         delay(50);
         digitalWrite(flowrHD, LOW); // players get seal 1
