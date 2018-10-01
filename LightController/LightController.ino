@@ -185,7 +185,7 @@ void loop() {
   }
 
   if (command > 0) Serial.println("Command = " + String(command));
-
+  /*
   if (command == 0x10) setLightBri(0); // Выключить весь свет
   else if (command == 0x15) randomWind = true;
   else if (command == 0x20) // Baloon passed
@@ -202,8 +202,12 @@ void loop() {
     digitalWrite(wind, windState);
   }
   else if (command == 0x90) moonSun = true;
+  */
+  if(command = 0x31)
+  {
+    digitalWrite(wind, HIGH);
+  }
   command = 0;
-
 
   if (randomWind) randWind();
   else if (windState) // for stop wind after comand 0x80
@@ -226,7 +230,6 @@ void loop() {
       }
     }
   }
-
 
   /*
 
