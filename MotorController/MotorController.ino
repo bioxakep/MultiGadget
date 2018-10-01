@@ -107,6 +107,7 @@ void setup() {
   Serial.println("\nMotor Controller v1  \n21_AGO_2018 ");
   Serial.println("Hardware = Mega\n");
   checkInputs();
+  digitalWrite(13, LOW);
 }
 
 void loop() {
@@ -153,6 +154,12 @@ void loop() {
     
   } else     digitalWrite(columnDN, LOW);
 
+  //TEST
+  if (command == 0x31)
+  {
+    digitalWrite(13, HIGH);
+  }
+  /*
   // receives command from master via i2c
   if (command == 0x10)
   { 
@@ -162,7 +169,7 @@ void loop() {
     columnUp();
     Serial.println("Done.");
   }
-
+  
   if (command == 0x20)
   { 
     Serial.print("\ncurtainUP start...");
@@ -201,7 +208,7 @@ void loop() {
     grapeUp();
     Serial.println("Done.");
   }
-/*
+
   if (command == 0x07) { // column up  - top sensor available
     Serial.println("\nColumn UP start...");
     columnUp();
