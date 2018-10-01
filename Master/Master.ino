@@ -628,6 +628,7 @@ void loop()
         windRFWait = false;
         Serial.println("Wind RFID Recieved");
         sendToSlave(motorConAddr, 0x31); // CloudDown - отдать 3 часть щита
+        delay(10);
         sendToSlave(lightConAddr, 0x31); // windBlow 10-15 secs
         // MP3 FILE
       }
