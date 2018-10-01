@@ -427,7 +427,7 @@ void loop()
         delay(200);
         //send random wind to lightController
         sendToSlave(lightConAddr, 0x11); // random Wind
-        Serial.println("Go to level 20");
+        Serial.println("Go to level 12");
         level = 12;
       }
     }    
@@ -445,7 +445,7 @@ void loop()
       sendToSlave(motorConAddr, 0x12);
       send250ms(pressOUT);
       level = 13;
-      Serial.println("Go to level 30");
+      Serial.println("Go to level 13");
     }
     // if players never finish ballon, operator can skip it here (send signal to ballon)
   }
@@ -457,15 +457,15 @@ void loop()
       if (operGStates[presss]) send250ms(pressOUT);
       Serial.println("Press signal recieved. Press gave players the RFID key to the gate ");
       level = 14;
-      Serial.println("Go to level 40");
+      Serial.println("Go to level 14");
     }
     // if players never finish press, operator can skip it here (send signal to press)
   }
   else if (level == 14)
   {
     gateRFWait = !getGateRFID();
-    Serial.println("gateWait = " + String(gateRFWait));
-    Serial.println("gatePassState = " + String(passGStates[gate]));
+    //Serial.println("gateWait = " + String(gateRFWait));
+    //Serial.println("gatePassState = " + String(passGStates[gate]));
     if ((!gateRFWait || operGStates[gate]) && !passGStates[gate])
     {
       passGStates[gate] = true;
@@ -473,7 +473,7 @@ void loop()
       //send250ms(gheraOUT);  // ghera start speaking, 'thunder' level
       //door1 10s отдельно
       level = 90;
-      Serial.println("Go to level 50");
+      Serial.println("Go to level 90");
       //START MP3 FILE
     }// if players never find the key, operator can skip it here > gateOpen = true;
   }
@@ -522,6 +522,7 @@ void loop()
         sendToSlave(motorConAddr, 0x22); // send signal to motor_controller > grapeGrow
         // MP3 FILE
         passGStates[rain] = true;
+        rainRFWait = false;
       }
 
       if ((!digitalRead(vinemIN) || operGStates[vine]) && !passGStates[vine] && passGStates[demetra] && passGStates[rain])
@@ -624,6 +625,7 @@ void loop()
         //мр3 файл и спускаем облакоИз тайника игроки получают рфид ветра.и когда вставляют его в приемник рфида 
         //ветра то включаем ветер на 10-15 секунд, мр3 файл и спускаем облако
         passGStates[wind] = true;
+        windRFWait = false;
         Serial.println("Wind RFID Recieved");
         sendToSlave(motorConAddr, 0x31); // CloudDown - отдать 3 часть щита
         sendToSlave(lightConAddr, 0x31); // windBlow 10-15 secs
@@ -707,6 +709,7 @@ void loop()
       {
         sendToSlave(motorConAddr, 0x51);
         passGStates[under] = true;
+        underRFWait = false;
       }
       
       if ((!digitalRead(zodiaIN) || operGStates[zodiak]) && !passGStates[zodiak] && passGStates[under])
