@@ -482,11 +482,11 @@ void loop()
     //Big request to World
     if (millis() % 100 == 0)
     {
-      if (getWindRFID() && windRFWait) windRFWait = false;
-      if (getRainRFID() && rainRFWait) rainRFWait = false;
-      if (getUnderRFID() && underRFWait) underRFWait = false;
+      if (windRFWait) windRFWait = !getWindRFID();
+      if (rainRFWait) rainRFWait = !getRainRFID();
+      if (underRFWait) underRFWait = !getUnderRFID();
     }
-    // --------------------
+    
     // ---------thunder--------------
     if (!thunderDone)
     {
