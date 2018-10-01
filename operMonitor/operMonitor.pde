@@ -36,7 +36,7 @@ boolean calculated = false;
 
 int[] levGadCount = {3, 9, 7, 6, 5, 1};
 String[] levelNames = {"START", "THUNDER", "SHIELDS", "SEALS", "UNDERGROUND", "END"};
-String[] gadgetNames = {"Baloon", "Press", "Gate", "Hercules", "Poseidon", "Trident", "Demetra-1", "Rain", "Vine", "Dionis-1", "Narcis", "Thunder", "Afina-1", "Afina-2", "Time", "Octopus", "Note", "Wind", "Ghera-1", "Fire", "Flower-1", "Flower-2", "Arpha", "Dionis-2", "Ghera-2", "Zodiak", "Minot", "Gorgona", "Cristals", "Light", "End"};
+String[] gadgetNames = {"Baloon", "Press", "Gate", "Poseidon", "Trident", "Demetra-1", "Rain", "Vine", "Dionis-1", "Hercules", "Narcis", "Thunder", "Afina-1", "Afina-2", "Time", "Octopus", "Note", "Wind", "Ghera-1", "Fire", "Flower-1", "Flower-2", "Arpha", "Dionis-2", "Ghera-2", "Zodiak", "Minot", "Gorgona", "Cristals", "Light", "End"};
 boolean[] passedGadgets = {true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false};
 boolean[] hintedGadgets = {true, false, true, false, false, true, true, true, true, false, true, true, true, true, true, false, true, true, true, true, true, false, true, true, false, false, true, false, true, true, true, true};
 int[] passedTimes = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};

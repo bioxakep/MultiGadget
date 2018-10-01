@@ -521,6 +521,7 @@ void loop()
       {
         sendToSlave(motorConAddr, 0x22); // send signal to motor_controller > grapeGrow
         // MP3 FILE
+        passGStates[rain] = true;
       }
 
       if ((!digitalRead(vinemIN) || operGStates[vine]) && !passGStates[vine] && passGStates[demetra] && passGStates[rain])
