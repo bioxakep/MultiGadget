@@ -318,10 +318,6 @@ void receiveEvent(int howMany)
   {
     command = Wire.read();    // принять байт как символ
   }
-  /*
-     commands
-     0x10 =
-  */
 }
 
 void requestEvent()
