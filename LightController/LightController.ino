@@ -132,7 +132,7 @@ void setup()
   Serial.println("turner     = " + String(digitalRead(turner)));
   randomSeed(A0);
 
-  lightOff();
+  setLightBri(0);
   Serial.println("\nReady\n");
 
 }
@@ -306,7 +306,7 @@ void receiveEvent(int howMany)
   if (Wire.available()) // пройтись по всем до последнего
   {
     byte c = Wire.read();    // принять байт как символ
-    if (c > 0x00 && c < 0x20) command = c;
+    if (c > 0x00 && c <= 0x99) command = c;
   }
   /*
      commands
