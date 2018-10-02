@@ -316,7 +316,8 @@ void receiveEvent(int howMany)
 {
   if (Wire.available() > 0) // пройтись по всем до последнего
   {
-    command = Wire.read();    // принять байт как символ
+    byte c = Wire.read();    // принять байт как символ
+    if (c>0) command = c;
   }
 }
 
