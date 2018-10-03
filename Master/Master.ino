@@ -265,7 +265,7 @@ boolean seal3  = false;
 boolean sealsDone  = false;
 
 unsigned long startHighPin = 0;
-
+unsigned long prevSent = 0;
 void setup() {
   Serial.begin (9600);
   //Serial3.begin(9600);  //xbee
@@ -383,6 +383,8 @@ void setup() {
 
 void loop()
 {
+  unsigned long tick = millis();
+
   startStates[0] = debounce(startStates[1], startPin); // READ START BUTTON
   
   if(level > 10 && !startStates[0] && startStates[1]) // SKIP BY START BUTTON
@@ -395,7 +397,7 @@ void loop()
   
   if (curHighPin > 0) // WATCH FOR ACTIVE PIN
   {
-    if (millis() - startHighPin > 250)
+    if (tick - startHighPin > 250)
     {
       digitalWrite(curHighPin, LOW);
       curHighPin = -1;
@@ -480,7 +482,7 @@ void loop()
   else if (level == 90)
   { // on level 50 all events may be done in any order/sequence
     //Big request to World
-    if (millis() % 100 == 0)
+    if (tick % 100 == 0)
     {
       if (windRFWait) windRFWait = !getWindRFID();
       if (rainRFWait) rainRFWait = !getRainRFID();
@@ -771,7 +773,7 @@ void loop()
         }
       }
 
-      if (millis() % 5000 == 0) openOpened();  // open (and re-open if closed) underground locks
+      if (tick % 5000 == 0) openOpened();  // open (and re-open if closed) underground locks
     } // eof_cristals
   } // eof.level_50
 
@@ -779,7 +781,7 @@ void loop()
   {
     // game over - victory !
   }
-  sendGStates();
+  if(tick - prevSent > 1000) { sendGStates(); prevSent = tick; }
   startStates[1] = startStates[0];
 } // LOOP END
 

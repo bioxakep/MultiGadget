@@ -2,7 +2,7 @@ void getOperSkips()
 {
   if (Serial1.available() > 0)
   {
-    byte input[29];
+    byte input[31];
     byte inByte = Serial1.read();
     if (inByte == 0xBB)
     {
