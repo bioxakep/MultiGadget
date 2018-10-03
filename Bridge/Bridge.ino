@@ -17,6 +17,8 @@ void setup() {
     operGStates[s] = false;
     passGStates[s] = false;
   }
+  //connectToMonitor();
+  Serial.println("Bridge started");
 }
 
 void loop() {
@@ -54,6 +56,7 @@ void loop() {
 
   if (masterSerial.available() > 0) //recieve from master
   {
+    Serial.println("Info from Master recieved");
     byte input[31];
     byte inByte = masterSerial.read();
     if (inByte == 0xAA)
@@ -78,6 +81,9 @@ void loop() {
         // End sending...
       }
     }
-    else Serial.flush();
+    else 
+    {
+      masterSerial.flush();
+    }
   }
 }
