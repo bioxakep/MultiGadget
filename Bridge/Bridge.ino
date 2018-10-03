@@ -2,14 +2,15 @@
 //0xAA from Master
 //0xBB from Bridge
 //0xCC from operator
-SoftwareSerial masterSerial(7, 8);
-int serialTXControl = 9;
+SoftwareSerial masterSerial(11, 10);
+int serialTXControl = 3;
 boolean operGStates[31];
 boolean passGStates[31];
 
 void setup() {
   masterSerial.begin(9600);
   Serial.begin(9600);
+  pinMode(serialTXControl, OUTPUT);
   for (int s = 0; s < 31; s++)
   {
     operGStates[s] = false;
