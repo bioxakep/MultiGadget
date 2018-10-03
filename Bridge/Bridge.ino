@@ -11,6 +11,7 @@ void setup() {
   masterSerial.begin(9600);
   Serial.begin(9600);
   pinMode(serialTXControl, OUTPUT);
+  digitalWrite(serialTXControl, LOW);
   for (int s = 0; s < 31; s++)
   {
     operGStates[s] = false;
