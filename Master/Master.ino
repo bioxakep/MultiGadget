@@ -781,7 +781,12 @@ void loop()
   {
     // game over - victory !
   }
-  if(tick - prevSent > 1000) { sendGStates(); prevSent = tick; }
+  if(tick - prevSent > 1000) 
+  { 
+    sendGStates();
+    prevSent = tick;
+    Serial.println("Send states to bridge");
+  }
   startStates[1] = startStates[0];
 } // LOOP END
 
