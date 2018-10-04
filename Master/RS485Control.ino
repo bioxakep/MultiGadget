@@ -27,15 +27,15 @@ void sendGStates() // Проверяем прошел ли игрок какой
   Serial.print("Send States to Operator: ");
   for (int d = 0; d < 31; d++)
   {
-    if (passGStates[d]) Serial1.write(0x01);
-    else Serial1.write(0x00);
-    Serial.print(passGStates[d], BIN);
+    if (passGStates[d]) Serial1.write(0x05);
+    else Serial1.write(0x01);
+    //Serial.print(passGStates[d]);
     if (!operGStates[d] && passGStates[d])
     {
       Serial.println("Gadget " + String(gadgetNames[d]) + " passed by player");
       operGStates[d] = true;
     }
-    delay(2);
+    delay(5);
   }
   Serial.println();
   Serial1.write(0xFF);
@@ -47,34 +47,36 @@ void connectToBridge()
   boolean timeOut = false;
   unsigned long connTime = millis();
   byte connCount = 0;
+  boolean sync = false;
+  boolean recFromBridge = false;
   Serial1.flush();
-  while (!Serial1.available()) {
-    ;
-  }
-  while (Serial1.available() && !timeOut)
+  while (!sync && !timeOut)
   {
-    String rec = Serial1.readStringUntil('\n');
-    if (rec.indexOf("Bridge") > 0)
+    unsigned long connTick = millis();
+    if (connTick - connTime > 1000)
     {
-      digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
-      delay(5);
-      Serial1.println("startMaster");
-      delay(5);
-      digitalWrite(SSerialTxControl, LOW);  // Init Transmitter
-    }
-    if (millis() - connTime > 1000)
-    {
-      if (++connCount > 30)
-      {
-        Serial.println("timeout");
-        timeOut = true;
-      }
+      if (++connCount > 30) timeOut = true;
       Serial.print(String(connCount) + "..");
       connTime += 1000;
     }
-    delay(100);
+    if(connTick - lastRec > 1000 && recFromBridge) sync = true;
+    if (Serial1.available() > 0)
+    {
+      lastRec = connTick;
+      String rec = Serial1.readStringUntil('\n');
+      if (rec.indexOf("Bridge") > 0)
+      {
+        recFromBridge = true;
+        delay(500);
+        digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
+        delay(5);
+        Serial1.println("startMaster");
+        delay(5);
+        digitalWrite(SSerialTxControl, LOW);  // Init Transmitter
+      }
+    }
   }
-  delay(500);
-  if(!timeOut) Serial.println("OK");
+  if (timeOut) Serial.println("...timeout.");
+  else Serial.println("OK");
 }
 

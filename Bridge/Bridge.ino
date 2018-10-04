@@ -19,7 +19,7 @@ void setup() {
 }
 
 void loop() {
-  /*if (Serial.available() > 0) //recieve from operator processing
+  if (Serial.available() > 0) //recieve from operator processing
   {
     byte input[31];
     byte inByte = Serial.read();
@@ -51,7 +51,7 @@ void loop() {
     }
     else Serial.flush();
   }
-  */
+  
   if (masterSerial.available() > 0) //recieve from master
   {
     //Serial.println("Info from Master recieved");
@@ -63,8 +63,9 @@ void loop() {
       for (int i = 0; i < 31; i++)
       {
         input[i] = masterSerial.read();
-        Serial.print(input[i], BIN);
-        if (input[i] == 0x01) passGStates[i] = true;
+        delay(5);
+        Serial.print(input[i]);
+        if (input[i] > 0x03) passGStates[i] = true;
         else passGStates[i] = false;
       }
       Serial.println();
@@ -81,7 +82,7 @@ void loop() {
           delay(2);
         }
         Serial.write(0xFF);
-        Serial.println();
+        Serial.println(); // for test only
       }
     }
     else 

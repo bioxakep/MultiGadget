@@ -39,12 +39,12 @@ void connectToMaster()
   boolean sync = false;
   while (!sync && !timeOut)
   {
-    delay(100);
     digitalWrite(serialTXControl, HIGH);  // Init Transmitter
     delay(5);
     masterSerial.println("startBridge");
     delay(5);
     digitalWrite(serialTXControl, LOW);  // Init Transmitter
+    delay(500);
     if (masterSerial.available() > 0)
     {
       String rec = masterSerial.readStringUntil('\n');
@@ -52,15 +52,12 @@ void connectToMaster()
     }
     if (millis() - connTime > 1000)
     {
-      if (++connCount > 30)
-      {
-        Serial.println("timeout");
-        timeOut = true;
-      }
+      if (++connCount > 30) timeOut = true;
       Serial.print(String(connCount) + "..");
       connTime += 1000;
     }
   }
   if (sync) Serial.println("OK");
+  if (timeOut) Serial.println("timeOut");
 }
 
