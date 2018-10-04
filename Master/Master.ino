@@ -255,7 +255,7 @@ int freeOUT = 40;
 //int worldOUT  = 11; free
 
 byte level = 10;
-//boolean gateOpen   = false; need?
+
 boolean shieldDone = false;
 boolean thunderDone = false;
 
@@ -781,7 +781,11 @@ void loop()
   {
     // game over - victory !
   }
-  if(tick - prevSent > 1000) { sendGStates(); prevSent = tick; }
+  if(tick - prevSent > 1000) 
+  { 
+    sendGStates();
+    prevSent = tick;
+  }
   startStates[1] = startStates[0];
 } // LOOP END
 
