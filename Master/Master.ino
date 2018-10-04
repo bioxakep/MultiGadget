@@ -255,7 +255,7 @@ int freeOUT = 40;
 //int worldOUT  = 11; free
 
 byte level = 10;
-//boolean gateOpen   = false; need?
+
 boolean shieldDone = false;
 boolean thunderDone = false;
 

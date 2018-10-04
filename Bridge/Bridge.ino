@@ -56,7 +56,7 @@ void loop() {
 
   if (masterSerial.available() > 0) //recieve from master
   {
-    Serial.println("Info from Master recieved");
+    //Serial.println("Info from Master recieved");
     byte input[31];
     byte inByte = masterSerial.read();
     if (inByte == 0xAA)
@@ -69,12 +69,13 @@ void loop() {
       byte last = masterSerial.read();
       if (last == 0xFF)
       {
+        Serial.println("send to oper");
         // Prepare to send states to Operator
         Serial.write(0xBB);
         //Sending...
         for (int d = 0; d < 31; d++)
         {
-          Serial.write(operGStates[d]);
+          Serial.write(operGStates[d], HEX);
           delay(2);
         }
         Serial.write(0xFF);
