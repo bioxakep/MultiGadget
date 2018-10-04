@@ -4,7 +4,6 @@
 //0xCC from operator
 SoftwareSerial masterSerial(10, 11);
 int serialTXControl = 3;
-boolean operGStates[31];
 boolean passGStates[31];
 
 void setup() {
@@ -12,11 +11,7 @@ void setup() {
   Serial.begin(9600);
   pinMode(serialTXControl, OUTPUT);
   digitalWrite(serialTXControl, LOW);
-  for (int s = 0; s < 31; s++)
-  {
-    operGStates[s] = false;
-    passGStates[s] = false;
-  }
+  for (int s = 0; s < 31; s++) passGStates[s] = false;
   //connectToMonitor();
   Serial.print("Master connecting...");
   connectToMaster();
@@ -24,7 +19,7 @@ void setup() {
 }
 
 void loop() {
-  if (Serial.available() > 0) //recieve from operator processing
+  /*if (Serial.available() > 0) //recieve from operator processing
   {
     byte input[31];
     byte inByte = Serial.read();
@@ -33,7 +28,8 @@ void loop() {
       for (int i = 0; i < 31; i++)
       {
         input[i] = Serial.read();
-        if (input[i]) operGStates[i] = true;
+        if (input[i] == 0x01) passGStates[i] = true;
+        else passGStates[i] = false;
         delay(5);
       }
       byte last = Serial.read();
@@ -45,7 +41,7 @@ void loop() {
         //Sending...
         for (int d = 0; d < 31; d++)
         {
-          masterSerial.write(operGStates[d]);
+          masterSerial.write(passGStates[d]);
           delay(2);
         }
         masterSerial.write(0xFF);
@@ -55,7 +51,7 @@ void loop() {
     }
     else Serial.flush();
   }
-
+  */
   if (masterSerial.available() > 0) //recieve from master
   {
     //Serial.println("Info from Master recieved");
@@ -63,25 +59,29 @@ void loop() {
     byte inByte = masterSerial.read();
     if (inByte == 0xAA)
     {
+      Serial.print("Recieving data from master: ");
       for (int i = 0; i < 31; i++)
       {
         input[i] = masterSerial.read();
-        if (input[i]) operGStates[i] = true;
+        Serial.print(input[i], BIN);
+        if (input[i] == 0x01) passGStates[i] = true;
+        else passGStates[i] = false;
       }
+      Serial.println();
       byte last = masterSerial.read();
       if (last == 0xFF)
       {
-        Serial.println("send to oper");
+        Serial.print("Send data to oper: ");
         // Prepare to send states to Operator
         Serial.write(0xBB);
         //Sending...
         for (int d = 0; d < 31; d++)
         {
-          Serial.print(operGStates[d]);
+          Serial.print(passGStates[d]);
           delay(2);
         }
         Serial.write(0xFF);
-        // End sending...
+        Serial.println();
       }
     }
     else 

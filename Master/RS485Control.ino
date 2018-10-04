@@ -9,7 +9,8 @@ void getOperSkips()
       for (int i = 0; i < 31; i++)
       {
         input[i] = Serial1.read();
-        if (input[i]) operGStates[i] = true;
+        if (input[i] == 0x01) operGStates[i] = true;
+        else operGStates[i] = false;
       }
       byte last = Serial1.read();
       if (last == 0xFF) Serial.println("Operator Skips Recieved");
@@ -23,10 +24,12 @@ void sendGStates() // Проверяем прошел ли игрок какой
   byte chkSum = 0;
   digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
   Serial1.write(0xAA);
+  Serial.print("Send States to Operator: ");
   for (int d = 0; d < 31; d++)
   {
     if (passGStates[d]) Serial1.write(0x01);
     else Serial1.write(0x00);
+    Serial.print(passGStates[d], BIN);
     if (!operGStates[d] && passGStates[d])
     {
       Serial.println("Gadget " + String(gadgetNames[d]) + " passed by player");
@@ -34,6 +37,7 @@ void sendGStates() // Проверяем прошел ли игрок какой
     }
     delay(2);
   }
+  Serial.println();
   Serial1.write(0xFF);
   digitalWrite(SSerialTxControl, LOW);  // Init Transmitter
 }
