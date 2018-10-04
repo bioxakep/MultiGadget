@@ -2,7 +2,7 @@
 //0xAA from Master
 //0xBB from Bridge
 //0xCC from operator
-SoftwareSerial masterSerial(11, 10);
+SoftwareSerial masterSerial(10, 11);
 int serialTXControl = 3;
 boolean operGStates[31];
 boolean passGStates[31];
@@ -51,7 +51,7 @@ void loop() {
         // End sending...
       }
     }
-    else Serial.flush();
+    else masterSerial.flush();
   }
 
   if (masterSerial.available() > 0) //recieve from master

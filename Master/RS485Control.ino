@@ -25,12 +25,8 @@ void sendGStates() // Проверяем прошел ли игрок какой
   Serial1.write(0xAA);
   for (int d = 0; d < 31; d++)
   {
-<<<<<<< HEAD
-    Serial1.write(passGStates[d] & 0x01);
-=======
     if (passGStates[d]) Serial1.write(0x01);
     else Serial1.write(0x00);
->>>>>>> 5516ac6acc5bd6ed047db6c54de7ee228e080321
     if(!operGStates[d] && passGStates[d])
     {
       Serial.println("Gadget " + String(gadgetNames[d]) + " passed by player");
