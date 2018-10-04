@@ -37,11 +37,13 @@ void connectToMaster()
   unsigned long connTime = millis();
   byte connCount = 0;
   boolean sync = false;
-  while (!sync || !timeOut)
+  while (!sync && !timeOut)
   {
     delay(100);
     digitalWrite(serialTXControl, HIGH);  // Init Transmitter
+    delay(5);
     masterSerial.println("startBridge");
+    delay(5);
     digitalWrite(serialTXControl, LOW);  // Init Transmitter
     if (masterSerial.available() > 0)
     {

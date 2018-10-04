@@ -53,7 +53,7 @@ void loop() {
         // End sending...
       }
     }
-    else masterSerial.flush();
+    else Serial.flush();
   }
 
   if (masterSerial.available() > 0) //recieve from master
@@ -77,7 +77,7 @@ void loop() {
         //Sending...
         for (int d = 0; d < 31; d++)
         {
-          Serial.write(operGStates[d], HEX);
+          Serial.print(operGStates[d]);
           delay(2);
         }
         Serial.write(0xFF);
