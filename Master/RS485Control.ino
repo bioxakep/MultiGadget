@@ -60,7 +60,7 @@ void connectToBridge()
     }
     if (millis() - connTime > 1000)
     {
-      if (++connCount > 10)
+      if (++connCount > 30)
       {
         Serial.println("timeout");
         timeOut = true;
@@ -70,7 +70,7 @@ void connectToBridge()
     }
     delay(100);
   }
-  delay(2000);
-  Serial.println("OK");
+  delay(500);
+  if(!timeOut) Serial.println("OK");
 }
 

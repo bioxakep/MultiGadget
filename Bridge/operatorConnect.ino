@@ -52,7 +52,7 @@ void connectToMaster()
     }
     if (millis() - connTime > 1000)
     {
-      if (++connCount > 10)
+      if (++connCount > 30)
       {
         Serial.println("timeout");
         timeOut = true;
@@ -61,6 +61,6 @@ void connectToMaster()
       connTime += 1000;
     }
   }
-  Serial.println("OK");
+  if (sync) Serial.println("OK");
 }
 
