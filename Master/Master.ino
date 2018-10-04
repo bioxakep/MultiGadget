@@ -785,7 +785,6 @@ void loop()
   { 
     sendGStates();
     prevSent = tick;
-    Serial.println("Send states to bridge");
   }
   startStates[1] = startStates[0];
 } // LOOP END
