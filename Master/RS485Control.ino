@@ -37,3 +37,35 @@ void sendGStates() // Проверяем прошел ли игрок какой
   Serial1.write(0xFF);
   digitalWrite(SSerialTxControl, LOW);  // Init Transmitter
 }
+
+void connectToBridge()
+{
+  boolean timeOut = false;
+  unsigned long connTime = millis();
+  byte connCount = 0;
+  Serial1.flush();
+  while(!Serial1.available()) {;}
+  while(Serial1.available() || !timeOut)
+  {
+    String rec = Serial1.readStringUntil('\n');
+    if(rec.indexOf("Bridge") > 0)
+    {
+      digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
+      Serial1.println("startMaster");
+      digitalWrite(SSerialTxControl, LOW);  // Init Transmitter
+    }
+    if(millis() - connTime > 1000) 
+    {
+      if(++connCount > 10)
+      {
+        Serial.println("timeout");
+        timeOut = true;
+      }
+      Serial.print(String(connCount) + "..");
+      connTime += 1000;
+    }
+  }
+  delay(2000);
+  Serial.println("OK");
+}
+

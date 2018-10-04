@@ -29,3 +29,36 @@ void connectToMonitor()
     }
   }
 }
+
+
+void connectToMaster()
+{
+  boolean timeOut = false;
+  unsigned long connTime = millis();
+  byte connCount = 0;
+  boolean sync = false;
+  while (!sync || !timeOut)
+  {
+    delay(100);
+    digitalWrite(serialTXControl, HIGH);  // Init Transmitter
+    masterSerial.println("startBridge");
+    digitalWrite(serialTXControl, LOW);  // Init Transmitter
+    if (masterSerial.available() > 0)
+    {
+      String rec = masterSerial.readStringUntil('\n');
+      if (rec.indexOf("Master") > 0) sync = true;
+    }
+    if (millis() - connTime > 1000)
+    {
+      if (++connCount > 10)
+      {
+        Serial.println("timeout");
+        timeOut = true;
+      }
+      Serial.print(String(connCount) + "..");
+      connTime += 1000;
+    }
+  }
+  Serial.println("OK");
+}
+

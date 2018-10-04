@@ -18,6 +18,8 @@ void setup() {
     passGStates[s] = false;
   }
   //connectToMonitor();
+  Serial.print("Master connecting...");
+  connectToMaster();
   Serial.println("Bridge started");
 }
 

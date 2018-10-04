@@ -379,6 +379,8 @@ void setup() {
   delay(10);
   openLocks();
   Serial.println("Locks Opened.");
+  Serial.print("Bridge connecting...");
+  connectToBridge();
 }
 
 void loop()
