@@ -47,25 +47,32 @@ void sendGStates() // Проверяем прошел ли игрок какой
 void connectToBridge()
 {
   boolean briConnected = false;
+  int recCount = 0;
   while (!briConnected)
   {
     if (Serial1.available() > 0)
     {
+      recCount++;
       String input = "";
       input = Serial1.readStringUntil('\n');
       if (input.indexOf("Bridge") > 0)
       {
         Serial1.println("startMaster");
-        delay(500);
+        lcd.clear();
+        lcd.print("BRIDGE REC");
+        delay(1000);
         boolean sync = false;
         while (!sync)
         {
           if (Serial1.available() > 0)
           {
+            recCount++;
+            lcd.clear();
+            lcd.print("REC BRIDGE:" + String(recCount));
             Serial1.readStringUntil('\n');
             delay(50);
             Serial1.println("startMaster");
-            delay(1500);
+            delay(500);
           }
           else sync = true;
         }

@@ -31,26 +31,30 @@ void connectToMonitor()
 }
 
 
-void connectToMaster()
+boolean connectToMaster()
 {
   // Ожидаем 1цу с мастера
   // При приеме 1цы отправляем 3 раза 2-ку и стартуем
 
   boolean masterConnected = false;
   unsigned long startConnect = millis();
-  while (!masterConnected && (millis() - startConnect < 60000))
+  unsigned long tick = startConnect;
+  while (!masterConnected && (tick - startConnect < 60000))
   {
+    tick = millis();
     masterSerial.println("startBridge");
     Serial.println("Connecting...");
-    unsigned long tick = millis();
     while (millis() - tick < 1000) {
       if(masterSerial.available() > 0)
       {
-        String in = masterSerial.readStringUntil('\n');
+        String in = "";
+        in = masterSerial.readStringUntil('\n');
+        Serial.println(in);
         if(in.indexOf("Master") > 0) masterConnected = true;
       }
     }
   }
+  return masterConnected;
   /*
   byte fromMaster = 0;
   byte toMaster = 2;

@@ -384,7 +384,6 @@ void setup() {
   lcd.init();                   
   lcd.backlight();
   lcd.print("Initialising...");
-  
   connectToBridge();
   lcd.clear();
 }

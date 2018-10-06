@@ -14,8 +14,8 @@ void setup() {
   for (int s = 0; s < 31; s++) passGStates[s] = false;
   //connectToMonitor();
   Serial.print("Master connecting...");
-  connectToMaster();
-  Serial.println("Bridge started");
+  if(connectToMaster()) Serial.println("Bridge started");
+  else Serial.println("Master not connected");
 }
 
 void loop() {
