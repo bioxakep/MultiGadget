@@ -33,31 +33,67 @@ void connectToMonitor()
 
 void connectToMaster()
 {
-  boolean timeOut = false;
-  unsigned long connTime = millis();
-  byte connCount = 0;
-  boolean sync = false;
-  while (!sync && !timeOut)
+  // Ожидаем 1цу с мастера
+  // При приеме 1цы отправляем 3 раза 2-ку и стартуем
+  byte fromMaster = 0;
+  byte toMaster = 2;
+  while (fromMaster != 1)
   {
-    digitalWrite(serialTXControl, HIGH);  // Init Transmitter
-    delay(5);
-    masterSerial.println("startBridge");
-    delay(5);
-    digitalWrite(serialTXControl, LOW);  // Init Transmitter
-    delay(500);
+    if (masterSerial.available() > 0)
+    {
+      fromMaster = Serial1.read();
+    }
+  }
+  digitalWrite(serialTXControl, HIGH);  // Init Transmitter
+  delay(5);
+  masterSerial.println(toMaster);
+  delay(100);
+  masterSerial.println(toMaster);
+  delay(5);
+  digitalWrite(serialTXControl, LOW);  // Init Transmitter
+  /*
+    boolean sync = false;
+    boolean timeOut = false;
+    boolean recieved = false;
+    unsigned long connTime = millis();
+    unsigned long lastRec = connTime;
+    byte connCount = 0;
+    while (!sync && !timeOut) // пока не синхронизировались и не вышло время:
+    { // отправляем сигнал пока не получили в ответ
+    // получили ответ - ждем паузы сигналов и стартуем игру
+    unsigned long syncTick = millis();
+    if (recieved)
+    {
+      if(syncTick - lastRec > 2000) sync = true;
+    }
+    else
+    {
+      digitalWrite(serialTXControl, HIGH);  // Init Transmitter
+      delay(5);
+      masterSerial.println("startBridge");
+      delay(5);
+      digitalWrite(serialTXControl, LOW);  // Init Transmitter
+      delay(500);
+    }
+
     if (masterSerial.available() > 0)
     {
       String rec = masterSerial.readStringUntil('\n');
-      if (rec.indexOf("Master") > 0) sync = true;
+      if (rec.indexOf("Master") > 0)
+      {
+        recieved = true;
+        lastRec = syncTick;
+      }
     }
-    if (millis() - connTime > 1000)
+    if (syncTick - connTime > 1000)
     {
       if (++connCount > 30) timeOut = true;
       Serial.print(String(connCount) + "..");
       connTime += 1000;
     }
-  }
-  if (sync) Serial.println("OK");
-  if (timeOut) Serial.println("timeOut");
+    }
+    if (sync) Serial.println("OK");
+    if (timeOut) Serial.println("timeOut");
+  */
 }
 

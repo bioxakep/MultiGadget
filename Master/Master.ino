@@ -9,10 +9,11 @@
 #include <ArdCPZ.h>
 #include <DFPlayer_Mini_Mp3.h>
 #include <SoftwareSerial.h>
-
+#include <LiquidCrystal_I2C.h>
 //I2C PINS: 20-21
-
 #define SSerialTxControl 17   //RS485 Direction control
+
+LiquidCrystal_I2C lcd(0x3F,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 
 byte devCount = 21;//Under calculate volitile gadgets...
 
@@ -380,7 +381,12 @@ void setup() {
   openLocks();
   Serial.println("Locks Opened.");
   Serial.print("Bridge connecting...");
+  lcd.init();                   
+  lcd.backlight();
+  lcd.print("Initialising...");
+  
   connectToBridge();
+  lcd.clear();
 }
 
 void loop()

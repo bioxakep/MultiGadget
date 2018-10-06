@@ -46,39 +46,64 @@ void sendGStates() // Проверяем прошел ли игрок какой
 
 void connectToBridge()
 {
-  boolean timeOut = false;
-  unsigned long connTime = millis();
-  byte connCount = 0;
-  boolean sync = false;
-  boolean recFromBridge = false;
-  Serial1.flush();
-  while (!sync && !timeOut)
+  // Отправляем 1цу пока не получим двойку
+  byte fromBridge = 0;
+  while (fromBridge != 2)
   {
-    unsigned long connTick = millis();
-    if (connTick - connTime > 1000)
+    digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
+    delay(5);
+    byte toBridge = 1;
+    Serial1.println(toBridge);
+    delay(5);
+    digitalWrite(SSerialTxControl, LOW);  // Init Transmitter
+    delay(500);
+    if (Serial1.available() > 0)
+    {
+      fromBridge = Serial1.read();
+    }
+  }
+  /*
+    boolean sync = false;
+    boolean timeOut = false;
+    boolean recieved = false;
+    unsigned long connTime = millis();
+    unsigned long lastRec = connTime;
+    byte connCount = 0;
+    while (!sync && !timeOut) // пока не синхронизировались и не вышло время:
+    { // отправляем сигнал пока не получили в ответ
+    // получили ответ - ждем паузы сигналов и стартуем игру
+    unsigned long syncTick = millis();
+    if (recieved)
+    {
+      if(syncTick - lastRec > 2000) sync = true;
+    }
+    else
+    {
+      digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
+      delay(5);
+      Serial1.println("startMaster");
+      delay(5);
+      digitalWrite(SSerialTxControl, LOW);  // Init Transmitter
+      delay(500);
+    }
+    if (Serial1.available() > 0)
+    {
+      String rec = Serial1.readStringUntil('\n');
+      if (rec.indexOf("Bridge") > 0)
+      {
+        recieved = true;
+        lastRec = syncTick;
+      }
+    }
+    if (syncTick - connTime > 1000)
     {
       if (++connCount > 30) timeOut = true;
       Serial.print(String(connCount) + "..");
       connTime += 1000;
     }
-    if(connTick - lastRec > 1000 && recFromBridge) sync = true;
-    if (Serial1.available() > 0)
-    {
-      lastRec = connTick;
-      String rec = Serial1.readStringUntil('\n');
-      if (rec.indexOf("Bridge") > 0)
-      {
-        recFromBridge = true;
-        delay(500);
-        digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
-        delay(5);
-        Serial1.println("startMaster");
-        delay(5);
-        digitalWrite(SSerialTxControl, LOW);  // Init Transmitter
-      }
     }
-  }
-  if (timeOut) Serial.println("...timeout.");
-  else Serial.println("OK");
+    if (sync) Serial.println("OK");
+    if (timeOut) Serial.println("timeOut");
+  */
 }
 
