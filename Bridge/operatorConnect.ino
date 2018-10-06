@@ -42,13 +42,14 @@ void connectToMaster()
     if (masterSerial.available() > 0)
     {
       fromMaster = masterSerial.read();
+      Serial.println(fromMaster);
     }
   }
   digitalWrite(serialTXControl, HIGH);  // Init Transmitter
   delay(5);
-  masterSerial.println(toMaster);
+  masterSerial.write(toMaster);
   delay(100);
-  masterSerial.println(toMaster);
+  masterSerial.write(toMaster);
   delay(5);
   digitalWrite(serialTXControl, LOW);  // Init Transmitter
   /*

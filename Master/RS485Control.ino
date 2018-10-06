@@ -53,13 +53,15 @@ void connectToBridge()
     digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
     delay(5);
     byte toBridge = 1;
-    Serial1.println(toBridge);
+    Serial1.write(toBridge);
     delay(5);
     digitalWrite(SSerialTxControl, LOW);  // Init Transmitter
     delay(500);
     if (Serial1.available() > 0)
     {
+      
       fromBridge = Serial1.read();
+      Serial.println(fromBridge);
     }
   }
   /*
