@@ -57,7 +57,6 @@ void connectToBridge()
       {
         Serial1.println("startMaster");
         delay(500);
-        digitalWrite(13, HIGH);
         boolean sync = false;
         while (!sync)
         {
