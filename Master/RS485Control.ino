@@ -1,3 +1,5 @@
+unsigned long lastRec = 0;
+
 void getOperSkips()
 {
   if (Serial1.available() > 0)
