@@ -46,25 +46,54 @@ void sendGStates() // Проверяем прошел ли игрок какой
 
 void connectToBridge()
 {
-  // Отправляем 1цу пока не получим двойку
-  byte fromBridge = 0;
-  while (fromBridge != 2)
+  boolean briConnected = false;
+  while (!briConnected)
   {
-    digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
-    delay(5);
-    byte toBridge = 1;
-    Serial1.write(toBridge);
-    delay(5);
-    digitalWrite(SSerialTxControl, LOW);  // Init Transmitter
-    delay(500);
     if (Serial1.available() > 0)
     {
-      
-      fromBridge = Serial1.read();
-      Serial.println(fromBridge);
+      String input = "";
+      input = Serial1.readStringUntil('\n');
+      if (input.indexOf("Bridge") > 0)
+      {
+        Serial1.println("startMaster");
+        delay(500);
+        digitalWrite(13, HIGH);
+        boolean sync = false;
+        while (!sync)
+        {
+          if (Serial1.available() > 0)
+          {
+            Serial1.readStringUntil('\n');
+            delay(50);
+            Serial1.println("startMaster");
+            delay(1500);
+          }
+          else sync = true;
+        }
+        briConnected = true;
+      }
     }
   }
   /*
+  byte fromBridge = 0;
+  digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
+  delay(5);
+  byte toBridge = 1;
+  Serial1.write(toBridge);
+  delay(5);
+  digitalWrite(SSerialTxControl, LOW);  // Init Transmitter
+  delay(500);
+  while (fromBridge != 2)
+  {
+    if (Serial1.available() > 0)
+    {
+
+      fromBridge = Serial1.read();
+      Serial.println(fromBridge);
+      lcd.print("REC:" + String(fromBridge));
+    }
+  }
+  
     boolean sync = false;
     boolean timeOut = false;
     boolean recieved = false;

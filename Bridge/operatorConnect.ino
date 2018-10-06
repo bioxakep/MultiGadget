@@ -35,6 +35,23 @@ void connectToMaster()
 {
   // Ожидаем 1цу с мастера
   // При приеме 1цы отправляем 3 раза 2-ку и стартуем
+
+  boolean masterConnected = false;
+  unsigned long startConnect = millis();
+  while (!masterConnected && (millis() - startConnect < 60000))
+  {
+    masterSerial.println("startBridge");
+    Serial.println("Connecting...");
+    unsigned long tick = millis();
+    while (millis() - tick < 1000) {
+      if(masterSerial.available() > 0)
+      {
+        String in = masterSerial.readStringUntil('\n');
+        if(in.indexOf("Master") > 0) masterConnected = true;
+      }
+    }
+  }
+  /*
   byte fromMaster = 0;
   byte toMaster = 2;
   while (fromMaster != 1)
@@ -48,11 +65,11 @@ void connectToMaster()
   digitalWrite(serialTXControl, HIGH);  // Init Transmitter
   delay(5);
   masterSerial.write(toMaster);
-  delay(100);
-  masterSerial.write(toMaster);
+  //delay(100);
+  //masterSerial.write(toMaster);
   delay(5);
   digitalWrite(serialTXControl, LOW);  // Init Transmitter
-  /*
+  
     boolean sync = false;
     boolean timeOut = false;
     boolean recieved = false;
