@@ -41,7 +41,7 @@ void connectToMaster()
   {
     if (masterSerial.available() > 0)
     {
-      fromMaster = Serial1.read();
+      fromMaster = masterSerial.read();
     }
   }
   digitalWrite(serialTXControl, HIGH);  // Init Transmitter
