@@ -55,8 +55,7 @@ void connectToBridge()
     if (Serial1.available() > 0)
     {
       recCount++;
-      String input = "";
-      input = Serial1.read();
+      byte input = Serial1.read();
       delay(50);
       if (input == 0xC2)
       {
