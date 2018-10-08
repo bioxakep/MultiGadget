@@ -1,4 +1,6 @@
-// Ago 30.01.2018
+// 08.10.2018
+// Rewrote Connection
+
 // Master SKY  - Mega
 // I2C master - linked to Motor_Controller & Lights_Controller & World
 // RS-485 interface - Serial1 - link to Admin
