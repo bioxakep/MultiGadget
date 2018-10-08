@@ -46,101 +46,32 @@ void sendGStates() // Проверяем прошел ли игрок какой
 
 void connectToBridge()
 {
-  boolean briConnected = false;
+  boolean recieved = false;
   int recCount = 0;
-  while (!briConnected)
+  unsigned long recTime = 0;
+  while (!bridgeConnected)
   {
+    unsigned long connTick = millis();
     if (Serial1.available() > 0)
     {
       recCount++;
       String input = "";
-      input = Serial1.readStringUntil('\n');
-      if (input.indexOf("Bridge") > 0)
+      input = Serial1.read();
+      delay(50);
+      if (input == 0xC2)
       {
-        Serial1.println("startMaster");
+        recTime = connTick;
+        digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
+        Serial1.write(0xC1);
+        digitalWrite(SSerialTxControl, LOW);  // Init Transmitter
         lcd.clear();
         lcd.print("BRIDGE REC");
-        delay(1000);
-        boolean sync = false;
-        while (!sync)
-        {
-          if (Serial1.available() > 0)
-          {
-            recCount++;
-            lcd.clear();
-            lcd.print("REC BRIDGE:" + String(recCount));
-            Serial1.readStringUntil('\n');
-            delay(50);
-            Serial1.println("startMaster");
-            delay(500);
-          }
-          else sync = true;
-        }
-        briConnected = true;
-      }
-    }
-  }
-  /*
-  byte fromBridge = 0;
-  digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
-  delay(5);
-  byte toBridge = 1;
-  Serial1.write(toBridge);
-  delay(5);
-  digitalWrite(SSerialTxControl, LOW);  // Init Transmitter
-  delay(500);
-  while (fromBridge != 2)
-  {
-    if (Serial1.available() > 0)
-    {
-
-      fromBridge = Serial1.read();
-      Serial.println(fromBridge);
-      lcd.print("REC:" + String(fromBridge));
-    }
-  }
-  
-    boolean sync = false;
-    boolean timeOut = false;
-    boolean recieved = false;
-    unsigned long connTime = millis();
-    unsigned long lastRec = connTime;
-    byte connCount = 0;
-    while (!sync && !timeOut) // пока не синхронизировались и не вышло время:
-    { // отправляем сигнал пока не получили в ответ
-    // получили ответ - ждем паузы сигналов и стартуем игру
-    unsigned long syncTick = millis();
-    if (recieved)
-    {
-      if(syncTick - lastRec > 2000) sync = true;
-    }
-    else
-    {
-      digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
-      delay(5);
-      Serial1.println("startMaster");
-      delay(5);
-      digitalWrite(SSerialTxControl, LOW);  // Init Transmitter
-      delay(500);
-    }
-    if (Serial1.available() > 0)
-    {
-      String rec = Serial1.readStringUntil('\n');
-      if (rec.indexOf("Bridge") > 0)
-      {
+        delay(500);
         recieved = true;
-        lastRec = syncTick;
       }
+      if(input == 0xC3) bridgeConnected = true;
     }
-    if (syncTick - connTime > 1000)
-    {
-      if (++connCount > 30) timeOut = true;
-      Serial.print(String(connCount) + "..");
-      connTime += 1000;
-    }
-    }
-    if (sync) Serial.println("OK");
-    if (timeOut) Serial.println("timeOut");
-  */
+    if (recieved && connTick - recTime > 1000) bridgeConnected = true;
+  }
 }
 

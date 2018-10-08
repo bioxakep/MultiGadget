@@ -265,6 +265,7 @@ boolean seal2  = false;
 boolean seal3  = false;
 boolean sealsDone  = false;
 
+boolean bridgeConnected = false;
 unsigned long startHighPin = 0;
 unsigned long prevSent = 0;
 void setup() {
@@ -438,6 +439,11 @@ void loop()
         sendToSlave(lightConAddr, 0x11); // random Wind
         Serial.println("Go to level 12");
         level = 12;
+        digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
+        Serial1.write(0xC4);
+        lcd.clear();
+        lcd.print("GADGET CLEAR");
+        digitalWrite(SSerialTxControl, LOW);  // Stop Transmitter
       }
     }    
   }
