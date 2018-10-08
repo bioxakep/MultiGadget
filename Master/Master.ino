@@ -403,6 +403,8 @@ void loop()
     while(passGStates[curGadget]) {curGadget++;}
     operGStates[curGadget] = true;
     Serial.println("Gadget #" + String(gadgetNames[curGadget]) + " passed by start button");
+    lcd.clear();
+    lcd.print("SKIPPED "+String(curGadget));
   }
   
   if (curHighPin > 0) // WATCH FOR ACTIVE PIN

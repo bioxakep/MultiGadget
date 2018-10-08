@@ -29,39 +29,50 @@ void setup() {
   pinMode(serialTXControl, OUTPUT);
   digitalWrite(serialTXControl, LOW);
   for (int s = 0; s < 31; s++) passGStates[s] = false;
-  if(!monitorConnected) Serial.print("Monitor connecting...");
+  if (!monitorConnected) Serial.print("Monitor connecting...");
   //connectToMonitor();
-  if(!monitorConnected) Serial.println("OK");
+  if (!monitorConnected) Serial.println("OK");
 }
 
-void loop() 
+void loop()
 {
   unsigned long tick = millis();
+  if (tick - masterLastRecTime > masterTimeOut && masterConnected)
+  {
+    masterConnected = false;
+    Serial.println("masterLastRecTime:" + String(masterLastRecTime));
+    Serial.println("tick:" + String(tick));
+    Serial.println("masterTimeOut:" + String(masterTimeOut));
+    Serial.println("MASTER DISCONNECTED");
+  }
   if (!masterConnected)
   {
     unsigned long startConnect = tick;
     unsigned long whileTick = tick;
-    if(!monitorConnected) Serial.print("Connecting to master...");
+    if (!monitorConnected) Serial.print("Connecting to master...");
     int connCount = 0;
     while (!masterConnected && (whileTick - startConnect < masterConnTimeOut))
     {
       whileTick = millis();
       digitalWrite(serialTXControl, HIGH);  // Init Transmitter
       masterSerial.write(0xC2);
-      digitalWrite(serialTXControl, LOW);  // Init Transmitter
+      digitalWrite(serialTXControl, LOW);  // Stop Transmitter
       connCount++;
-      if(!monitorConnected) Serial.print(String(connCount)+"..");
+      if (!monitorConnected) Serial.print(String(connCount) + "..");
       while (millis() - whileTick < 500)
       {
         if (masterSerial.available() > 0)
         {
-          byte in = masterSerial.read();
+          byte in;
+          in = masterSerial.read();
+          masterLastRecTime = whileTick;
           if (in == 0xC1) masterConnected = true;
         }
       }
     }
-    if(!masterConnected) Serial.println("MASTER DISCONNECTED LONG TIME");
+    if (!masterConnected) Serial.println("MASTER DISCONNECTED LONG TIME");
     else Serial.println("OK");
+    masterSerial.flush();
   }
   else // Master Connected
   {
@@ -76,7 +87,6 @@ void loop()
           input[i] = Serial.read();
           if (input[i] == 0x01) passGStates[i] = true;
           else passGStates[i] = false;
-          delay(5);
         }
         byte last = Serial.read();
         if (last == 0xFF) //All Data Recieved marker
@@ -96,61 +106,44 @@ void loop()
       }
       else Serial.flush();
     }
-    
+
     if (masterSerial.available() > 0) //recieve from master
     {
       byte input[31];
+      for(byte i = 0; i < 31; i++) input[i] = 0x00;
       byte inByte = masterSerial.read();
-      if(inByte == 0xC1) //Master starts when bridge sync-ed and wait data...
-      {
-        if(!monitorConnected) Serial.println("Master Restarted and try sync again");
-        digitalWrite(serialTXControl, HIGH);  // Init Transmitter
-        masterSerial.write(0xC3);
-        digitalWrite(serialTXControl, LOW);  // Stop Transmitter
-        boolean masterSync = false;
-        while(!masterSync)
-        {
-          if(masterSerial.available() > 0)
-          {
-            if(masterSerial.read() == 0xAA)
-            {
-              inByte = 0xAA;
-              masterSync = true;
-            }
-          }
-        }
-        if(!monitorConnected) Serial.println("Master Connected, reading data...");
-      }
+      Serial.println("First byte is " + String(inByte));
       if (inByte == 0xC4)
       {
         for (int s = 0; s < 31; s++) passGStates[s] = false;
-        if(!monitorConnected) Serial.println("Send to operator clear states");
+        if (!monitorConnected) Serial.println("Send to operator clear states");
         Serial.write(0xBB);
-          //Sending...
-          for (int d = 0; d < 31; d++)
-          {
-            Serial.print(passGStates[d]);
-            delay(2);
-          }
-          Serial.write(0xFF);
+        //Sending...
+        for (int d = 0; d < 31; d++)
+        {
+          Serial.print(passGStates[d]);
+        }
+        Serial.write(0xFF);
       }
-      if (inByte == 0xAA)
+      else if (inByte == 0xAA)
       {
         masterLastRecTime = millis();
-        if(!monitorConnected) Serial.print("Recieving data from master: ");
+        if (!monitorConnected) Serial.print("Recieving data from master: ");
+        delay(5);
         for (int i = 0; i < 31; i++)
         {
           input[i] = masterSerial.read();
           delay(5);
-          if(!monitorConnected) Serial.print(input[i]);
+          Serial.print("|"+String(input[i]));
           if (input[i] > 0x03) passGStates[i] = true;
           else passGStates[i] = false;
         }
-        if(!monitorConnected) Serial.println();
+        if (!monitorConnected) Serial.println();
         byte last = masterSerial.read();
+        Serial.println("Last byte is " + String(last));
         if (last == 0xFF)
         {
-          if(!monitorConnected) Serial.print("Send to operator: ");
+          if (!monitorConnected) Serial.print("Send to operator: ");
           // Prepare to send states to Operator
           Serial.write(0xBB);
           //Sending...
@@ -159,19 +152,12 @@ void loop()
             Serial.print(passGStates[d]);
             delay(2);
           }
-          Serial.write(0xFF);
-          if(!monitorConnected) Serial.println(); // for test only
+          Serial.write(last);
+          if (!monitorConnected) Serial.println(); // for test only
         }
       }
-      else
-      {
-        masterSerial.flush();
-      }
-    }
-    if(tick - masterLastRecTime > masterTimeOut) 
-    {
-      masterConnected = false;
-      Serial.println("MASTER DISCONNECTED");
+      while(masterSerial.available()) masterSerial.read();
     }
   }
 }
+
