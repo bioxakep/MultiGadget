@@ -55,8 +55,7 @@ void loop()
       {
         if (masterSerial.available() > 0)
         {
-          String in = "";
-          in = masterSerial.read();
+          byte in = masterSerial.read();
           if (in == 0xC1) masterConnected = true;
         }
       }
