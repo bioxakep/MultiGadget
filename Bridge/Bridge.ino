@@ -13,7 +13,7 @@
 //0xAA from Master
 //0xBB from Bridge
 //0xCC from operator
-SoftwareSerial masterSerial(10, 11);
+SoftwareSerial Serial1(10, 11);
 int serialTXControl = 3;
 boolean passGStates[31];
 boolean monitorConnected = false;
@@ -72,7 +72,7 @@ void loop()
     }
     if (!masterConnected) Serial.println("MASTER DISCONNECTED LONG TIME");
     else Serial.println("OK");
-    masterSerial.flush();
+    Serial1.flush();
   }
   else // Master Connected
   {
@@ -112,7 +112,7 @@ void loop()
       byte input[31];
       for(byte i = 0; i < 31; i++) input[i] = 0x00;
       byte inByte = masterSerial.read();
-      Serial.println("First byte is " + String(inByte));
+      //masterSerial.println("First byte is " + String(inByte));
       if (inByte == 0xC4)
       {
         for (int s = 0; s < 31; s++) passGStates[s] = false;
@@ -156,8 +156,9 @@ void loop()
           if (!monitorConnected) Serial.println(); // for test only
         }
       }
+      
       while(masterSerial.available()) masterSerial.read();
     }
+
   }
 }
-
