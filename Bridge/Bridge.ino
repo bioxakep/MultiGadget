@@ -55,8 +55,10 @@ void loop()
     {
       whileTick = millis();
       digitalWrite(serialTXControl, HIGH);  // Init Transmitter
+      delay(50);
       masterSerial.write(0xC2);
       digitalWrite(serialTXControl, LOW);  // Stop Transmitter
+      delay(50);
       connCount++;
       if (!monitorConnected) Serial.print(String(connCount) + "..");
       while (millis() - whileTick < 1500)
