@@ -59,7 +59,7 @@ void loop()
       digitalWrite(serialTXControl, LOW);  // Stop Transmitter
       connCount++;
       if (!monitorConnected) Serial.print(String(connCount) + "..");
-      while (millis() - whileTick < 500)
+      while (millis() - whileTick < 1500)
       {
         if (masterSerial.available() > 0)
         {
