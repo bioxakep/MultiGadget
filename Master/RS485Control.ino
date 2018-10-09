@@ -68,11 +68,11 @@ void connectToBridge()
         digitalWrite(SSerialTxControl, LOW);  // Init Transmitter
         lcd.clear();
         lcd.print("Bridge c-ted");
-        delay(500);
+        delay(1500);
         recieved = true;
       }
     }
-    if (recieved && connTick - recTime > 1000) bridgeConnected = true;
+    if (recieved && connTick - recTime > 3500) bridgeConnected = true;
   }
 }
 
