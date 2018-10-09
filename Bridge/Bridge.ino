@@ -58,9 +58,10 @@ void loop()
       delay(50);
       masterSerial.write(0xC2);
       digitalWrite(serialTXControl, LOW);  // Stop Transmitter
+      delay(50);
       connCount++;
       if (!monitorConnected) Serial.print(String(connCount) + "..");
-      while (millis() - whileTick < 500)
+      while (millis() - whileTick < 1500)
       {
         if (masterSerial.available() > 0)
         {
@@ -73,7 +74,7 @@ void loop()
     }
     if (!masterConnected) Serial.println("MASTER DISCONNECTED LONG TIME");
     else Serial.println("OK");
-    Serial1.flush();
+    masterSerial.flush();
   }
   else // Master Connected
   {
