@@ -53,28 +53,18 @@ void connectToBridge()
   unsigned long recTime = 0;
   while (!bridgeConnected)
   {
-    unsigned long connTick = millis();
-    if (Serial1.available() > 0)
-    {
-      byte inByte = (byte)Serial1.read();
-      Serial.println(inByte, HEX);
-      recCount++;
-      delay(50);
-      if (inByte == 0xC2 && !recieved)
-      {
-        recTime = connTick;
-        digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
-        delay(50);
-        Serial1.write(0xC1);
-        digitalWrite(SSerialTxControl, LOW);  // Init Transmitter
-        delay(50);
-        lcd.clear();
-        lcd.print("Bridge c-ted");
-        delay(1500);
-        recieved = true;
-      }
-    }
-    if (recieved && connTick - recTime > 3500) bridgeConnected = true;
+    digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
+    delay(100);
+    Serial1.write(0xC1);
+    digitalWrite(SSerialTxControl, LOW);  // Init Transmitter
+    delay(500);
+    
+    while (!Serial1.available()) {;}
+    byte in = Serial1.read();
+    lcd.clear();
+    lcd.print("REC-ED");
+    if (in == 0xC2) bridgeConnected = true;
+    //if (recieved && connTick - recTime > 3500) bridgeConnected = true;
   }
 }
 

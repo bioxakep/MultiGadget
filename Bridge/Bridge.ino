@@ -54,27 +54,45 @@ void loop()
     while (!masterConnected && (whileTick - startConnect < masterConnTimeOut))
     {
       whileTick = millis();
+      while(!masterSerial.available()) {;}
+      byte in = masterSerial.read();
+      Serial.println(in);
+      if (in == 0xC1) masterConnected = true;
+      while(masterSerial.available()) {masterSerial.read();}
+      
+      /*
       digitalWrite(serialTXControl, HIGH);  // Init Transmitter
-      delay(50);
+      delay(200);
       masterSerial.write(0xC2);
       digitalWrite(serialTXControl, LOW);  // Stop Transmitter
-      delay(50);
+      delay(200);
       connCount++;
-      if (!monitorConnected) Serial.print(String(connCount) + "..");
-      while (millis() - whileTick < 1500)
+      //if (!monitorConnected) Serial.print(String(connCount) + "..");
+      while (millis() - whileTick < 3000)
       {
         if (masterSerial.available() > 0)
         {
-          byte in;
-          in = masterSerial.read();
+          byte in = masterSerial.read();
+          Serial.println(in);
           masterLastRecTime = whileTick;
           if (in == 0xC1) masterConnected = true;
         }
       }
+
+      */
     }
+    
     if (!masterConnected) Serial.println("MASTER DISCONNECTED LONG TIME");
-    else Serial.println("OK");
-    masterSerial.flush();
+    else 
+    {
+      delay(1000);
+      Serial.println("OK");
+      digitalWrite(serialTXControl, HIGH);  // Init Transmitter
+      delay(100);
+      masterSerial.write(0xC2);
+      digitalWrite(serialTXControl, LOW);  // Stop Transmitter
+      delay(200);
+    }
   }
   else // Master Connected
   {
@@ -158,7 +176,6 @@ void loop()
           if (!monitorConnected) Serial.println(); // for test only
         }
       }
-      
       while(masterSerial.available()) masterSerial.read();
     }
 
