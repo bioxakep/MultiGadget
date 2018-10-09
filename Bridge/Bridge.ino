@@ -13,7 +13,7 @@
 //0xAA from Master
 //0xBB from Bridge
 //0xCC from operator
-SoftwareSerial Serial1(10, 11);
+SoftwareSerial masterSerial(10, 11);
 int serialTXControl = 3;
 boolean passGStates[31];
 boolean monitorConnected = false;
@@ -55,6 +55,7 @@ void loop()
     {
       whileTick = millis();
       digitalWrite(serialTXControl, HIGH);  // Init Transmitter
+      delay(50);
       masterSerial.write(0xC2);
       digitalWrite(serialTXControl, LOW);  // Stop Transmitter
       connCount++;
