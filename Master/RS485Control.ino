@@ -64,8 +64,10 @@ void connectToBridge()
       {
         recTime = connTick;
         digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
+        delay(50);
         Serial1.write(0xC1);
         digitalWrite(SSerialTxControl, LOW);  // Init Transmitter
+        delay(50);
         lcd.clear();
         lcd.print("Bridge c-ted");
         delay(1500);
