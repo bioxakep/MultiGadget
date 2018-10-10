@@ -1,5 +1,5 @@
 #define SSerialTxControl 17   //RS485 Direction control
-unsigned long tick = 0;
+unsigned long sendTime = 0;
 void setup() {
   // put your setup code here, to run once:
   Serial1.begin(9600);  //RS-485 adapter
@@ -9,20 +9,21 @@ void setup() {
 }
 
 void loop() {
-  if (millis() - tick > 5000)  
+  unsigned long tick = millis();
+  if (tick - sendTime > 5672)  
   {
-    tick = millis();
+    sendTime = tick;
     digitalWrite(SSerialTxControl, HIGH);
-    Serial1.write(0xFB);
+    Serial1.write(0xC1);
     digitalWrite(SSerialTxControl, LOW);
-    Serial.println("Send in " + String(tick));
+    Serial.println("Send 0xFB in " + String(tick));
   }
   if (Serial1.available() > 0)
   {
     while (Serial1.available()) 
     {
-      inByte = Serial1.read();
-      if(inByte == 0xFB) Serial.println("Recieved in "+String(millis()));
+      byte inByte = Serial1.read();
+      Serial.println("Recieved:"+String(inByte)+" in "+String(tick));
     }
   }
 }
