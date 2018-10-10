@@ -6,7 +6,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial1.begin(9600);  //RS-485 adapter
   Serial.begin(9600);
-  pinMode(19, INPUT_PULLUP);
+  
   pinMode(SSerialTxControl, OUTPUT);
   digitalWrite(SSerialTxControl, LOW); // Init Recieve RS485
   lcd.init();                   
@@ -15,7 +15,7 @@ void setup() {
 }
 
 void loop() {
-  if(!digitalRead(19)) Serial.println("RX WORKS");
+
   unsigned long tick = millis();
   /*
   if (tick - sendTime > 5672)  
@@ -35,10 +35,11 @@ void loop() {
     {
       byte inByte = Serial1.read();
       Serial.println("Recieved:"+String(inByte)+" in "+String(tick));
-      //lcd.clear();
-      //lcd.print("RCV:"+String(inByte));
-      //lcd.setCursor(0,1);
-      //lcd.print(String(tick));
+      lcd.clear();
+      lcd.print("RCV:"+String(inByte));
+      lcd.setCursor(0,1);
+      lcd.print(String(tick));
     }
   }
+  
 }
