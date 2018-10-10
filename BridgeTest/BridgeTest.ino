@@ -20,7 +20,7 @@ void loop()
     digitalWrite(SSerialTxControl, HIGH);
     mySerial.write(0xC2);
     digitalWrite(SSerialTxControl, LOW);
-    mySerial.println("Send 0xFA in " + String(tick));
+    mySerial.println("Send 0xС2 in " + String(tick));
   }
   if (mySerial.available() > 0)
   {

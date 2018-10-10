@@ -21,7 +21,7 @@ void loop() {
     digitalWrite(SSerialTxControl, HIGH);
     Serial1.write(0xC1);
     digitalWrite(SSerialTxControl, LOW);
-    Serial.println("Send 0xFB in " + String(tick));
+    Serial.println("Send 0xС1 in " + String(tick));
   }
   if (Serial1.available() > 0)
   {
