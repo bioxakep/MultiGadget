@@ -14,20 +14,17 @@ void setup() {
 void loop()
 {
   unsigned long tick = millis();
-  /*
-  if (tick - sendTime > 3287)  
+  
+  if (tick - sendTime > 9456)  
   {
     sendTime = tick;
     digitalWrite(SSerialTxControl, HIGH);
-    delay(200);
     mySerial.write(0xC2);
-    delay(50);
+    delay(10);
     digitalWrite(SSerialTxControl, LOW);
-    delay(200);
     Serial.println("Send 0xС2 in " + String(tick));
     while(mySerial.available()) mySerial.read();
   }
-  */
   if (mySerial.available() > 0)
   {
     while (mySerial.available()) 
