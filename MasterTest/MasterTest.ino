@@ -19,13 +19,17 @@ void loop() {
   {
     sendTime = tick;
     digitalWrite(SSerialTxControl, HIGH);
+    delay(200);
     Serial1.write(0xC1);
+    delay(50);
     digitalWrite(SSerialTxControl, LOW);
+    delay(200);
     Serial.println("Send 0xС1 in " + String(tick));
+    while(Serial1.available()) Serial1.read();
   }
   if (Serial1.available() > 0)
   {
-    while (Serial1.available()) 
+    while (Serial1.available())
     {
       byte inByte = Serial1.read();
       Serial.println("Recieved:"+String(inByte)+" in "+String(tick));
