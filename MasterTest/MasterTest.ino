@@ -1,4 +1,6 @@
+#include <LiquidCrystal_I2C.h>
 #define SSerialTxControl 17   //RS485 Direction control
+LiquidCrystal_I2C lcd(0x3F,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 unsigned long sendTime = 0;
 void setup() {
   // put your setup code here, to run once:
@@ -6,6 +8,9 @@ void setup() {
   Serial.begin(9600);
   pinMode(SSerialTxControl, OUTPUT);
   digitalWrite(SSerialTxControl, LOW); // Init Recieve RS485
+  lcd.init();                   
+  lcd.backlight();
+  lcd.print("Initialising...");
 }
 
 void loop() {
@@ -24,6 +29,10 @@ void loop() {
     {
       byte inByte = Serial1.read();
       Serial.println("Recieved:"+String(inByte)+" in "+String(tick));
+      lcd.clear();
+      lcd.print("RCV:"+String(inByte));
+      lcd.setCursor(0,1);
+      lcd.print(String(tick));
     }
   }
 }
