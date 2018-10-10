@@ -18,15 +18,15 @@ void loop()
   {
     sendTime = tick;
     digitalWrite(SSerialTxControl, HIGH);
-    Serial1.write(0xC2);
+    mySerial.write(0xC2);
     digitalWrite(SSerialTxControl, LOW);
-    Serial.println("Send 0xFA in " + String(tick));
+    mySerial.println("Send 0xFA in " + String(tick));
   }
-  if (Serial1.available() > 0)
+  if (mySerial.available() > 0)
   {
-    while (Serial1.available()) 
+    while (mySerial.available()) 
     {
-      byte inByte = Serial1.read();
+      byte inByte = mySerial.read();
       Serial.println("Recieved:"+String(inByte)+" in "+String(tick));
     }
   }
