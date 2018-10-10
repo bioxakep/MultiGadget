@@ -1,6 +1,6 @@
 #include <SoftwareSerial.h>
 
-#define SSerialTxControl 3   //RS485 Direction control
+#define SSerialTxControl 17   //RS485 Direction control
 SoftwareSerial mySerial(10, 11); // RX, TX
 unsigned long sendTime = 0;
 void setup() {
