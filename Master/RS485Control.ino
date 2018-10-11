@@ -27,10 +27,12 @@ void sendGStates() // Проверяем прошел ли игрок какой
   digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
   Serial.print("Send States to Operator: ");
   Serial1.write(0xAA);
+  delay(10);
   for (int d = 0; d < 31; d++)
   {
     if (passGStates[d]) Serial1.write(0x05);
     else Serial1.write(0x01);
+    delay(10);
     //Serial1.write(passGStates[d] ? 0x05 : 0x01);
     //Serial.print(passGStates[d] ? 0x05 : 0x01);
     if (!operGStates[d] && passGStates[d])
@@ -40,6 +42,7 @@ void sendGStates() // Проверяем прошел ли игрок какой
     }
   }
   Serial1.write(0xFF);
+  delay(10);
   Serial.println();
   lcd.clear();
   lcd.print("SENT");
