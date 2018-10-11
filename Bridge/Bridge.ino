@@ -137,7 +137,7 @@ void loop()
       }
       else if (inByte == 0xAA)
       {
-        masterLastRecTime = millis();
+        masterLastRecTime = tick;
         if (!monitorConnected) Serial.print("Recieving data from master: ");
         delay(5);
         for (int i = 0; i < 31; i++)
