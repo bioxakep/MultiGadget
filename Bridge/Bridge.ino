@@ -37,14 +37,7 @@ void setup() {
 void loop()
 {
   unsigned long tick = millis();
-  if (tick - masterLastRecTime > masterTimeOut && masterConnected)
-  {
-    masterConnected = false;
-    Serial.println("masterLastRecTime:" + String(masterLastRecTime));
-    Serial.println("tick:" + String(tick));
-    Serial.println("masterTimeOut:" + String(masterTimeOut));
-    Serial.println("MASTER DISCONNECTED");
-  }
+  
   if (!masterConnected)
   {
     unsigned long startConnect = tick;
@@ -68,7 +61,7 @@ void loop()
       if (inByte == 0xA3) masterConnected = true;
       if (inByte == 0xA1 || inByte == 0xA2 || inByte == 0xA3)
       {
-        if (!monitorConnected) Serial.println("/nConnecting... recieved and sending back: "+String(inByte)+ " in " + String(whileTick));
+        if (!monitorConnected) Serial.println("\nConnecting... recieved and sending back: "+String(inByte)+ " in " + String(whileTick));
         digitalWrite(serialTXControl, HIGH);  // Init Transmitter
         masterSerial.write(inByte);
         delay(10);
@@ -80,7 +73,7 @@ void loop()
       if (!monitorConnected) Serial.println("MASTER DISCONNECTED LONG TIME");
       else Serial.println("MDLT");
     }
-    else Serial.println("/nMASTER CONNECTED/n");
+    else Serial.println("\nMASTER CONNECTED\n");
   }
   else // Master Connected
   {
@@ -122,6 +115,7 @@ void loop()
       byte input[31];
       for (byte i = 0; i < 31; i++) input[i] = 0x00;
       byte inByte = masterSerial.read();
+      masterLastRecTime = tick;
       //masterSerial.println("First byte is " + String(inByte));
       if (inByte == 0xA5)
       {
@@ -137,7 +131,6 @@ void loop()
       }
       else if (inByte == 0xAA)
       {
-        masterLastRecTime = tick;
         if (!monitorConnected) Serial.print("Recieving data from master: ");
         delay(5);
         for (int i = 0; i < 31; i++)
@@ -167,6 +160,11 @@ void loop()
         }
       }
       while (masterSerial.available()) masterSerial.read();
+    }
+    if(tick - masterLastRecTime > masterTimeOut && masterLastRecTime > 0)
+    {
+      masterConnected = false;
+      Serial.println("MASTER CONNECTION LOST");
     }
   }
 }

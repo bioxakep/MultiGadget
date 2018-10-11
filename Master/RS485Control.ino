@@ -70,7 +70,7 @@ void connectToBridge()
     Serial1.write(outByte);
     delay(10);
     digitalWrite(SSerialTxControl, LOW);
-    Serial.println("Send 0xС1 in " + String(tick));
+    Serial.println("Send " + String(outByte,HEX) + " in " + String(tick));
     
     while (tick - sendTime < 1500 && !recieved)
     {
