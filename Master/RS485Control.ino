@@ -43,10 +43,11 @@ void sendGStates() // Проверяем прошел ли игрок какой
   }
   Serial1.write(0xFF);
   delay(10);
+  digitalWrite(SSerialTxControl, LOW);  // Stop Transmitter
   Serial.println();
   lcd.clear();
   lcd.print("SENT");
-  digitalWrite(SSerialTxControl, LOW);  // Init Transmitter
+  
 }
 
 void connectToBridge()

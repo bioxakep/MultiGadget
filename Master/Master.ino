@@ -356,6 +356,9 @@ void setup() {
   pinMode( gheraIN  , INPUT_PULLUP);
   pinMode( gheraOUT , OUTPUT);
   pinMode( flowrHD,   OUTPUT);
+  
+  pinMode(triPin, INPUT_PULLUP);
+  pinMode(firePin, INPUT_PULLUP);
   //pinMode( worldIN  , INPUT_PULLUP);
   //pinMode( worldOUT , OUTPUT);
 

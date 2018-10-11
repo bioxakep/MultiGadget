@@ -74,6 +74,7 @@ void loop()
       else Serial.println("MDLT");
     }
     else Serial.println("\nMASTER CONNECTED\n");
+    masterLastRecTime = 0;
   }
   else // Master Connected
   {
@@ -146,6 +147,9 @@ void loop()
         Serial.println("Last byte is " + String(last));
         if (last == 0xFF)
         {
+          Serial.print("else data in buffer:");
+          while(masterSerial.available()) {Serial.print(masterSerial.read()); delay(10);}
+          Serial.println();
           if (!monitorConnected) Serial.print("Send to operator: ");
           // Prepare to send states to Operator
           Serial.write(0xBB);
