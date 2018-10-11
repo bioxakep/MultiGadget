@@ -13,7 +13,7 @@
 //0xAA from Master
 //0xBB from Bridge
 //0xCC from operator
-
+SoftwareSerial masterSerial(10, 11);
 int serialTXControl = 3;
 boolean passGStates[31];
 boolean monitorConnected = false;
@@ -24,7 +24,7 @@ unsigned long masterLastRecTime = 0;
 unsigned long masterTimeOut = 5000;
 unsigned long masterConnTimeOut = 20000;
 void setup() {
-  Serial1.begin(9600);
+  masterSerial.begin(9600);
   Serial.begin(9600);
   pinMode(serialTXControl, OUTPUT);
   digitalWrite(serialTXControl, LOW);
@@ -55,7 +55,7 @@ void loop()
     int connCount = 0;
     while (!masterConnected && (whileTick - startConnect < masterConnTimeOut))
     {
-      while (!Serial1.available()) {
+      while (!masterSerial.available()) {
         whileTick = millis();
         if(whileTick - startConnect + connectWaitCount*1000 > 1000 && inByte == 0)
         {
@@ -63,14 +63,14 @@ void loop()
           if (!monitorConnected) Serial.print(String(connectWaitCount) + "...");
         }
       }
-      inByte = Serial1.read();
+      inByte = masterSerial.read();
       delay(10);
       if (inByte == 0xA3) masterConnected = true;
       if (inByte == 0xA1 || inByte == 0xA2 || inByte == 0xA3)
       {
         if (!monitorConnected) Serial.println("/nConnecting... recieved and sending back: "+String(inByte)+ " in " + String(whileTick));
         digitalWrite(serialTXControl, HIGH);  // Init Transmitter
-        Serial1.write(inByte);
+        masterSerial.write(inByte);
         delay(10);
         digitalWrite(serialTXControl, LOW);  // Stop Transmitter
       }
@@ -101,15 +101,15 @@ void loop()
         {
           // Prepare to send states to Master
           digitalWrite(serialTXControl, HIGH);  // Init Transmitter
-          Serial1.write(0xBB);
+          masterSerial.write(0xBB);
           delay(10);
           //Sending...
           for (int d = 0; d < 31; d++)
           {
-            Serial1.write(passGStates[d]);
+            masterSerial.write(passGStates[d]);
             delay(10);
           }
-          Serial1.write(0xFF); // End sending
+          masterSerial.write(0xFF); // End sending
           delay(10);
           digitalWrite(serialTXControl, LOW);  // Stop Transmitter
         }
@@ -117,12 +117,12 @@ void loop()
       else Serial.flush();
     }
 
-    if (Serial1.available() > 0) //recieve from master
+    if (masterSerial.available() > 0) //recieve from master
     {
       byte input[31];
       for (byte i = 0; i < 31; i++) input[i] = 0x00;
-      byte inByte = Serial1.read();
-      //Serial1.println("First byte is " + String(inByte));
+      byte inByte = masterSerial.read();
+      //masterSerial.println("First byte is " + String(inByte));
       if (inByte == 0xA5)
       {
         for (int s = 0; s < 31; s++) passGStates[s] = false;
@@ -142,14 +142,14 @@ void loop()
         delay(5);
         for (int i = 0; i < 31; i++)
         {
-          input[i] = Serial1.read();
+          input[i] = masterSerial.read();
           delay(5);
           Serial.print("|" + String(input[i]));
           if (input[i] > 0x03) passGStates[i] = true;
           else passGStates[i] = false;
         }
         if (!monitorConnected) Serial.println();
-        byte last = Serial1.read();
+        byte last = masterSerial.read();
         Serial.println("Last byte is " + String(last));
         if (last == 0xFF)
         {
@@ -166,7 +166,7 @@ void loop()
           if (!monitorConnected) Serial.println(); // for test only
         }
       }
-      while (Serial1.available()) Serial1.read();
+      while (masterSerial.available()) masterSerial.read();
     }
   }
 }
