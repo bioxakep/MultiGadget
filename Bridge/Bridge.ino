@@ -13,7 +13,7 @@
 //0xAA from Master
 //0xBB from Bridge
 //0xCC from operator
-SoftwareSerial Serial1(10, 11);
+
 int serialTXControl = 3;
 boolean passGStates[31];
 boolean monitorConnected = false;
@@ -68,7 +68,7 @@ void loop()
       if (inByte == 0xA3) masterConnected = true;
       if (inByte == 0xA1 || inByte == 0xA2 || inByte == 0xA3)
       {
-        if (!monitorConnected) Serial.println("/nConnecting... recieved: "+String(inByte)+", sending: "+String(outByte) + " in " + String(whileTick));
+        if (!monitorConnected) Serial.println("/nConnecting... recieved and sending back: "+String(inByte)+ " in " + String(whileTick));
         digitalWrite(serialTXControl, HIGH);  // Init Transmitter
         Serial1.write(inByte);
         delay(10);
