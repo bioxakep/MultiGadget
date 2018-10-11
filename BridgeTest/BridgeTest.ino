@@ -23,7 +23,7 @@ void loop()
     delay(10);
     digitalWrite(SSerialTxControl, LOW);
     Serial.println("Send 0xС2 in " + String(tick));
-    // while(mySerial.available()) mySerial.read();
+    //while(Serial1.available()) Serial1.read();
   }
   if (Serial1.available() > 0)
   {

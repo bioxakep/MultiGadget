@@ -48,23 +48,46 @@ void sendGStates() // Проверяем прошел ли игрок какой
 
 void connectToBridge()
 {
+  byte inByte = 0;
+  byte outByte = 0xA1;
   boolean recieved = false;
-  int recCount = 0;
-  unsigned long recTime = 0;
+  unsigned long tick = millis();
+  unsigned long sendTime = tick;
   while (!bridgeConnected)
   {
-    digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
-    delay(100);
-    Serial1.write(0xC1);
-    digitalWrite(SSerialTxControl, LOW);  // Init Transmitter
-    delay(500);
+    /*
+       ждем 3 секунды
+        если ничего не приняли - отправляет текущий байт
+        если приняли - отправляем сразу байт ответ (меняем на следующий) и снова ждем
+       после отправки приняли предыдущий байт - не меняем ничего.
+       меняем и отправляем СРАЗУ только если приняли следующий
+    */
+    sendTime = tick;
+    digitalWrite(SSerialTxControl, HIGH);
+    Serial1.write(outByte);
+    delay(10);
+    digitalWrite(SSerialTxControl, LOW);
+    Serial.println("Send 0xС1 in " + String(tick));
     
-    while (!Serial1.available()) {;}
-    byte in = Serial1.read();
-    lcd.clear();
-    lcd.print("REC-ED");
-    if (in == 0xC2) bridgeConnected = true;
-    //if (recieved && connTick - recTime > 3500) bridgeConnected = true;
+    while (tick - sendTime < 1500 && !recieved)
+    {
+      tick = millis();
+      if (Serial1.available() > 0)
+      {
+        while (Serial1.available())
+        {
+          byte inByte = Serial1.read();
+          Serial.println("Recieved:" + String(inByte) + " in " + String(tick));
+          if (inByte == 0xA1 && outByte == 0xA1) { outByte = 0xA2; }
+          if (inByte == 0xA2 && outByte == 0xA2) { outByte = 0xA3; }
+          if (inByte == 0xA3) bridgeConnected = true;
+          lcd.clear();
+          lcd.print("RCV:" + String(inByte));
+          lcd.setCursor(0, 1);
+          lcd.print(String(tick));
+        }
+      }
+    }
   }
 }
 

@@ -444,7 +444,8 @@ void loop()
         Serial.println("Go to level 12");
         level = 12;
         digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
-        Serial1.write(0xC4);
+        Serial1.write(0xA5);
+        delay(10);
         lcd.clear();
         lcd.print("GADGET CLEAR");
         digitalWrite(SSerialTxControl, LOW);  // Stop Transmitter

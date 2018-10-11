@@ -17,7 +17,7 @@ void setup() {
 void loop() {
 
   unsigned long tick = millis();
-  /*
+  
     if (tick - sendTime > 5672)
     {
     sendTime = tick;
@@ -28,7 +28,7 @@ void loop() {
     Serial.println("Send 0xС1 in " + String(tick));
     while(Serial1.available()) Serial1.read();
     }
-  */
+  
 
   while (Serial1.available())
   {
@@ -39,5 +39,4 @@ void loop() {
     lcd.setCursor(0, 1);
     lcd.print(String(tick));
   }
-
 }
