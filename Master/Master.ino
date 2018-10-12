@@ -359,6 +359,7 @@ void setup() {
   
   pinMode(triPin, INPUT_PULLUP);
   pinMode(firePin, INPUT_PULLUP);
+  pinMode(13, OUTPUT);
   //pinMode( worldIN  , INPUT_PULLUP);
   //pinMode( worldOUT , OUTPUT);
 
@@ -802,7 +803,7 @@ void loop()
   {
     // game over - victory !
   }
-  if(tick - prevSent > 1000) 
+  if(tick - prevSent > 3000) 
   { 
     sendGStates();
     prevSent = tick;

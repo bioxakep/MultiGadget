@@ -1,5 +1,7 @@
 import processing.serial.*;
 Serial arduino;
+boolean recieved = false;
+
 PrintWriter data;
 
 boolean game;
@@ -37,10 +39,10 @@ boolean calculated = false;
 int[] levGadCount = {3, 9, 7, 6, 5, 1};
 String[] levelNames = {"START", "THUNDER", "SHIELDS", "SEALS", "UNDERGROUND", "END"};
 String[] gadgetNames = {"Baloon", "Press", "Gate", "Poseidon", "Trident", "Demetra-1", "Rain", "Vine", "Dionis-1", "Hercules", "Narcis", "Thunder", "Afina-1", "Afina-2", "Time", "Octopus", "Note", "Wind", "Ghera-1", "Fire", "Flower-1", "Flower-2", "Arpha", "Dionis-2", "Ghera-2", "Zodiak", "Minot", "Gorgona", "Cristals", "Light", "End"};
-boolean[] passedGadgets = {true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false};
-boolean[] hintedGadgets = {true, false, true, false, false, true, true, true, true, false, true, true, true, true, true, false, true, true, true, true, true, false, true, true, false, false, true, false, true, true, true, true};
-int[] passedTimes = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
+boolean[] passedGadgets = new boolean[31];
+boolean[] hintedGadgets = new boolean[31];
+int[] passedTimes = new int[31];
+byte[] inData = new byte[31];
 int passTimesIndex = 0;
 
 int[] gadgetPassedOrder = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -89,8 +91,15 @@ void setup()
   t = new StopWatchTimer();
   t.setStartTime(0, 1, 30);
   totalSeconds = 0 + 1 * 60 + 30;
-  //arduinoConnect();
+  arduinoConnect();
   for (int c = 0; c < 15; c++) teamName[c] = ' ';
+  for(int g = 0; g < 31; g++)
+  {
+    passedGadgets[g] = false;
+    hintedGadgets[g] = false;
+    passedTimes[g] = 0;
+    inData[g] = 0;
+  }
 }
 void draw()
 {
@@ -164,8 +173,9 @@ void draw()
           }
         }
         fill(butCol);
-        if (hintedGadgets[gadCount]) fill(color(255, 180, 130, 60));
         if (passedGadgets[gadCount]) fill(color(0, 200, 100, 60));
+        else fill(color(100, 100, 100, 60));
+        if (hintedGadgets[gadCount]) fill(color(255, 180, 130, 60));
         rect((g+1) * gadMarX + gadButW * g, topH + gadMarY*(lev+1) + gadButH*lev, gadButW, gadButH);
         textFont(topFont, timerH * 0.3);
         float gtxtW = textWidth(gadgetNames[gadCount]);
@@ -178,6 +188,69 @@ void draw()
       line(gadMarX, topH + gadMarY*(lev+1) + gadButH*lev, (levGadCount[lev]) * (gadMarX + gadButW), topH + gadMarY*(lev+1) + gadButH*lev);
       strokeWeight(1);
     }
+    
+    //RECIEVE FROM BRIDGE
+    if (arduino.available() > 0)
+    {
+      byte input = (byte)(0xFF & (arduino.read()));
+      //println(input);
+      //println(hex(input));
+      if (hex(input).equals("BB"))
+      {
+        for (int i = 0; i < 31; i++)
+        {
+          byte inByte = (byte)(0xFF & arduino.read());
+          inData[i] = inByte;
+        }
+        byte last = (byte)(0xFF & arduino.read());
+        if (hex(last).equals("FF")) recieved = true;
+      } else arduino.readStringUntil('\n');
+    }
+    if (recieved)
+    {
+      print("Recieved from bridge:");
+      for (int p = 0; p < 31; p++)
+      {
+        print(inData[p]);
+        print("|");
+        if(inData[p] > 3 && !passedGadgets[p])
+        {
+          passedGadgets[p] = true;
+        }
+        inData[p] = 0;
+      }
+      println();
+      recieved = false;
+    }
+    
+    //SEND TO BRIDGE
+    boolean sendToBridge = false;
+    for(int i = 0; i < 31; i++)
+    {
+      if(hintedGadgets[i] && !passedGadgets[i])
+      {
+        sendToBridge = true;
+        passedGadgets[i] = true;
+      }
+    }
+    
+    if(sendToBridge)
+    {
+      print("sending to bridge hints..");
+      arduino.write(0xCC);
+      for(int s = 0; s < 31; s++)
+      {
+        byte outByte = 0x01;
+        if(hintedGadgets[s]) outByte = 0x05;
+        print(int(hintedGadgets[s]));
+        print("-");
+        arduino.write(outByte);
+      }
+      arduino.write(0xFF);
+      println("OK");
+      sendToBridge = false;
+    }
+
     boolean allDone = true;
     for (int g = 0; g < gadCount; g++)
     {
@@ -193,7 +266,7 @@ void draw()
     if (endGame)
     {
       background(0);
-      fill(color(200,200,200));
+      fill(color(200, 200, 200));
       textFont(topFont, scrH/20);
       float statTextWidth = textWidth("STATISTICS");
       text("STATISTICS", scrW/2 - statTextWidth/2, scrH/19);
@@ -203,10 +276,10 @@ void draw()
       data.println("Time: "+str(hour()) +":"+str(minute())+":"+str(second()));
       data.println("Team Name: " + teamNameStr);
       data.println("Players: " + str(playersCount));
-      for(int g = 0; g < passedTimes.length; g++)
+      for (int g = 0; g < passedTimes.length; g++)
       {
         String result = str(g+1) + ". " + gadgetNames[g] + " passed by " + passedTimes[g] + " seconds";
-        if(hintedGadgets[g]) result = result + " and hinted.";
+        if (hintedGadgets[g]) result = result + " and hinted.";
         else result = result + ".";
         String csvString = g+";"+gadgetNames[g]+";"+passedTimes[g]+";"+hintedGadgets[g]+";";
         data.println(csvString);
@@ -274,52 +347,6 @@ void draw()
   prevMouseState = currMouseState;
 }
 
-void arduinoConnect()
-{
-  connected = false;
-  portName = "COM3"; // COM3 or /dev/tty.wchusbserial1410 or /dev/tty.wchusbserial1420
-  //portName = "/dev/tty.wchusbserial1411";
-  portName = "/dev/cu.usbmodem1411";
-  arduino = new Serial(this, portName, 9600);
-  long startConnect = millis();
-  while (!connected && (millis() - startConnect < 60000))
-  {
-    arduino.write("letsgame\n");
-    println("Connecting...");
-    long now = millis();
-    while (millis() - now < 1000) {
-      ;
-    }
-    String input = getInput(); 
-    if (input.length() > 4)
-    {
-      if (input.trim().equals("start")) connected = true;
-    }
-  }
-  println("Connect status: " + str(connected));
-  if (!connected) { 
-    noLoop(); 
-    println("No connection for arduino..."); 
-    text("NO ARDUINO CONNECTED TO " + portName, width/2, height/2);
-  }
-}
-
-String getInput()
-{
-  if (arduino.available() > 0)
-  {
-    //println("start read string from serial::"+str(millis()));
-    String inp = arduino.readStringUntil('\n');
-    //println("end read string from serial::"+str(millis()));
-    if (inp != null)
-    {
-      //if (inp.length() > 1) println(inp);
-      //println("print string from serial::"+str(millis()));
-      return inp;
-    } else return " ";
-  } else return " ";
-}
-
 int calcTSize(String txt, float maxWidth)
 {
   int retSize = 1;
@@ -370,5 +397,51 @@ void keyPressed()
     nameLen--;
     teamName[nameLen] = ' ';
     println(teamName);
+  }
+}
+
+String getInput()
+{
+  if (arduino.available() > 0)
+  {
+    //println("start read string from serial::"+str(millis()));
+    String inp = arduino.readStringUntil('\n');
+    //println("end read string from serial::"+str(millis()));
+    if (inp != null)
+    {
+      //if (inp.length() > 1) println(inp);
+      //println("print string from serial::"+str(millis()));
+      return inp;
+    } else return " ";
+  } else return " ";
+}
+
+void arduinoConnect()
+{
+  connected = false;
+  portName = "COM18"; // COM3 or /dev/tty.wchusbserial1410 or /dev/tty.wchusbserial1420
+
+  arduino = new Serial(this, portName, 9600);
+  long startConnect = millis();
+  while (!connected && (millis() - startConnect < 60000))
+  {
+    arduino.write("letsgame\n");
+    println("Connecting...");
+    long now = millis();
+    while (millis() - now < 1000) {
+      ;
+    }
+    String input = getInput();
+    println(input);
+    if (input.length() > 4)
+    {
+      if (input.trim().equals("start")) connected = true;
+    }
+  }
+  println("Connect status: " + str(connected));
+  if (!connected) { 
+    noLoop(); 
+    println("No connection for arduino..."); 
+    text("NO ARDUINO CONNECTED TO " + portName, width/2, height/2);
   }
 }

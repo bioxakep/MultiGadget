@@ -1,7 +1,6 @@
 void connectToMonitor()
 {
-  boolean monConnected = false;
-  while (!monConnected)
+  while (!monitorConnected)
   {
     if (Serial.available() > 0)
     {
@@ -20,11 +19,11 @@ void connectToMonitor()
             Serial.readStringUntil('\n');
             delay(50);
             Serial.println("start");
-            delay(500);
+            delay(1000);
           }
           else sync = true;
         }
-        monConnected = true;
+        monitorConnected = true;
       }
     }
   }

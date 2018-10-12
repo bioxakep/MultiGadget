@@ -6,16 +6,28 @@ void getOperSkips()
   {
     byte input[31];
     byte inByte = Serial1.read();
+    
     if (inByte == 0xBB)
     {
+      Serial.print("Operator Skips Recieved:");
+      delay(350);
       for (int i = 0; i < 31; i++)
       {
         input[i] = Serial1.read();
-        if (input[i] == 0x01) operGStates[i] = true;
+        if (input[i] > 0x03) operGStates[i] = true;
         else operGStates[i] = false;
+        Serial.print(operGStates[i]);
+        Serial.print("|");
       }
       byte last = Serial1.read();
-      if (last == 0xFF) Serial.println("Operator Skips Recieved");
+      if (last == 0xFF) Serial.println("OK");
+    }
+    else if (inByte == 0xBA) {
+      bridgeConnected = false;
+      connectToBridge();
+      digitalWrite(13, HIGH);
+      delay(100);
+      digitalWrite(13, LOW);
     }
     else Serial1.flush();
   }
@@ -34,7 +46,7 @@ void sendGStates() // Проверяем прошел ли игрок какой
     else Serial1.write(0x01);
     delay(10);
     //Serial1.write(passGStates[d] ? 0x05 : 0x01);
-    //Serial.print(passGStates[d] ? 0x05 : 0x01);
+    Serial.print(passGStates[d] ? 0x05 : 0x01);
     if (!operGStates[d] && passGStates[d])
     {
       Serial.println("Gadget " + String(gadgetNames[d]) + " passed by player");
@@ -47,7 +59,6 @@ void sendGStates() // Проверяем прошел ли игрок какой
   Serial.println();
   lcd.clear();
   lcd.print("SENT");
-  
 }
 
 void connectToBridge()
