@@ -24,8 +24,8 @@ class StopWatchTimer {
              long mil = millis();
              //print("millis = " + str(mil));
              //print("startTime = " + str(startTime));
-             passedTime = millis() - startTime;
-             elapsed = elapsedSecs - (millis() - startTime);
+             passedTime = mil - startTime;
+             elapsed = elapsedSecs - (mil - startTime);
              //print(str(millis() - startTime));
         }
         else {

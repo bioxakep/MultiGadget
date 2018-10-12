@@ -67,7 +67,7 @@ void setup()
   //fullScreen();
   fill(255);
   teamName = new char[15];
-  game = false;//DEBUG
+  game = true;//DEBUG
   timerFont = createFont("Arial", 10);//Silom
   topFont = createFont("MyanmarMN", 14);
   enterFont = createFont("MyanmarMN", 14);
@@ -93,7 +93,7 @@ void setup()
   totalSeconds = 0 + 1 * 60 + 30;
   arduinoConnect();
   for (int c = 0; c < 15; c++) teamName[c] = ' ';
-  for(int g = 0; g < 31; g++)
+  for (int g = 0; g < 31; g++)
   {
     passedGadgets[g] = false;
     hintedGadgets[g] = false;
@@ -101,6 +101,7 @@ void setup()
     inData[g] = 0;
   }
 }
+
 void draw()
 {
   currMouseState = mousePressed;
@@ -108,6 +109,8 @@ void draw()
   {
     background(background);
     //Timer
+    strokeWeight(1);
+    stroke(0);
     String currTime = getTime(t.hour(), t.minute(), t.second());
     textFont(timerFont, timerH);
     timerTextW = textWidth(currTime);
@@ -188,10 +191,11 @@ void draw()
       line(gadMarX, topH + gadMarY*(lev+1) + gadButH*lev, (levGadCount[lev]) * (gadMarX + gadButW), topH + gadMarY*(lev+1) + gadButH*lev);
       strokeWeight(1);
     }
-    
+
     //RECIEVE FROM BRIDGE
     if (arduino.available() > 0)
     {
+      boolean start = true;
       byte input = (byte)(0xFF & (arduino.read()));
       //println(input);
       //println(hex(input));
@@ -204,44 +208,49 @@ void draw()
         }
         byte last = (byte)(0xFF & arduino.read());
         if (hex(last).equals("FF")) recieved = true;
-      } else arduino.readStringUntil('\n');
+      }
+      else if (hex(input).equals("EE"))
+      {
+        t.start(); 
+        println("start game");
+      }
+      else arduino.readStringUntil('\n');
     }
     if (recieved)
     {
       print("Recieved from bridge:");
+      
       for (int p = 0; p < 31; p++)
       {
         print(inData[p]);
         print("|");
-        if(inData[p] > 3 && !passedGadgets[p])
-        {
-          passedGadgets[p] = true;
-        }
+        if (inData[p] > 3 && !passedGadgets[p]) passedGadgets[p] = true;
         inData[p] = 0;
       }
       println();
       recieved = false;
+      
     }
-    
+
     //SEND TO BRIDGE
     boolean sendToBridge = false;
-    for(int i = 0; i < 31; i++)
+    for (int i = 0; i < 31; i++)
     {
-      if(hintedGadgets[i] && !passedGadgets[i])
+      if (hintedGadgets[i] && !passedGadgets[i])
       {
         sendToBridge = true;
         passedGadgets[i] = true;
       }
     }
-    
-    if(sendToBridge)
+
+    if (sendToBridge)
     {
       print("sending to bridge hints..");
       arduino.write(0xCC);
-      for(int s = 0; s < 31; s++)
+      for (int s = 0; s < 31; s++)
       {
         byte outByte = 0x01;
-        if(hintedGadgets[s]) outByte = 0x05;
+        if (hintedGadgets[s]) outByte = 0x05;
         print(int(hintedGadgets[s]));
         print("-");
         arduino.write(outByte);
@@ -290,59 +299,18 @@ void draw()
       if (!prevMouseState && currMouseState) 
       {
         endGame = false;
+        for (int c = 0; c < 15; c++) teamName[c] = ' ';
+        for (int g = 0; g < 31; g++)
+        {
+          passedGadgets[g] = false;
+          hintedGadgets[g] = false;
+          passedTimes[g] = 0;
+          inData[g] = 0;
+        }
+        arduino.write(0xCF);
         //RESET GAME
       }
-    } else
-    {
-      background(0);
-      fill(200);
-      strokeWeight(2);
-      fill(0);
-      stroke(255);
-      ellipse(scrW/2 - 122, scrH/2 - 51, 40, 40); // minus circle
-      ellipse(scrW/2 + 118, scrH/2 - 51, 40, 40); // minus circle
-      fill(200);
-      strokeWeight(0);
-      rect(scrW/2 - 135, scrH/2 - 52, 28, 4); // minus
-
-      rect(scrW/2 + 105, scrH/2 - 52, 28, 4); // plus horiz
-      rect(scrW/2 + 117, scrH/2 - 64, 4, 28); // plus vertical
-      enterTextSize = calcTSize(str(playersCount) + " PLAYERS", 190);
-      textFont(enterFont, enterTextSize);
-      float playersTextWidth = textWidth(str(playersCount) + " PLAYERS");
-      text(str(playersCount) + " PLAYERS", scrW/2 - playersTextWidth/2, scrH/2 - 50 + enterTextSize/3);
-
-      teamNameStr = new String(teamName);
-      teamNameStr = teamNameStr.substring(0, nameLen);
-      float nameTextWidth = textWidth("TEAM NAME: " + teamNameStr);
-      text("TEAM NAME: "+ teamNameStr, scrW/2 - nameTextWidth/2, scrH/2 + enterTextSize/3);
-
-      enterTextSize = calcTSize("PLAY", 90);
-      textFont(enterFont, enterTextSize);
-      fill(255);
-      if (playersCount > 0) text("PLAY", scrW/2 - 40, scrH/2 + 60);
-
-      if (!prevMouseState && currMouseState)
-      {
-        if (mouseX > scrW/2 - 140 && mouseX < scrW/2 - 100 && mouseY > scrH/2 - 70 && mouseY < scrH/2 - 40)
-        {
-          playersCount--;
-          if (playersCount < 0) playersCount = 0;
-        }
-        if (mouseX > scrW/2 + 100 && mouseX < scrW/2 + 135 && mouseY > scrH/2 - 70 && mouseY < scrH/2 - 40)
-        {
-          playersCount++;
-        }
-        //Play button 
-        if (mouseX > scrW/2 - 45 && mouseX < scrW/2 - 40 + playersTextWidth && mouseY > scrH/2 + 63 - enterTextSize && mouseY < scrH/2 + 63 && playersCount > 0)
-        {
-          game = true;
-          strokeWeight(1);
-          stroke(0);
-          t.start();
-        }
-      }
-    }
+    } else endGame();
   }
   prevMouseState = currMouseState;
 }
@@ -382,6 +350,7 @@ Integer getSecs(int h, int m, int s)
 {
   return (h*3600 + m*60 + s);
 }
+
 void keyPressed()
 {
   if (keyCode == 27) key = 0;
@@ -440,8 +409,8 @@ void arduinoConnect()
   }
   println("Connect status: " + str(connected));
   if (!connected) { 
-    noLoop(); 
-    println("No connection for arduino..."); 
+    noLoop();
+    println("No connection for arduino...");
     text("NO ARDUINO CONNECTED TO " + portName, width/2, height/2);
   }
 }

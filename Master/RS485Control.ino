@@ -6,7 +6,7 @@ void getOperSkips()
   {
     byte input[31];
     byte inByte = Serial1.read();
-    
+
     if (inByte == 0xBB)
     {
       Serial.print("Operator Skips Recieved:");
@@ -15,7 +15,6 @@ void getOperSkips()
       {
         input[i] = Serial1.read();
         if (input[i] > 0x03) operGStates[i] = true;
-        else operGStates[i] = false;
         Serial.print(operGStates[i]);
         Serial.print("|");
       }
@@ -28,6 +27,16 @@ void getOperSkips()
       digitalWrite(13, HIGH);
       delay(100);
       digitalWrite(13, LOW);
+    }
+    else if (inByte == 0xCF)
+    {
+      for (int g = 0; g < totalGadgets; g++)
+      {
+        operGStates[g] = false;
+        passGStates[g] = false;
+      }
+      level = 10;
+      start = 0;
     }
     else Serial1.flush();
   }
@@ -56,7 +65,7 @@ void sendGStates() // Проверяем прошел ли игрок какой
   Serial1.write(0xFF);
   delay(10);
   digitalWrite(SSerialTxControl, LOW);  // Stop Transmitter
-  Serial.println();
+  Serial.println(", level = " + String(level));
   lcd.clear();
   lcd.print("SENT");
 }
@@ -82,8 +91,8 @@ void connectToBridge()
     Serial1.write(outByte);
     delay(10);
     digitalWrite(SSerialTxControl, LOW);
-    Serial.println("Send " + String(outByte,HEX) + " in " + String(tick));
-    
+    Serial.println("Send " + String(outByte, HEX) + " in " + String(tick));
+
     while (tick - sendTime < 1500 && !recieved)
     {
       tick = millis();
@@ -93,8 +102,12 @@ void connectToBridge()
         {
           byte inByte = Serial1.read();
           Serial.println("Recieved:" + String(inByte) + " in " + String(tick));
-          if (inByte == 0xA1 && outByte == 0xA1) { outByte = 0xA2; }
-          if (inByte == 0xA2 && outByte == 0xA2) { outByte = 0xA3; }
+          if (inByte == 0xA1 && outByte == 0xA1) {
+            outByte = 0xA2;
+          }
+          if (inByte == 0xA2 && outByte == 0xA2) {
+            outByte = 0xA3;
+          }
           if (inByte == 0xA3) bridgeConnected = true;
           lcd.clear();
           lcd.print("RCV:" + String(inByte));
@@ -104,5 +117,7 @@ void connectToBridge()
       }
     }
   }
+  level = 10;
+  start = 0;
 }
 
