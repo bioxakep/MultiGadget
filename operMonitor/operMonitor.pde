@@ -7,6 +7,8 @@ PrintWriter data;
 boolean game;
 boolean endGame = false;
 boolean connected;
+boolean rec = false;
+int recCount = 0;
 String portName;
 PFont timerFont, topFont, enterFont, gadgetFont;
 String alpha = "abcdefghijklmnopqrstuvwxyzABCDEFGJHIJKLMNOPQRSTUVWXYZ1234567890";
@@ -89,7 +91,7 @@ void setup()
   gadButH = gadMarY*3-2;
 
   t = new StopWatchTimer();
-  t.setStartTime(0, 1, 30);
+  t.setStartTime(1, 30, 0);
   totalSeconds = 0 + 1 * 60 + 30;
   arduinoConnect();
   for (int c = 0; c < 15; c++) teamName[c] = ' ';
@@ -195,31 +197,37 @@ void draw()
     //RECIEVE FROM BRIDGE
     if (arduino.available() > 0)
     {
-      boolean start = true;
       byte input = (byte)(0xFF & (arduino.read()));
-      //println(input);
-      //println(hex(input));
       if (hex(input).equals("BB"))
       {
-        for (int i = 0; i < 31; i++)
+        rec = true;
+        recCount = 0;
+        while(rec)
         {
-          byte inByte = (byte)(0xFF & arduino.read());
-          inData[i] = inByte;
+          while(arduino.available() < 0) {;}
+          inData[recCount] = (byte)(0xFF & (arduino.read()));
+          recCount = recCount + 1;
+          if(recCount == 31) rec = false;
         }
-        byte last = (byte)(0xFF & arduino.read());
-        if (hex(last).equals("FF")) recieved = true;
+        while(arduino.available() < 0) {;}
+        byte last = (byte)(0xFF & (arduino.read()));
+        if(hex(last).equals("FF")) recieved = true;
       }
       else if (hex(input).equals("EE"))
       {
-        t.start(); 
+        t.start();
+        for (int g = 0; g < 31; g++)
+        {
+          passedGadgets[g] = false;
+          hintedGadgets[g] = false;
+        }
         println("start game");
       }
-      else arduino.readStringUntil('\n');
+      
     }
     if (recieved)
     {
       print("Recieved from bridge:");
-      
       for (int p = 0; p < 31; p++)
       {
         print(inData[p]);
@@ -229,7 +237,6 @@ void draw()
       }
       println();
       recieved = false;
-      
     }
 
     //SEND TO BRIDGE

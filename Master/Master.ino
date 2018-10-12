@@ -357,6 +357,9 @@ void setup() {
   pinMode( gheraOUT , OUTPUT);
   pinMode( flowrHD,   OUTPUT);
   
+  pinMode(timeIN, INPUT_PULLUP);
+  pinMode(octopIN, INPUT_PULLUP);
+  
   pinMode(triPin, INPUT_PULLUP);
   pinMode(firePin, INPUT_PULLUP);
   pinMode(13, OUTPUT);
@@ -497,7 +500,7 @@ void loop()
       //send250ms(gheraOUT);  // ghera start speaking, 'thunder' level
       //door1 10s отдельно
       level = 90;
-      Serial.println("Go to level 90");
+      Serial.println("Gate Done, Go to level 90");
       //START MP3 FILE
     }// if players never find the key, operator can skip it here > gateOpen = true;
   }
@@ -529,6 +532,7 @@ void loop()
         sendToSlave(motorConAddr, 0x21); // Column Down
         // START MP3 - FILE
         passGStates[trident]=true;
+        Serial.println("Trident Done");
       }
 
 
@@ -547,13 +551,14 @@ void loop()
         // MP3 FILE
         passGStates[rain] = true;
         rainRFWait = false;
+        Serial.println("Rain Done");
       }
 
       if ((!digitalRead(vinemIN) || operGStates[vine]) && !passGStates[vine] && passGStates[demetra] && passGStates[rain])
       {
         passGStates[vine] = true;
         send250ms(dioniOUT);
-        Serial.println("Demetra 2 part Done");
+        Serial.println("Vine Done");
       }
 
       if ((!digitalRead(dioniIN) || operGStates[dionis1]) && !passGStates[dionis1] && passGStates[vine])
@@ -565,7 +570,7 @@ void loop()
         passGStates[dionis1] = true;
         digitalWrite(dioniHD1, LOW); // open first dionis vault
         // MP3 FILE
-        Serial.println("Demetra Done");
+        Serial.println("Dionis-1 Done");
       }
 
       // demetra gives players the water > they should put it int the World
@@ -597,7 +602,7 @@ void loop()
         send250ms(gheraOUT);  // moves ghera to 'shields' level, ALWAYS OR BY OPERATOR?
         passGStates[thunder] = true;
         thunderDone = true;
-        Serial.println("thunder Done");
+        Serial.println("Thunder Done");
       }
     }// eof.thundiDone
 
@@ -611,7 +616,7 @@ void loop()
         Serial.println("Afina 1 part Done");
       }
 
-      if ((!digitalRead(afinaIN) || operGStates[afina1]) && !passGStates[afina2] && passGStates[afina1])
+      if ((!digitalRead(afinaIN) || operGStates[afina2]) && !passGStates[afina2] && passGStates[afina1])
       { // afina  second signal > open afinaHD2  > players get escu1
         digitalWrite(afinaHD2, LOW); // here afina gives players another part of the shield
         passGStates[afina2] = true;
@@ -663,7 +668,7 @@ void loop()
         passGStates[ghera1] = true;
         send250ms(musesOUT);
         send250ms(gheraOUT);
-        Serial.println("SHIELD Done");
+        Serial.println("Ghera-1 Done, SHIELD Done");
       }
     }
 
@@ -683,12 +688,14 @@ void loop()
         // turner start
         sendToSlave(lightConAddr, 0x41); //turner start
         passGStates[fire] = true;
+        Serial.println("Fire Done");
       }
 
       if ((!digitalRead(flowrIN) || operGStates[flower1]) && !passGStates[flower1])
       { // first level of flower
         if (operGStates[flower1]) send250ms(flowrOUT);
         passGStates[flower1] = true;
+        Serial.println("Flower-1 part Done");
       }
 
       if ((!digitalRead(flowrIN) || operGStates[flower2]) && !passGStates[flower2] && passGStates[flower1])
@@ -698,12 +705,14 @@ void loop()
         sendToSlave(lightConAddr, 0x42); // turner off, light switch
         if (operGStates[flower2]) send250ms(flowrOUT);
         passGStates[flower2] = true;
+        Serial.println("Flower-2 part Done");
       }
 
       if ((!digitalRead(dioniIN) || operGStates[dionis2]) && !passGStates[dionis2])
       { // dionis(2) cold heart if all done
         digitalWrite(dioniHD2, LOW);  // open second dionis vault > players get seal 2
         passGStates[dionis2] = true;
+        Serial.println("Dionis-2 Done");
       }
 
       if ((!digitalRead(arphaIN) || operGStates[arpha]) && !passGStates[arpha])
@@ -711,6 +720,7 @@ void loop()
         send250ms(musesOUT); // send signal to shut up the muses
         digitalWrite(arphaHD, LOW);  // give players seal 3
         passGStates[arpha] = true;
+        Serial.println("Arpha Done");
       }
       if (passGStates[flower2] && passGStates[arpha] && passGStates[dionis2])
       {
@@ -719,6 +729,7 @@ void loop()
           if(operGStates[ghera2]) send250ms(gheraOUT);
           passGStates[ghera2] = true;
           sealsDone = true;
+          Serial.println("Seals Done");
           // if all seals are in ghera place  > gheraLevel send signal to master  >>   sealsDone = true;
           // ((((  ghera speaks > open HD4 (key for underground) ))))
         }
@@ -735,6 +746,7 @@ void loop()
         sendToSlave(motorConAddr, 0x51);
         passGStates[under] = true;
         underRFWait = false;
+        Serial.println("Underground Opened");
       }
       
       if ((!digitalRead(zodiaIN) || operGStates[zodiak]) && !passGStates[zodiak] && passGStates[under])
@@ -742,6 +754,7 @@ void loop()
         // shoud be skippable from master console
         // click lock
         passGStates[zodiak] = true;
+        Serial.println("Zodiak Done");
       }
 
       if ((!digitalRead(minotIN) || operGStates[minot]) && !passGStates[minot] && passGStates[under])
@@ -749,6 +762,7 @@ void loop()
         // shoud be skippable from master console
         // click lock
         passGStates[minot] = true;
+        Serial.println("Minot Done");
       }
 
       if ((!digitalRead(gorgoIN) || operGStates[gorgona]) && !passGStates[gorgona] && passGStates[under])
@@ -756,6 +770,7 @@ void loop()
         // shoud be skippable from master console
         // click lock
         passGStates[gorgona] = true;
+        Serial.println("Gorgona Done");
       }
 
       if (passGStates[gorgona] && passGStates[minot] && passGStates[zodiak])
@@ -820,9 +835,11 @@ void sendToSlave(int address, byte data)
 
 void send250ms(int pin)
 {
+  digitalWrite(13, HIGH);
   digitalWrite(pin, HIGH);
   delay(250);
   digitalWrite(pin, LOW);
+  digitalWrite(13, LOW);
 }
 
 void send250ms2(int pin)

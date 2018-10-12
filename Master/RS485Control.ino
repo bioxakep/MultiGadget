@@ -15,7 +15,7 @@ void getOperSkips()
       {
         input[i] = Serial1.read();
         if (input[i] > 0x03) operGStates[i] = true;
-        Serial.print(operGStates[i]);
+        Serial.print(input[i]);
         Serial.print("|");
       }
       byte last = Serial1.read();
@@ -24,19 +24,11 @@ void getOperSkips()
     else if (inByte == 0xBA) {
       bridgeConnected = false;
       connectToBridge();
-      digitalWrite(13, HIGH);
-      delay(100);
-      digitalWrite(13, LOW);
+      resetStates();
     }
     else if (inByte == 0xCF)
     {
-      for (int g = 0; g < totalGadgets; g++)
-      {
-        operGStates[g] = false;
-        passGStates[g] = false;
-      }
-      level = 10;
-      start = 0;
+      resetStates();
     }
     else Serial1.flush();
   }
@@ -117,7 +109,15 @@ void connectToBridge()
       }
     }
   }
+}
+
+void resetStates()
+{
+  for (int g = 0; g < totalGadgets; g++)
+  {
+    operGStates[g] = false;
+    passGStates[g] = false;
+  }
   level = 10;
   start = 0;
 }
-
