@@ -20,8 +20,7 @@ boolean monitorConnected = false;
 boolean masterConnected = false;
 unsigned long mConnectTime = 0;
 unsigned long mDisconnectTime = 0;
-unsigned long masterLastRecTime = 0;
-unsigned long masterTimeOut = 5000;
+unsigned long mLastA9Rec = 0;
 unsigned long masterConnTimeOut = 20000;
 void setup() {
   masterSerial.begin(9600);
@@ -65,14 +64,14 @@ void loop()
         delay(10);
         digitalWrite(serialTXControl, LOW);  // Stop Transmitter
       }
-      if (inByte == 0xAA)
+      if (inByte == 0xA9)
       {
         delay(350);
         while (masterSerial.available()) masterSerial.read();
         digitalWrite(serialTXControl, HIGH);  // Init Transmitter
         digitalWrite(13, HIGH);
         masterSerial.write(0xBA);
-        delay(100);
+        delay(10);
         digitalWrite(serialTXControl, LOW);  // Stop Transmitter
         digitalWrite(13, LOW);
       }
@@ -82,19 +81,18 @@ void loop()
       if (!monitorConnected) Serial.println("MASTER DISCONNECTED LONG TIME");
       else Serial.println("MDLT");
     }
-    else Serial.println("\nMASTER CONNECTED\n");
-    masterLastRecTime = 0;
+    else Serial.println("\nRestart");
   }
   else // Master Connected
   {
     if (Serial.available() > 0) //recieve from operator processing
     {
-      String input = Serial.readStringUntil(‘/n’);
-      if (input.startsWith(“CC”)) // Start-signal of DATA recieve from Operator
+      String input = Serial.readStringUntil('\n');
+      if (input.startsWith("CC")) // Start-signal of DATA recieve from Operator
       {
-        for (int i = 2; i < 33; i++)
+        for (int i = 0; i < 31; i++)
         {
-          if (input[i] == ‘5’)
+          if (input[i+2] == '5')
           {
             passGStates[i] = true;
             digitalWrite(13, HIGH);
@@ -103,7 +101,7 @@ void loop()
           }
           else passGStates[i] = false;
         }
-        if (input.endsWith(“FF”)) //All Data Recieved marker
+        if (input.endsWith("FF")) //All Data Recieved marker
         {
           digitalWrite(13,HIGH);
           // Prepare to send states to Master
@@ -123,7 +121,7 @@ void loop()
           digitalWrite(13, LOW);
         }
       }
-      else if (input.startsWith(“ClearStates”))
+      else if (input.startsWith("ClearStates"))
       {
         digitalWrite(13, HIGH);
         // Prepare to send states to Master
@@ -143,16 +141,24 @@ void loop()
       byte inByte = masterSerial.read();
 
       //masterSerial.println("First byte is " + String(inByte));
-      if (inByte == 0xA5)
+      if(inByte == 0xA1)
+      {
+        masterConnected = false;
+        for (int s = 0; s < 31; s++) passGStates[s] = false;
+      }
+      else if (inByte == 0xA9)
+      {
+        mLastA9Rec = tick;
+      }
+      else if (inByte == 0xA5)
       {
         for (int s = 0; s < 31; s++) passGStates[s] = false;
         if (!monitorConnected) Serial.println("Send to operator clear states and run");
-        Serial.write(0xEE);
+        Serial.write("masterStart\n");
         //Sending...
       }
       else if (inByte == 0xAA)
       {
-        masterLastRecTime = tick;
         delay(350);
         if (!monitorConnected) Serial.print("Recieving data from master: ");
         for (int i = 0; i < 31; i++)
@@ -170,23 +176,25 @@ void loop()
           if (!monitorConnected) Serial.print("Send to operator: ");
 
           // Prepare to send states to Operator
-          String toOperator=“BB”;
-          
+          String toOperator="BB";
+          Serial.write("BB");
           for (int d = 0; d < 31; d++)
           {
-            if (passGStates[d]) toOperator+=“5”;
-            else toOperator+=“1”;
+            if (passGStates[d]) Serial.write("5");
+            else Serial.write("1");
           }
-          
+          Serial.write("FF\n");
           if (!monitorConnected) Serial.println(); // for test only
         }
       }
       while (masterSerial.available()) masterSerial.read();
-    }
-    if (tick - masterLastRecTime > masterTimeOut && masterLastRecTime > 0)
-    {
-      masterConnected = false;
-      Serial.println("MASTER CONNECTION LOST");
+      if(mLastA9Rec - tick > 30000)
+      {
+        digitalWrite(serialTXControl, HIGH);  // Init Transmitter
+        masterSerial.write(0xBA);
+        delay(10);
+        digitalWrite(serialTXControl, LOW);  // Stop Transmitter
+      }
     }
   }
 }

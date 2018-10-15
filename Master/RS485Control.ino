@@ -23,8 +23,8 @@ void getOperSkips()
     }
     else if (inByte == 0xBA) {
       bridgeConnected = false;
-      connectToBridge();
       resetStates();
+      connectToBridge();
     }
     else if (inByte == 0xCF)
     {
@@ -37,29 +37,36 @@ void getOperSkips()
 void sendGStates() // Проверяем прошел ли игрок какой-нибудь гаджет
 {
   byte chkSum = 0;
-  digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
-  Serial.print("Send States to Operator: ");
-  Serial1.write(0xAA);
-  delay(10);
-  for (int d = 0; d < 31; d++)
+  boolean needSend = false;
+  for (int s = 0; s < 31; s++)
   {
-    if (passGStates[d]) Serial1.write(0x05);
-    else Serial1.write(0x01);
-    delay(10);
-    //Serial1.write(passGStates[d] ? 0x05 : 0x01);
-    Serial.print(passGStates[d] ? 0x05 : 0x01);
-    if (!operGStates[d] && passGStates[d])
+    if (passGStates[s] && !operGStates[s])
     {
-      Serial.println("Gadget " + String(gadgetNames[d]) + " passed by player");
-      operGStates[d] = true;
+      needSend = true;
+      operGStates[s] = true;
     }
   }
-  Serial1.write(0xFF);
-  delay(10);
-  digitalWrite(SSerialTxControl, LOW);  // Stop Transmitter
-  Serial.println(", level = " + String(level));
-  lcd.clear();
-  lcd.print("SENT");
+  if (needSend)
+  {
+    digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
+    Serial.print("Send States to Operator: ");
+    Serial1.write(0xAA);
+    delay(10);
+    for (int d = 0; d < 31; d++)
+    {
+      if (passGStates[d]) Serial1.write(0x05);
+      else Serial1.write(0x01);
+      delay(10);
+      //Serial1.write(passGStates[d] ? 0x05 : 0x01);
+      Serial.print(passGStates[d] ? 0x05 : 0x01);
+    }
+    Serial1.write(0xFF);
+    delay(10);
+    digitalWrite(SSerialTxControl, LOW);  // Stop Transmitter
+    Serial.println(", level = " + String(level));
+    lcd.clear();
+    lcd.print("SENT");
+  }
 }
 
 void connectToBridge()
@@ -109,6 +116,7 @@ void connectToBridge()
       }
     }
   }
+  lastConnSenderTime = tick;
 }
 
 void resetStates()

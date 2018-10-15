@@ -171,10 +171,10 @@ void draw()
       {
         if (!prevMouseState && currMouseState)
         {
-          if (mouseX > ((g+1) * gadMarX + gadButW * g) && mouseX < ((g+1) * (gadMarX + gadButW))  && mouseY > (topH + gadMarY * (lev+1) + gadButH*lev) && mouseY < (topH + (lev+1) * (gadMarY + gadButH)))
+          if (!passedGadgets[gadCount] && mouseX > ((g+1) * gadMarX + gadButW * g) && mouseX < ((g+1) * (gadMarX + gadButW))  && mouseY > (topH + gadMarY * (lev+1) + gadButH*lev) && mouseY < (topH + (lev+1) * (gadMarY + gadButH)))
           { 
             hintedGadgets[gadCount] = true;
-            passedTimes[gadCount] = getSecs(t.hour(), t.minute(), t.second());
+            passedTimes[gadCount] = int(t.passedTime()/1000);
           }
         }
         fill(butCol);
@@ -195,27 +195,35 @@ void draw()
     }
 
     //RECIEVE FROM BRIDGE
-    if (arduino.available() > 0)
+    String fromBridge = getInput();
+    
+    if (fromBridge.equals("masterStart"))
     {
-      String input = arduino.readStringUntil(‘/n’);
-      if (input.equals(“Restart”))
+      t.start();
+      println("start game");
+    } else if (fromBridge.equals("Restart"))
+    {
+      t.stop();
+      t = new StopWatchTimer();
+      t.setStartTime(1, 30, 0);
+      for (int g = 0; g < 31; g++)
       {
-        t.start();
-        for (int g = 0; g < 31; g++)
-        {
-          passedGadgets[g] = false;
-          hintedGadgets[g] = false;
-        }
-        println("start game");
+        passedGadgets[g] = false;
+        hintedGadgets[g] = false;
       }
-      else if (input.startwith(“BB”))
+    }
+    else if (fromBridge.startsWith("BB") && fromBridge.endsWith("FF"))
+    {
+      for (int i = 0; i < fromBridge.length()-4; i++)
       {
-        for (int i=2; i<33; i++)
+        //print(fromBridge.charAt(i));
+        int data = Integer.parseInt(String.valueOf(fromBridge.charAt(i+2)));
+        if(data > 3)
         {
-         passGadgets[i]=int(input[i+2])>3;
+          passedGadgets[i] = true;
+          passedTimes[i] = int(t.passedTime()/1000);
         }
       }
-      
     }
 
     //SEND TO BRIDGE
@@ -224,24 +232,24 @@ void draw()
     {
       if (hintedGadgets[i] && !passedGadgets[i])
       {
+        //print("gadget"); print(i+1); println(" hinted, sending...");
         sendToBridge = true;
         passedGadgets[i] = true;
+        print("Hinted state:"); print(hintedGadgets[i]); print(" Passed:"); println(passedGadgets[i]);
       }
     }
 
     if (sendToBridge)
     {
       print("sending to bridge hints..");
-      String outStr=“CC”;
-
+      arduino.write("CC");
       for (int s = 0; s < 31; s++)
       {
-        outStr[outStr.length]= passedGadgets[s]?”5”:”1”;
+        arduino.write(passedGadgets[s]?"5":"1");
       }
-      outStr=outStr+”FF”;
+      arduino.write("FF\n");
       println("OK");
       sendToBridge = false;
-      arduino.prontln(outStr);
     }
 
     boolean allDone = true;
@@ -362,7 +370,8 @@ String getInput()
     //println("end read string from serial::"+str(millis()));
     if (inp != null)
     {
-      //if (inp.length() > 1) println(inp);
+      if (inp.length() > 1) println(inp);
+      inp = inp.trim();
       //println("print string from serial::"+str(millis()));
       return inp;
     } else return " ";

@@ -89,7 +89,12 @@ UNDERGROUND (cmds 0x5x)
 END (cmds 0x6x)
 31 WIN
 */
-String gadgetNames[31] = {"Baloon", "Press", "Gate", "Poseidon", "Trident", "Demetra-1", "Rain", "Vine", "Dionis-1", "Hercules”, “Narcis", "Thunder", "Afina-1", "Afina-2", "Time", "Octopus", "Note", "Wind", "Ghera-1", "Fire", "Flower-1", "Flower-2", "Arpha", "Dionis-2", "Ghera-2", "Zodiak", "Minot", "Gorgona", "Cristals", "Light", "End"};
+String gadgetNames[31] = {"Baloon", "Press", "Gate", 
+                          "Poseidon", "Trident", "Demetra-1", "Rain", "Vine", "Dionis-1", "Hercules”, “Narcis", "Thunder", 
+                          "Afina-1", "Afina-2", "Time", "Octopus", "Note", "Wind", "Ghera-1", 
+                          "Fire", "Flower-1", "Flower-2", "Arpha", "Dionis-2", "Ghera-2", 
+                          "Zodiak", "Minot", "Gorgona", "Cristals", "Light", 
+                          "End"};
 //START
 int start = 0;
 int startPin = 8;
@@ -141,7 +146,7 @@ int vinemOUT = 36;
 
 //DIONIS
 byte dionis1 = 8;
-byte dionis2 = 22;
+byte dionis2 = 23;
 int dioniIN  = 22;   //f.
 int dioniOUT = 34;
 int dioniHD1 = A2;   // piston
@@ -213,7 +218,7 @@ int flowrOUT = 33;   //n.
 int flowrHD  = A13;
 
 //ARPHA
-byte arpha = 23;
+byte arpha = 22;
 int arphaIN  = 6;
 int arphaHD  = A9;
 
@@ -269,7 +274,8 @@ boolean sealsDone  = false;
 
 boolean bridgeConnected = false;
 unsigned long startHighPin = 0;
-unsigned long prevSent = 0;
+unsigned long lastConnSenderTime = 0;
+
 void setup() {
   Serial.begin (9600);
   //Serial3.begin(9600);  //xbee
@@ -396,6 +402,9 @@ void setup() {
   lcd.print("Initialising...");
   connectToBridge();
   lcd.clear();
+  lcd.print("Connected");
+  lcd.setCursor(0,1);
+  lcd.print("Wait start pin");
 }
 
 void loop()
@@ -429,7 +438,7 @@ void loop()
   {
     if (!startStates[0] && startStates[1])
     {
-      start ++;   // wait for prestart signal ( any RFID from startRF )
+      start++;   // wait for prestart signal ( any RFID from startRF )
       if (start == 1)
       {
         // if received send command to Motor_controller and Light_controller
@@ -454,7 +463,7 @@ void loop()
         Serial1.write(0xA5);
         delay(10);
         lcd.clear();
-        lcd.print("GADGET CLEAR");
+        lcd.print("Timer started");
         digitalWrite(SSerialTxControl, LOW);  // Stop Transmitter
       }
     }    
@@ -609,12 +618,6 @@ void loop()
     //-------- shields ------
     if (!shieldDone)
     {
-      if ((!digitalRead(afinaIN) || operGStates[afina1]) && !passGStates[afina1])
-      { // afina first signal opens afinaHD1
-        digitalWrite(afinaHD1, LOW); // here afina gives players a key to open next vault
-        passGStates[afina1] = true;
-        Serial.println("Afina 1 part Done");
-      }
 
       if ((!digitalRead(afinaIN) || operGStates[afina2]) && !passGStates[afina2] && passGStates[afina1])
       { // afina  second signal > open afinaHD2  > players get escu1
@@ -622,7 +625,16 @@ void loop()
         passGStates[afina2] = true;
         Serial.println("Afina 2 part Done");
       }
+      
+      if ((!digitalRead(afinaIN) || operGStates[afina1]) && !passGStates[afina1])
+      { // afina first signal opens afinaHD1
+        digitalWrite(afinaHD1, LOW); // here afina gives players a key to open next vault
+        passGStates[afina1] = true;
+        Serial.println("Afina 1 part Done");
+        delay(200);
+      }
 
+     
       if ((!digitalRead(timeIN) || operGStates[Time]) && !passGStates[Time])
       {
         if (operGStates[Time]) send250ms(timeOUT);
@@ -818,10 +830,16 @@ void loop()
   {
     // game over - victory !
   }
-  if(tick - prevSent > 3000) 
-  { 
-    sendGStates();
-    prevSent = tick;
+
+  sendGStates();
+  if(tick - lastConnSenderTime > 10000)
+  {
+    digitalWrite(SSerialTxControl, HIGH);
+    Serial1.write(0xA9);
+    delay(10);
+    digitalWrite(SSerialTxControl, LOW);
+    Serial.println("Send sync signal");
+    lastConnSenderTime = tick;
   }
   startStates[1] = startStates[0];
 } // LOOP END
