@@ -89,15 +89,12 @@ void loop()
   {
     if (Serial.available() > 0) //recieve from operator processing
     {
-      byte input[31];
-      byte inByte = Serial.read();
-      if (inByte == 0xCC) // Start-signal of DATA recieve from Operator
+      String input = Serial.readStringUntil(‘/n’);
+      if (input.startsWith(“CC”)) // Start-signal of DATA recieve from Operator
       {
-        delay(50);
-        for (int i = 0; i < 31; i++)
+        for (int i = 2; i < 33; i++)
         {
-          input[i] = Serial.read();
-          if (input[i] == 0x05)
+          if (input[i] == ‘5’)
           {
             passGStates[i] = true;
             digitalWrite(13, HIGH);
@@ -106,10 +103,9 @@ void loop()
           }
           else passGStates[i] = false;
         }
-        byte last = Serial.read();
-        if (last == 0xFF) //All Data Recieved marker
+        if (input.endsWith(“FF”)) //All Data Recieved marker
         {
-          digitalWrite(13, HIGH);
+          digitalWrite(13,HIGH);
           // Prepare to send states to Master
           digitalWrite(serialTXControl, HIGH);  // Init Transmitter
           masterSerial.write(0xBB);
@@ -127,7 +123,7 @@ void loop()
           digitalWrite(13, LOW);
         }
       }
-      else if (inByte == 0xCF)
+      else if (input.startsWith(“ClearStates”))
       {
         digitalWrite(13, HIGH);
         // Prepare to send states to Master
@@ -172,15 +168,16 @@ void loop()
         if (last == 0xFF)
         {
           if (!monitorConnected) Serial.print("Send to operator: ");
+
           // Prepare to send states to Operator
-          Serial.write(0xBB);
-          //Sending...
+          String toOperator=“BB”;
+          
           for (int d = 0; d < 31; d++)
           {
-            if (passGStates[d]) Serial.write(0x05);
-            else Serial.write(0x01);
+            if (passGStates[d]) toOperator+=“5”;
+            else toOperator+=“1”;
           }
-          Serial.write(last);
+          
           if (!monitorConnected) Serial.println(); // for test only
         }
       }
