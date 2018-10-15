@@ -197,23 +197,8 @@ void draw()
     //RECIEVE FROM BRIDGE
     if (arduino.available() > 0)
     {
-      byte input = (byte)(0xFF & (arduino.read()));
-      if (hex(input).equals("BB"))
-      {
-        rec = true;
-        recCount = 0;
-        while(rec)
-        {
-          while(arduino.available() < 0) {;}
-          inData[recCount] = (byte)(0xFF & (arduino.read()));
-          recCount = recCount + 1;
-          if(recCount == 31) rec = false;
-        }
-        while(arduino.available() < 0) {;}
-        byte last = (byte)(0xFF & (arduino.read()));
-        if(hex(last).equals("FF")) recieved = true;
-      }
-      else if (hex(input).equals("EE"))
+      String input = arduino.readStringUntil(‘/n’);
+      if (input.equals(“Restart”))
       {
         t.start();
         for (int g = 0; g < 31; g++)
@@ -223,20 +208,14 @@ void draw()
         }
         println("start game");
       }
-      
-    }
-    if (recieved)
-    {
-      print("Recieved from bridge:");
-      for (int p = 0; p < 31; p++)
+      else if (input.startwith(“BB”))
       {
-        print(inData[p]);
-        print("|");
-        if (inData[p] > 3 && !passedGadgets[p]) passedGadgets[p] = true;
-        inData[p] = 0;
+        for (int i=2; i<33; i++)
+        {
+         passGadgets[i]=int(input[i+2])>3;
+        }
       }
-      println();
-      recieved = false;
+      
     }
 
     //SEND TO BRIDGE
@@ -253,18 +232,16 @@ void draw()
     if (sendToBridge)
     {
       print("sending to bridge hints..");
-      arduino.write(0xCC);
+      String outStr=“CC”;
+
       for (int s = 0; s < 31; s++)
       {
-        byte outByte = 0x01;
-        if (hintedGadgets[s]) outByte = 0x05;
-        print(int(hintedGadgets[s]));
-        print("-");
-        arduino.write(outByte);
+        outStr[outStr.length]= passedGadgets[s]?”5”:”1”;
       }
-      arduino.write(0xFF);
+      outStr=outStr+”FF”;
       println("OK");
       sendToBridge = false;
+      arduino.prontln(outStr);
     }
 
     boolean allDone = true;
