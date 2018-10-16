@@ -6,7 +6,6 @@ class StopWatchTimer {
     void setStartTime(int hours, int minutes, int seconds)
     {
       elapsedSecs = 1000*(hours*60*60 + minutes*60 + seconds);
-      print("set time");
     }
     void start() 
     {

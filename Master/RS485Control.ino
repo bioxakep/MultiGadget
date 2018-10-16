@@ -21,7 +21,8 @@ void getOperSkips()
       byte last = Serial1.read();
       if (last == 0xFF) Serial.println("OK");
     }
-    else if (inByte == 0xBA) {
+    else if (inByte == 0xBC) {
+      Serial.println("Resync with Bridge...");
       bridgeConnected = false;
       resetStates();
       connectToBridge();
@@ -76,6 +77,7 @@ void connectToBridge()
   boolean recieved = false;
   unsigned long tick = millis();
   unsigned long sendTime = tick;
+  Serial.print("Connecting to Bridge..");
   while (!bridgeConnected)
   {
     /*
@@ -90,7 +92,7 @@ void connectToBridge()
     Serial1.write(outByte);
     delay(10);
     digitalWrite(SSerialTxControl, LOW);
-    Serial.println("Send " + String(outByte, HEX) + " in " + String(tick));
+    //Serial.println("Send " + String(outByte, HEX) + " in " + String(tick));
 
     while (tick - sendTime < 1500 && !recieved)
     {
@@ -100,12 +102,14 @@ void connectToBridge()
         while (Serial1.available())
         {
           byte inByte = Serial1.read();
-          Serial.println("Recieved:" + String(inByte) + " in " + String(tick));
+          //if (inByte > 0) Serial.println("Recieved:" + String(inByte) + " in " + String(tick));
           if (inByte == 0xA1 && outByte == 0xA1) {
             outByte = 0xA2;
+            Serial.print("1..");
           }
           if (inByte == 0xA2 && outByte == 0xA2) {
             outByte = 0xA3;
+            Serial.print("2..");
           }
           if (inByte == 0xA3) bridgeConnected = true;
           lcd.clear();
@@ -116,7 +120,8 @@ void connectToBridge()
       }
     }
   }
-  lastConnSenderTime = tick;
+  lastA9SentTime = tick;
+  Serial.println("connected");
 }
 
 void resetStates()

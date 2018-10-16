@@ -5,13 +5,13 @@ boolean getWindRFID() {
     byte addr[6];
     int ficha1 = 0;
     cpz1->getAddress(addr);
-    Serial.print("\nBeacon-Wind: ");
+    //Serial.print("\nBeacon-Wind: ");
     for(int i = 0; i < 6; i++) 
     {                               
       ficha1 = ficha1 + addr[i];    // Serial.print(addr[i], HEX);
     }
-    Serial.print(" sum = ");
-    Serial.println(ficha1);
+    //Serial.print(" sum = ");
+    //Serial.println(ficha1);
     if (ficha1 == windBeacon) return true;
     else return false;
   }
@@ -25,13 +25,13 @@ boolean getUnderRFID() {
     byte addr[6];
     int ficha2 = 0;
     cpz2->getAddress(addr);
-    Serial.print("\nBeacon-Under: ");
+    //Serial.print("\nBeacon-Under: ");
     for(int i = 0; i < 6; i++) 
     {                               
       ficha2 = ficha2 + addr[i];    // Serial.print(addr[i], HEX);
     }
-    Serial.print(" sum = ");
-    Serial.println(ficha2);
+    //Serial.print(" sum = ");
+    //Serial.println(ficha2);
     if (ficha2 == underBeacon) return true;
     else return false;
   }
@@ -44,13 +44,13 @@ boolean getGateRFID() {
     byte addr[6];
     int ficha3 = 0;
     cpz3->getAddress(addr);
-    Serial.print("Beacon-gate: ");
+    //Serial.print("Beacon-gate: ");
     for(int i = 0; i < 6; i++) 
     {                               
       ficha3 = ficha3 + addr[i];    // Serial.print(addr[i], HEX);
     }
-    Serial.print(" sum = ");
-    Serial.println(ficha3);
+    //Serial.print(" sum = ");
+    //Serial.println(ficha3);
     if (ficha3 == gateBeacon) return true;
     else return false;
   }
@@ -64,13 +64,13 @@ boolean getRainRFID() {
     byte addr[6];
     int ficha4 = 0;
     cpz4->getAddress(addr);
-    Serial.print("\nBeacon-Rain: ");
+    //Serial.print("\nBeacon-Rain: ");
     for(int i = 0; i < 6; i++) 
     {                               
       ficha4 = ficha4 + addr[i];    // Serial.print(addr[i], HEX);
     }
-    Serial.print(" sum = ");
-    Serial.println(ficha4);
+    //Serial.print(" sum = ");
+    //Serial.println(ficha4);
     if (ficha4 == rainBeacon) return true;
     else return false;
   }

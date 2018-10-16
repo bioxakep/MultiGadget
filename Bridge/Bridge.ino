@@ -41,39 +41,45 @@ void loop()
     unsigned long whileTick = tick;
     byte inByte = 0;
     int connectWaitCount = 0;
-    if (!monitorConnected) Serial.print("Connecting to master...");
     int connCount = 0;
     while (!masterConnected && (whileTick - startConnect < masterConnTimeOut))
     {
-      while (!masterSerial.available()) {
-        whileTick = millis();
-        if (whileTick - (startConnect + connectWaitCount * 1000) > 1000 && inByte == 0)
+      whileTick = millis();
+      if (whileTick - (startConnect + connectWaitCount * 1000) > 1000 && inByte == 0)
+      {
+        connectWaitCount++;
+        if (!monitorConnected) Serial.print(String(connectWaitCount) + "...");
+      }
+      if (masterSerial.available()) 
+      {
+        inByte = masterSerial.read();
+        delay(10);
+        if (inByte == 0xA9)
         {
-          connectWaitCount++;
-          if (!monitorConnected) Serial.print(String(connectWaitCount) + "...");
+          delay(350);
+          while (masterSerial.available()) masterSerial.read();
+          digitalWrite(serialTXControl, HIGH);  // Init Transmitter
+          digitalWrite(13, HIGH);
+          masterSerial.write(0xBC);
+          delay(10);
+          digitalWrite(serialTXControl, LOW);  // Stop Transmitter
+          digitalWrite(13, LOW);
+          Serial.println("Send resync to master");
         }
-      }
-      inByte = masterSerial.read();
-      delay(10);
-      if (inByte == 0xA3) masterConnected = true;
-      if (inByte == 0xA1 || inByte == 0xA2 || inByte == 0xA3)
-      {
-        if (!monitorConnected) Serial.println("\nConnecting... recieved and sending back: " + String(inByte) + " in " + String(whileTick));
-        digitalWrite(serialTXControl, HIGH);  // Init Transmitter
-        masterSerial.write(inByte);
-        delay(10);
-        digitalWrite(serialTXControl, LOW);  // Stop Transmitter
-      }
-      if (inByte == 0xA9)
-      {
-        delay(350);
-        while (masterSerial.available()) masterSerial.read();
-        digitalWrite(serialTXControl, HIGH);  // Init Transmitter
-        digitalWrite(13, HIGH);
-        masterSerial.write(0xBA);
-        delay(10);
-        digitalWrite(serialTXControl, LOW);  // Stop Transmitter
-        digitalWrite(13, LOW);
+        else if (inByte == 0xA1 || inByte == 0xA2 || inByte == 0xA3)
+        {
+          if (!monitorConnected) Serial.println("\nConnecting... recieved and sending back: " + String(inByte) + " in " + String(whileTick));
+          digitalWrite(serialTXControl, HIGH);  // Init Transmitter
+          masterSerial.write(inByte);
+          delay(10);
+          digitalWrite(serialTXControl, LOW);  // Stop Transmitter
+        }
+        if (inByte == 0xA3)
+        {
+          masterConnected = true;
+          mLastA9Rec = whileTick;
+          Serial.println("masterConnected");
+        }
       }
     }
     if (!masterConnected)
@@ -81,7 +87,6 @@ void loop()
       if (!monitorConnected) Serial.println("MASTER DISCONNECTED LONG TIME");
       else Serial.println("MDLT");
     }
-    else Serial.println("\nRestart");
   }
   else // Master Connected
   {
@@ -92,7 +97,7 @@ void loop()
       {
         for (int i = 0; i < 31; i++)
         {
-          if (input[i+2] == '5')
+          if (input[i + 2] == '5')
           {
             passGStates[i] = true;
             digitalWrite(13, HIGH);
@@ -103,7 +108,7 @@ void loop()
         }
         if (input.endsWith("FF")) //All Data Recieved marker
         {
-          digitalWrite(13,HIGH);
+          digitalWrite(13, HIGH);
           // Prepare to send states to Master
           digitalWrite(serialTXControl, HIGH);  // Init Transmitter
           masterSerial.write(0xBB);
@@ -141,7 +146,7 @@ void loop()
       byte inByte = masterSerial.read();
 
       //masterSerial.println("First byte is " + String(inByte));
-      if(inByte == 0xA1)
+      if (inByte == 0xA1)
       {
         masterConnected = false;
         for (int s = 0; s < 31; s++) passGStates[s] = false;
@@ -176,7 +181,7 @@ void loop()
           if (!monitorConnected) Serial.print("Send to operator: ");
 
           // Prepare to send states to Operator
-          String toOperator="BB";
+          String toOperator = "BB";
           Serial.write("BB");
           for (int d = 0; d < 31; d++)
           {
@@ -188,10 +193,10 @@ void loop()
         }
       }
       while (masterSerial.available()) masterSerial.read();
-      if(mLastA9Rec - tick > 30000)
+      if (tick - mLastA9Rec > masterConnTimeOut)
       {
         digitalWrite(serialTXControl, HIGH);  // Init Transmitter
-        masterSerial.write(0xBA);
+        masterSerial.write(0xBC);
         delay(10);
         digitalWrite(serialTXControl, LOW);  // Stop Transmitter
       }

@@ -7,6 +7,7 @@ PrintWriter data;
 boolean game;
 boolean endGame = false;
 boolean connected;
+boolean allowTouch = false;
 boolean rec = false;
 int recCount = 0;
 String portName;
@@ -147,12 +148,12 @@ void draw()
     if (!prevMouseState && currMouseState) //hint + -
     {
       //hint minus
-      if (mouseX > (scrW/2 - hintTextW/2 - 55) && mouseX < scrW/2 - hintTextW/2 - 5  && mouseY > timerY - timerH/2 - 44 && mouseY < timerY - timerH/2 + 56)
+      if (allowTouch && mouseX > (scrW/2 - hintTextW/2 - 55) && mouseX < scrW/2 - hintTextW/2 - 5  && mouseY > timerY - timerH/2 - 44 && mouseY < timerY - timerH/2 + 56)
       {
         hintCount--;
         if (hintCount < 0) hintCount = 0;
       }
-      if (mouseX > (scrW/2 + hintTextW/2 + 5) && mouseX < scrW/2 + hintTextW/2 + 55  && mouseY > timerY - timerH/2 - 44 && mouseY < timerY - timerH/2 + 56)
+      if (allowTouch && mouseX > (scrW/2 + hintTextW/2 + 5) && mouseX < scrW/2 + hintTextW/2 + 55  && mouseY > timerY - timerH/2 - 44 && mouseY < timerY - timerH/2 + 56)
       {
         hintCount++;
       }
@@ -171,7 +172,7 @@ void draw()
       {
         if (!prevMouseState && currMouseState)
         {
-          if (!passedGadgets[gadCount] && mouseX > ((g+1) * gadMarX + gadButW * g) && mouseX < ((g+1) * (gadMarX + gadButW))  && mouseY > (topH + gadMarY * (lev+1) + gadButH*lev) && mouseY < (topH + (lev+1) * (gadMarY + gadButH)))
+          if (allowTouch && !passedGadgets[gadCount] && mouseX > ((g+1) * gadMarX + gadButW * g) && mouseX < ((g+1) * (gadMarX + gadButW))  && mouseY > (topH + gadMarY * (lev+1) + gadButH*lev) && mouseY < (topH + (lev+1) * (gadMarY + gadButH)))
           { 
             hintedGadgets[gadCount] = true;
             passedTimes[gadCount] = int(t.passedTime()/1000);
@@ -195,15 +196,10 @@ void draw()
     }
 
     //RECIEVE FROM BRIDGE
-    String fromBridge = getInput();
+    String fromBridge = getInput(false);
     
     if (fromBridge.equals("masterStart"))
     {
-      t.start();
-      println("start game");
-    } else if (fromBridge.equals("Restart"))
-    {
-      t.stop();
       t = new StopWatchTimer();
       t.setStartTime(1, 30, 0);
       for (int g = 0; g < 31; g++)
@@ -211,6 +207,13 @@ void draw()
         passedGadgets[g] = false;
         hintedGadgets[g] = false;
       }
+      t.start();
+      allowTouch = true;
+      println("Run game");
+    }
+    else if (fromBridge.equals("masterConnected"))
+    {
+      println("Connecting to Master: true");
     }
     else if (fromBridge.startsWith("BB") && fromBridge.endsWith("FF"))
     {
@@ -299,7 +302,7 @@ void draw()
           passedTimes[g] = 0;
           inData[g] = 0;
         }
-        arduino.write(0xCF);
+        arduino.write(0xCF);//rewrite
         //RESET GAME
       }
     } else endGame();
@@ -361,7 +364,7 @@ void keyPressed()
   }
 }
 
-String getInput()
+String getInput(boolean debug)
 {
   if (arduino.available() > 0)
   {
@@ -370,7 +373,7 @@ String getInput()
     //println("end read string from serial::"+str(millis()));
     if (inp != null)
     {
-      if (inp.length() > 1) println(inp);
+      if (inp.length() > 1 && debug) println(inp);
       inp = inp.trim();
       //println("print string from serial::"+str(millis()));
       return inp;
@@ -381,29 +384,31 @@ String getInput()
 void arduinoConnect()
 {
   connected = false;
+  print("Connecting to Bridge: ");
   portName = "COM18"; // COM3 or /dev/tty.wchusbserial1410 or /dev/tty.wchusbserial1420
-
   arduino = new Serial(this, portName, 9600);
   long startConnect = millis();
   while (!connected && (millis() - startConnect < 60000))
   {
-    arduino.write("letsgame\n");
-    println("Connecting...");
+    arduino.write("startMonitor\n");
+    //println("Connecting...");
     long now = millis();
     while (millis() - now < 1000) {
       ;
     }
-    String input = getInput();
-    println(input);
+    String input = getInput(false);
     if (input.length() > 4)
     {
-      if (input.trim().equals("start")) connected = true;
+      if (input.trim().equals("startBridge")) 
+      {
+        connected = true;
+        println("true");
+      }
     }
   }
-  println("Connect status: " + str(connected));
   if (!connected) { 
     noLoop();
-    println("No connection for arduino...");
-    text("NO ARDUINO CONNECTED TO " + portName, width/2, height/2);
+    println("No connection for Bridge...");
+    text("NO BRIDGE CONNECTED TO " + portName, width/2, height/2);
   }
 }

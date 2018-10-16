@@ -274,7 +274,7 @@ boolean sealsDone  = false;
 
 boolean bridgeConnected = false;
 unsigned long startHighPin = 0;
-unsigned long lastConnSenderTime = 0;
+unsigned long lastA9SentTime = 0;
 
 void setup() {
   Serial.begin (9600);
@@ -396,7 +396,6 @@ void setup() {
   delay(10);
   openLocks();
   Serial.println("Locks Opened.");
-  Serial.print("Bridge connecting...");
   lcd.init();                   
   lcd.backlight();
   lcd.print("Initialising...");
@@ -832,14 +831,14 @@ void loop()
   }
 
   sendGStates();
-  if(tick - lastConnSenderTime > 10000)
+  if(tick - lastA9SentTime > 10000)
   {
     digitalWrite(SSerialTxControl, HIGH);
     Serial1.write(0xA9);
     delay(10);
     digitalWrite(SSerialTxControl, LOW);
     Serial.println("Send sync signal");
-    lastConnSenderTime = tick;
+    lastA9SentTime = tick;
   }
   startStates[1] = startStates[0];
 } // LOOP END

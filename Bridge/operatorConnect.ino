@@ -6,9 +6,9 @@ void connectToMonitor()
     {
       String input = "";
       input = Serial.readStringUntil('\n');
-      if (input.startsWith("letsgame"))
+      if (input.startsWith("startMonitor"))
       {
-        Serial.println("start");
+        Serial.println("startBridge");
         delay(500);
         digitalWrite(13, HIGH);
         boolean sync = false;
