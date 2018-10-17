@@ -1,3 +1,9 @@
+int gateBeaconA  = 513;
+int gateBeaconB  = 626;
+int underBeaconA  = 396;
+int underBeaconB  = 385;
+
+
 boolean getWindRFID() {
   cpz1->check();
   if(cpz1->isBeaconConnecting())
@@ -32,7 +38,7 @@ boolean getUnderRFID() {
     }
     //Serial.print(" sum = ");
     //Serial.println(ficha2);
-    if (ficha2 == underBeacon) return true;
+    if (ficha2 == underBeaconA || ficha2 == underBeaconB) return true;
     else return false;
   }
   else return false;
@@ -51,7 +57,7 @@ boolean getGateRFID() {
     }
     //Serial.print(" sum = ");
     //Serial.println(ficha3);
-    if (ficha3 == gateBeacon) return true;
+    if (ficha3 == gateBeaconA || ficha3 == gateBeaconB) return true;
     else return false;
   }
   else return false;

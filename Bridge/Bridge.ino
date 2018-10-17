@@ -15,19 +15,20 @@
 //0xCC from operator
 SoftwareSerial masterSerial(10, 11);
 int serialTXControl = 3;
-boolean passGStates[31];
+boolean passGStates[32];
 boolean monitorConnected = false;
 boolean masterConnected = false;
 unsigned long mConnectTime = 0;
 unsigned long mDisconnectTime = 0;
 unsigned long mLastA9Rec = 0;
 unsigned long masterConnTimeOut = 20000;
+int gadgetCount = 32;
 void setup() {
   masterSerial.begin(9600);
   Serial.begin(9600);
   pinMode(serialTXControl, OUTPUT);
   digitalWrite(serialTXControl, LOW);
-  for (int s = 0; s < 31; s++) passGStates[s] = false;
+  for (int s = 0; s < gadgetCount; s++) passGStates[s] = false;
   connectToMonitor();
 }
 
@@ -95,7 +96,7 @@ void loop()
       String input = Serial.readStringUntil('\n');
       if (input.startsWith("CC")) // Start-signal of DATA recieve from Operator
       {
-        for (int i = 0; i < 31; i++)
+        for (int i = 0; i < gadgetCount; i++)
         {
           if (input[i + 2] == '5')
           {
@@ -114,7 +115,7 @@ void loop()
           masterSerial.write(0xBB);
           delay(10);
           //Sending...
-          for (int d = 0; d < 31; d++)
+          for (int d = 0; d < gadgetCount; d++)
           {
             if (passGStates[d]) masterSerial.write(0x05);
             else masterSerial.write(0x01);
@@ -141,15 +142,15 @@ void loop()
 
     if (masterSerial.available() > 0) //recieve from master
     {
-      byte input[31];
-      for (byte i = 0; i < 31; i++) input[i] = 0x00;
+      byte input[gadgetCount];
+      for (byte i = 0; i < gadgetCount; i++) input[i] = 0x00;
       byte inByte = masterSerial.read();
 
       //masterSerial.println("First byte is " + String(inByte));
       if (inByte == 0xA1)
       {
         masterConnected = false;
-        for (int s = 0; s < 31; s++) passGStates[s] = false;
+        for (int s = 0; s < gadgetCount; s++) passGStates[s] = false;
       }
       else if (inByte == 0xA9)
       {
@@ -157,7 +158,7 @@ void loop()
       }
       else if (inByte == 0xA5)
       {
-        for (int s = 0; s < 31; s++) passGStates[s] = false;
+        for (int s = 0; s < gadgetCount; s++) passGStates[s] = false;
         if (!monitorConnected) Serial.println("Send to operator clear states and run");
         Serial.write("masterStart\n");
         //Sending...
@@ -166,7 +167,7 @@ void loop()
       {
         delay(350);
         if (!monitorConnected) Serial.print("Recieving data from master: ");
-        for (int i = 0; i < 31; i++)
+        for (int i = 0; i < gadgetCount; i++)
         {
           input[i] = masterSerial.read();
           //Serial.print("|" + String(input[i]));
@@ -183,7 +184,7 @@ void loop()
           // Prepare to send states to Operator
           String toOperator = "BB";
           Serial.write("BB");
-          for (int d = 0; d < 31; d++)
+          for (int d = 0; d < gadgetCount; d++)
           {
             if (passGStates[d]) Serial.write("5");
             else Serial.write("1");

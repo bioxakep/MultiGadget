@@ -39,13 +39,13 @@ boolean prevMouseState = false;
 boolean currMouseState = false;
 boolean calculated = false;
 
-int[] levGadCount = {3, 9, 7, 6, 5, 1};
+int[] levGadCount = {3, 9, 7, 6, 6, 1};
 String[] levelNames = {"START", "THUNDER", "SHIELDS", "SEALS", "UNDERGROUND", "END"};
-String[] gadgetNames = {"Baloon", "Press", "Gate", "Poseidon", "Trident", "Demetra-1", "Rain", "Vine", "Dionis-1", "Hercules", "Narcis", "Thunder", "Afina-1", "Afina-2", "Time", "Octopus", "Note", "Wind", "Ghera-1", "Fire", "Flower-1", "Flower-2", "Arpha", "Dionis-2", "Ghera-2", "Zodiak", "Minot", "Gorgona", "Cristals", "Light", "End"};
-boolean[] passedGadgets = new boolean[31];
-boolean[] hintedGadgets = new boolean[31];
-int[] passedTimes = new int[31];
-byte[] inData = new byte[31];
+String[] gadgetNames = {"Baloon", "Press", "Gate", "Poseidon", "Trident", "Demetra-1", "Rain", "Vine", "Dionis-1", "Hercules", "Narcis", "Thunder", "Afina-1", "Afina-2", "Time", "Octopus", "Note", "Wind", "Ghera-1", "Fire", "Flower-1", "Flower-2", "Arpha", "Dionis-2", "Ghera-2", "Under", "Zodiak", "Minot", "Gorgona", "Cristals", "Light", "End"};
+boolean[] passedGadgets = new boolean[32];
+boolean[] hintedGadgets = new boolean[32];
+int[] passedTimes = new int[32];
+byte[] inData = new byte[32];
 int passTimesIndex = 0;
 
 int[] gadgetPassedOrder = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -96,7 +96,7 @@ void setup()
   totalSeconds = 0 + 1 * 60 + 30;
   arduinoConnect();
   for (int c = 0; c < 15; c++) teamName[c] = ' ';
-  for (int g = 0; g < 31; g++)
+  for (int g = 0; g < 32; g++)
   {
     passedGadgets[g] = false;
     hintedGadgets[g] = false;
@@ -196,27 +196,28 @@ void draw()
     }
 
     //RECIEVE FROM BRIDGE
-    String fromBridge = getInput(false);
+    String fromBridge = getInput(true);
     
     if (fromBridge.equals("masterStart"))
     {
       t = new StopWatchTimer();
       t.setStartTime(1, 30, 0);
-      for (int g = 0; g < 31; g++)
+      for (int g = 0; g < 32; g++)
       {
         passedGadgets[g] = false;
         hintedGadgets[g] = false;
       }
       t.start();
-      allowTouch = true;
       println("Run game");
     }
     else if (fromBridge.equals("masterConnected"))
     {
       println("Connecting to Master: true");
+      allowTouch = true;
     }
     else if (fromBridge.startsWith("BB") && fromBridge.endsWith("FF"))
     {
+      println(fromBridge);
       for (int i = 0; i < fromBridge.length()-4; i++)
       {
         //print(fromBridge.charAt(i));
@@ -224,6 +225,9 @@ void draw()
         if(data > 3)
         {
           passedGadgets[i] = true;
+          print("Gadget "); 
+          print(i);
+          println(" passed by player");
           passedTimes[i] = int(t.passedTime()/1000);
         }
       }
@@ -231,22 +235,23 @@ void draw()
 
     //SEND TO BRIDGE
     boolean sendToBridge = false;
-    for (int i = 0; i < 31; i++)
+    for (int i = 0; i < 32; i++)
     {
       if (hintedGadgets[i] && !passedGadgets[i])
       {
         //print("gadget"); print(i+1); println(" hinted, sending...");
         sendToBridge = true;
         passedGadgets[i] = true;
-        print("Hinted state:"); print(hintedGadgets[i]); print(" Passed:"); println(passedGadgets[i]);
+        print("Hint "); print(i+1); print(" Gadget");
+        //print("Hinted state:"); print(hintedGadgets[i]); print(" Passed:"); println(passedGadgets[i]);
       }
     }
 
     if (sendToBridge)
     {
-      print("sending to bridge hints..");
+      print("...sending to bridge...");
       arduino.write("CC");
-      for (int s = 0; s < 31; s++)
+      for (int s = 0; s < 32; s++)
       {
         arduino.write(passedGadgets[s]?"5":"1");
       }
@@ -295,7 +300,7 @@ void draw()
       {
         endGame = false;
         for (int c = 0; c < 15; c++) teamName[c] = ' ';
-        for (int g = 0; g < 31; g++)
+        for (int g = 0; g < 32; g++)
         {
           passedGadgets[g] = false;
           hintedGadgets[g] = false;

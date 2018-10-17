@@ -4,14 +4,14 @@ void getOperSkips()
 {
   if (Serial1.available() > 0)
   {
-    byte input[31];
+    byte input[32];
     byte inByte = Serial1.read();
 
     if (inByte == 0xBB)
     {
       Serial.print("Operator Skips Recieved:");
       delay(350);
-      for (int i = 0; i < 31; i++)
+      for (int i = 0; i < 32; i++)
       {
         input[i] = Serial1.read();
         if (input[i] > 0x03) operGStates[i] = true;
@@ -39,7 +39,7 @@ void sendGStates() // Проверяем прошел ли игрок какой
 {
   byte chkSum = 0;
   boolean needSend = false;
-  for (int s = 0; s < 31; s++)
+  for (int s = 0; s < 32; s++)
   {
     if (passGStates[s] && !operGStates[s])
     {
@@ -53,18 +53,17 @@ void sendGStates() // Проверяем прошел ли игрок какой
     Serial.print("Send States to Operator: ");
     Serial1.write(0xAA);
     delay(10);
-    for (int d = 0; d < 31; d++)
+    for (int d = 0; d < 32; d++)
     {
       if (passGStates[d]) Serial1.write(0x05);
       else Serial1.write(0x01);
       delay(10);
-      //Serial1.write(passGStates[d] ? 0x05 : 0x01);
-      Serial.print(passGStates[d] ? 0x05 : 0x01);
+      Serial.print(passGStates[d] ? 0x05 : 0x01); // DEBUG
     }
     Serial1.write(0xFF);
     delay(10);
     digitalWrite(SSerialTxControl, LOW);  // Stop Transmitter
-    Serial.println(", level = " + String(level));
+    Serial.println(", level = " + String(level)); // DEBUG
     lcd.clear();
     lcd.print("SENT");
   }
@@ -80,20 +79,12 @@ void connectToBridge()
   Serial.print("Connecting to Bridge..");
   while (!bridgeConnected)
   {
-    /*
-       ждем 3 секунды
-        если ничего не приняли - отправляет текущий байт
-        если приняли - отправляем сразу байт ответ (меняем на следующий) и снова ждем
-       после отправки приняли предыдущий байт - не меняем ничего.
-       меняем и отправляем СРАЗУ только если приняли следующий
-    */
     sendTime = tick;
     digitalWrite(SSerialTxControl, HIGH);
     Serial1.write(outByte);
     delay(10);
     digitalWrite(SSerialTxControl, LOW);
-    //Serial.println("Send " + String(outByte, HEX) + " in " + String(tick));
-
+    
     while (tick - sendTime < 1500 && !recieved)
     {
       tick = millis();
