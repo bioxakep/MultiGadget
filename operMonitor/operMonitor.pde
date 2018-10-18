@@ -172,10 +172,12 @@ void draw()
       {
         if (!prevMouseState && currMouseState)
         {
+          println("mouse pressed : "+str(millis()));
           if (allowTouch && !passedGadgets[gadCount] && mouseX > ((g+1) * gadMarX + gadButW * g) && mouseX < ((g+1) * (gadMarX + gadButW))  && mouseY > (topH + gadMarY * (lev+1) + gadButH*lev) && mouseY < (topH + (lev+1) * (gadMarY + gadButH)))
           { 
             hintedGadgets[gadCount] = true;
             passedTimes[gadCount] = int(t.passedTime()/1000);
+            println("mouse touch button "+str(g) + " MX="+str(mouseX)+" and MY="+str(mouseY));
           }
         }
         fill(butCol);
@@ -196,8 +198,9 @@ void draw()
     }
 
     //RECIEVE FROM BRIDGE
+    print("Start rec from Bridge:"+str(millis()));
     String fromBridge = getInput(true);
-    
+    println(" end rec:"+str(millis()));
     if (fromBridge.equals("masterStart"))
     {
       t = new StopWatchTimer();
@@ -217,7 +220,7 @@ void draw()
     }
     else if (fromBridge.startsWith("BB") && fromBridge.endsWith("FF"))
     {
-      println(fromBridge);
+      print("rec"+fromBridge+":start in "+str(millis()));
       for (int i = 0; i < fromBridge.length()-4; i++)
       {
         //print(fromBridge.charAt(i));
@@ -231,6 +234,7 @@ void draw()
           passedTimes[i] = int(t.passedTime()/1000);
         }
       }
+      println(" end in "+str(millis()));
     }
 
     //SEND TO BRIDGE
