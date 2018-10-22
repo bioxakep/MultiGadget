@@ -1,3 +1,4 @@
+// 22.10.2018 version
 import processing.serial.*;
 Serial arduino;
 boolean recieved = false;
