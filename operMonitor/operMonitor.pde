@@ -178,7 +178,7 @@ void draw()
             println("mouse pressed : "+str(millis()));
             hintedGadgets[gadCount] = true;
             passedTimes[gadCount] = int(t.passedTime()/1000);
-            println("mouse touch button "+str(g) + " MX="+str(mouseX)+" and MY="+str(mouseY));
+            println("mouse touch button "+str(gadCount) + " MX="+str(mouseX)+" and MY="+str(mouseY));
           }
         }
         fill(butCol);
