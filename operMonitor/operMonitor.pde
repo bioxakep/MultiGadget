@@ -211,6 +211,7 @@ void draw()
         hintedGadgets[g] = false;
       }
       t.start();
+      allowTouch = true;
       println("Run game");
     } else if (fromBridge.equals("masterConnected"))
     {
@@ -220,7 +221,7 @@ void draw()
         passedGadgets[g] = false;
         hintedGadgets[g] = false;
       }
-      allowTouch = true;
+      
     } else if (fromBridge.startsWith("BB") && fromBridge.endsWith("FF"))
     {
       println(fromBridge);

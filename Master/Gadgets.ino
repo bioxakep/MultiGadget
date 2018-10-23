@@ -78,8 +78,10 @@ void Gate()
     //START MP3 FILE
   }
 }
+
 void Poseidon()
-{ if ((!digitalRead(poseiIN) || operGStates[poseidon]) && !passGStates[poseidon])
+{ 
+  if ((!digitalRead(poseiIN) || operGStates[poseidon]) && !passGStates[poseidon])
   { // signal from poseidon
     // posei > command via (i2c) to motor_controller activate falling column > players get first part thundi
     // shoud be skippable from master console

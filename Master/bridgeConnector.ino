@@ -124,4 +124,11 @@ void resetStates()
   }
   level = 10;
   start = 0;
+  thunderDone = false;
+  sealsDone = false;
+  shieldDone = false;
+  underRFWait = true;
+  windRFWait = true;
+  rainRFWait = true;
+  gateRFWait = true;
 }

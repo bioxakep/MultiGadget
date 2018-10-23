@@ -267,10 +267,6 @@ byte level = 10;
 
 boolean shieldDone = false;
 boolean thunderDone = false;
-
-boolean seal1  = false;
-boolean seal2  = false;
-boolean seal3  = false;
 boolean sealsDone  = false;
 
 boolean bridgeConnected = false;
