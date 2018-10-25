@@ -38,7 +38,7 @@ int motorConAddr = 21;
 //Gadget states
 boolean operGStates[32];
 boolean passGStates[32];
-
+byte voiceStates[32];
 // lev 0
 //
 /*
@@ -89,6 +89,7 @@ boolean passGStates[32];
   END (cmds 0x6x)
   31 WIN
 */
+
 String gadgetNames[32] = {"Baloon", "Press", "Gate",
                           "Poseidon", "Trident", "Demetra-1", "Rain", "Vine", "Dionis-1", "Hercules", "Narcis", "Thunder",
                           "Afina-1", "Afina-2", "Time", "Octopus", "Note", "Wind", "Ghera-1",
@@ -304,6 +305,7 @@ void setup()
   {
     operGStates[g] = false;
     passGStates[g] = false;
+    voiceStates[g] = 0;
   }
   
   //I2C Start

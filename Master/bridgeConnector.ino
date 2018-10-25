@@ -21,6 +21,18 @@ void getOperSkips()
       byte last = Serial1.read();
       if (last == 0xFF) Serial.println("OK");
     }
+    if (inByte == 0xBD) // if recieved voice-hints
+    {
+      byte voiceHintIndex = Serial1.read();
+      if(voiceHintIndex >= 0 && voiceHintIndex < 33)
+      {
+        Serial.println("Voice hint of gadget " + String(voiceHintIndex) + " number "+ String(voiceStates[voiceHintIndex]) + " started");
+        //Comand to Player...
+        voiceStates[voiceHintIndex] = (voiceStates[voiceHintIndex] + 1) % 3;
+      }
+      byte last = Serial1.read();
+      if (last == 0xFF) Serial.println("Voice hints recieved.");
+    }
     else if (inByte == 0xBC) {
       Serial.println("Resync with Bridge...");
       bridgeConnected = false;
