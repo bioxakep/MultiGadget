@@ -51,7 +51,7 @@ void loop()
         connectWaitCount++;
         if (!monitorConnected) Serial.print(String(connectWaitCount) + "...");
       }
-      if (masterSerial.available()) 
+      if (masterSerial.available())
       {
         inByte = masterSerial.read();
         delay(10);
@@ -127,14 +127,39 @@ void loop()
           digitalWrite(13, LOW);
         }
       }
-      else if (input.startsWith("ClearStates"))
+      else if (input.startsWith("CD")) // Voice Hint Resender
+      {
+        int endCD = input.indexOf("FF");
+        if (endCD > 1)
+        {
+          String index = "";
+          for (int i = 0; i < input.length(); i++)
+          {
+            if (isDigit(input[i])) index += input[i];
+          }
+          int voiceIndex = index.toInt();
+          byte indexToSend = voiceIndex & 0xFF;
+          if (indexToSend >= 0)
+          {
+            digitalWrite(serialTXControl, HIGH);  // Init
+            masterSerial.write(0xBD);
+            delay(10);
+            masterSerial.write(indexToSend);
+            delay(10);
+            masterSerial.write(0xFF);
+            delay(10);
+            digitalWrite(serialTXControl, LOW);  // Stop
+          }
+        }
+      }
+      else if (input.startsWith("ClearStates")) // Reset Resender
       {
         digitalWrite(13, HIGH);
         // Prepare to send states to Master
-        digitalWrite(serialTXControl, HIGH);  // Init Transmitter
+        digitalWrite(serialTXControl, HIGH);  // Init
         masterSerial.write(0xCF);
         delay(10);
-        digitalWrite(serialTXControl, LOW);  // Stop Transmitter
+        digitalWrite(serialTXControl, LOW);  // Stop
         digitalWrite(13, LOW);
       }
       else Serial.flush();
