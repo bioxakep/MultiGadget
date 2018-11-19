@@ -2,6 +2,8 @@
 // 13 AGO 2018
 // 21 AGO 2018 adjusted - I2C enabled - xBee deleted
 // 12 sep 2018 remote control temp sequence created, auto column and auto grape tested
+// 17 NOV 2018 automatic sequences corrected 
+// 18 NOV 2018 curtain1 and 2 added, megaColumn
 #include "Wire.h" // I2C
 #include <DFPlayer_Mini_Mp3.h>
 
@@ -10,8 +12,8 @@ int remote2   = 35;
 int remote3   = 39;
 int remote4   = 43;
 
-int gateUP    = A2;
-int gateTOP   = A11;
+int gateUP    = A15;   //was A2 moved SSR to ?????????????????????
+int gateTOP   = A11;  // not used - FREE
 
 int columnDN  = A12;
 int columnUP  = A13;
@@ -27,28 +29,43 @@ int grapeOOO  = 5;
 
 int cloudUP   = 23;
 int cloudDN   = 25;
-int cloudTOP  = 4;
-int cloudOOO  = 3;
+int cloudTOP  = 4;   
+int cloudOOO  = 3; // not used
 
-int curtainUP   = 47;
-int curtainDN   = 45;
+int curtain1UP   = 47;
+int curtain1DN   = 45;
 
-int mainDoor  = A1;
+int curtain2UP   = A1;
+int curtain2DN   = A2;
+
+int curtain1TOP   = A11;
+int curtain2TOP   = A11;
+
 int underDoor = A7;
 
-int poseiPump = A4;
-int poseiValv = A5;
-int poseiLock = A6;
+int megaColumn = 22;
+
+int poseiPump = A4;  // relay pending
+int poseiValv = A5;  // relay pending
+int poseiLock = A6;  // relay pending
 
 byte command = 0;
-int thisI2CAddr = 21;
-//int courtainUP = not implemented yet
-//int courtainDN = not implemented yet
+int  thisI2CAddr = 21;
 
-bool  grapeOnTop = false;
-bool  grapeOnBot = false;
-bool  columnOnTop = false;
-bool  columnOnBot = false;
+bool  grapeOnTop   = false;
+bool  grapeOnBot   = false;
+bool  columnOnTop  = false;
+bool  columnOnBot  = false;
+
+bool  cloudOnTop   = false;
+bool  cloudOnBot   = true;
+
+bool  curtain1OnTop = true;
+bool  curtain1OnBot = false;
+bool  curtain2OnTop = true;
+bool  curtain2OnBot = false;
+
+int   led           = 13;
 
 void setup() {
   Serial.begin(9600);
@@ -60,26 +77,34 @@ void setup() {
   pinMode(remote2, INPUT_PULLUP);
   pinMode(remote3, INPUT_PULLUP);
   pinMode(remote4, INPUT_PULLUP);
+  pinMode(led,OUTPUT);
+  digitalWrite(led,HIGH);
+  pinMode(gateUP, OUTPUT);    // just close contact momentary
 
-  pinMode(gateUP, OUTPUT);    // just close contact for 15 seconds to complete the action or until gateTOP is LOW
+  pinMode(megaColumn, OUTPUT); 
 
-  pinMode(columnDN, OUTPUT);  // close contact for xx seconds or count columnOOO till 300
-  pinMode(columnUP, OUTPUT);  // close contact for xx seconds or count columnOOO till 300
+  pinMode(columnDN, OUTPUT); 
+  pinMode(columnUP, OUTPUT); 
 
   pinMode(grapeUP,  OUTPUT);
   pinMode(grapeDN,  OUTPUT);
 
-  pinMode(curtainUP,  OUTPUT);
-  pinMode(curtainDN,  OUTPUT);
+  pinMode(curtain1UP,  OUTPUT);
+  pinMode(curtain1DN,  OUTPUT);
+
+  pinMode(curtain2UP,  OUTPUT);
+  pinMode(curtain2DN,  OUTPUT);
+
+  pinMode(curtain1TOP, INPUT_PULLUP);  
+  pinMode(curtain2TOP, INPUT_PULLUP);  
   
   pinMode(cloudUP,  OUTPUT);
   pinMode(cloudDN,  OUTPUT);
 
-  pinMode(mainDoor,  OUTPUT);
   pinMode(underDoor, OUTPUT);
 
-  pinMode(gateTOP, INPUT_PULLUP);
-
+  pinMode(gateTOP, INPUT_PULLUP);  // not used
+  
   pinMode(columnTOP, INPUT_PULLUP);
   pinMode(columnBOT, INPUT_PULLUP);
   pinMode(columnOOO, INPUT_PULLUP);
@@ -95,89 +120,62 @@ void setup() {
   pinMode(poseiValv,  OUTPUT);
   pinMode(poseiLock,  OUTPUT);
 
-  digitalWrite(mainDoor, LOW);
-  digitalWrite(underDoor, LOW);
+  digitalWrite(gateUP,     LOW);
 
-  digitalWrite(poseiValv, LOW);   // unpowered valve dont let water get out of the vault
-  digitalWrite(poseiPump, HIGH);
- /// delay(10000);                    /// some time to fill the poseidon vault with water
-  digitalWrite(poseiPump, LOW);
-  digitalWrite(poseiLock, HIGH);   // lock the cover of the vault while if full of water
+  digitalWrite(megaColumn, LOW);
 
-  Serial.println("\nMotor Controller v1  \n21_AGO_2018 ");
-  Serial.println("Hardware = Mega\n");
+  digitalWrite(columnDN,   LOW); 
+  digitalWrite(columnUP,   LOW); 
+
+  digitalWrite(grapeUP,    LOW);
+  digitalWrite(grapeDN,    LOW);
+
+  digitalWrite(curtain1UP,  HIGH);
+  digitalWrite(curtain1DN,  HIGH);
+
+  digitalWrite(curtain2UP,  HIGH);
+  digitalWrite(curtain2DN,  HIGH);
+  
+  digitalWrite(cloudUP,    HIGH);
+  digitalWrite(cloudDN,    HIGH);
+
+  digitalWrite(underDoor,  LOW);
+
+  digitalWrite(poseiValv,  HIGH);   // unpowered valve dont let water get out of the vault
+  digitalWrite(poseiPump,  HIGH);
+  delay(1000 );                    /// some time to fill the poseidon vault with water
+  digitalWrite(poseiPump,  HIGH);
+  digitalWrite(poseiLock,  HIGH);   // lock the cover of the vault while if full of water
+
+  Serial.println("Motor Controller \n21_AGO_2018 - 18_NOV \nHardware  = Mega\n");
   checkInputs();
-  digitalWrite(13, LOW);
+  digitalWrite(led, LOW);
+  Serial.println("\nReady.");
 }
 
 void loop() {
 
-  if (digitalRead(remote1)==LOW &&  grapeOnTop == false) {            // manual  control by radio remote control
-    Serial.println("\nRemote control (1) grape up");
-    digitalWrite(grapeUP, HIGH);
-    while(  digitalRead(grapeTOP)==LOW ) {;}
-    Serial.println("\ngrape on TOP");
-    grapeOnTop = true; 
-    grapeOnBot = false; 
-    // command = 0x02;
-    //grapeUp();
-  } else    digitalWrite(grapeUP, LOW);
-  
-  if (digitalRead(remote2)==LOW &&  grapeOnBot == false) {           // manual  control by radio remote control
-    Serial.println("\nRemote control (2) grape down");
-    digitalWrite(grapeDN, HIGH);
-    while(  digitalRead(grapeBOT)==LOW ) {;}
-    Serial.println("\nGrape is down"); 
-    grapeOnTop = false;
-    //command = 0x04;
-    //grapeDown();
-  } else     digitalWrite(grapeDN, LOW);
+remoteControl();
 
-//Column UP auto
-  if (digitalRead(remote3)==LOW &&  columnOnTop == false) {            // manual  control by radio remote control
-    Serial.println("\nRemote control (3) column up");
-    digitalWrite(columnUP, HIGH);
-    while(  digitalRead(columnTOP)==LOW ) {;}
-    Serial.println("\nColumn on TOP");
-    columnOnTop = true; 
-    columnOnBot = false;   
-    // command = 0x0x;
-  } else    digitalWrite(columnUP, LOW);
-
-  if (digitalRead(remote4)==LOW &&  columnOnBot == false) {           // manual  control by radio remote control
-    Serial.println("\nRemote control (4) column down");
-    digitalWrite(columnDN, HIGH);
-    while(  digitalRead(columnBOT)==LOW ) {;}
-    columnOnBot = true; 
-    columnOnTop = false;  
-    //command = 0x0x;
-    
-  } else     digitalWrite(columnDN, LOW);
-
-  //TEST
-  
-  
   // receives command from master via i2c
-  if (command == 0x10)
+  if (command == 0x10) 
   { 
-    Serial.print("\nOpen the gate start...");
-    cloudUp();
-    grapeUp();
-    columnUp();
-    Serial.println("Done.");
+    Serial.println("Initial command from master , at first START...");
+   // cloudUpCom();
+   // grapeUpCom();
+   // columnDownCom();
+    Serial.println("Initialize command Done.");
   }
-  else if (command == 0x12)
-  { 
-    Serial.print("\ncurtainUP start...");
-    digitalWrite(curtainUP, HIGH);
-    delay(200);
-    digitalWrite(curtainUP, LOW);
-    Serial.println("Done.");
+  else if (command == 0x12)  
+  {  // поднимаем шторы (их две)
+     Serial.println("curtainUP command from master");
+     curtain1UpCom();
+     Serial.println("curtainUP command done");
   }
   else if (command == 0x14)
   { 
-    Serial.print("\nGate UP start...");
-    gateUp();
+    Serial.print("\nGate UP command from master...");
+    gateUpCom();
     Serial.println("Done.");
   }
   else if(command == 0x20)
@@ -185,78 +183,33 @@ void loop() {
     poseiVaultOpen();
   }
   else if(command == 0x21)
-  {//sendToSlave(motorConAddr, 0x21); // Column Down
-    Serial.print("\nColumn Down start...");
-    columnDown();
+  {//sendToSlave(motorConAddr, 0x21); // Column Up
+    Serial.print("\nColumn Up command from master...");
+    columnUpCom();
     Serial.println("Done.");
   }
   else if(command == 0x22)
   {//sendToSlave(motorConAddr, 0x22); // send signal to motor_controller > grapeGrow
-    Serial.print("\nGrape UP start...");
-    grapeUp();
+    Serial.print("\nGrape Dn command from master");
+    grapeDownCom();
     Serial.println("Done.");
   }
   else if (command == 0x31)
-  {
-    //cloudDown
-    Serial.print("\nCloud Down start...");
-    cloudDown();
-    Serial.println("Done.");
+  { //cloudDown
+    Serial.println("\nCloud Down command from master...");
+    cloudDownCom();
   }
   else if (command == 0x51)
-  { //Under Open
-    //cloudDown
-    digitalWrite(underDoor, LOW);
+  { //Under doors Open
+   Serial.println("\nunderDoor command from master...");
+   digitalWrite(underDoor, HIGH);
   }
-/*
-  //level 30 without command
-  
-  if (command == 0x40)
-  { 
-    
+  else if (command == 0x61)
+  { //Mega Columns goes UP
+   Serial.println("\n/Mega Columns command from master...");
+   digitalWrite(megaColumn, HIGH);
   }
 
-  if (command == 0x50)
-  {
-    
-  }
-  
-  if (command == 0x51) // Trident
-  {
-    
-  }
-
-  if (command == 0x52) // Grape Grow
-  {
-    Serial.print("\nColumn Down start...");
-    grapeUp();
-    Serial.println("Done.");
-  }
-
-  if (command == 0x07) { // column up  - top sensor available
-    Serial.println("\nColumn UP start...");
-    columnUp();
-    
-    Serial.println("\nColumn UP done");
-  }
-
-  if (command == 0x08) { // open underground door
-    Serial.println("\nunderground Door OPEN");
-    digitalWrite(underDoor, LOW);
-  }
-
-  if (command == 0x09) { // open main door
-    Serial.println("\nmain Door OPEN");
-    digitalWrite(mainDoor, LOW);
-  }
-
-  if (command == 0xFF) { // poseidon - lets open poseidon vault
-    Serial.println("\nPoseidon vault OPENING...");
-    poseiVaultOpen();
-    Serial.println("\nPoseidon vault OPEN");
-    
-  }
-  */
   command = 0;
 }
 
@@ -267,4 +220,3 @@ void receiveEvent(int howMany)
     command = Wire.read();    // принять байт как символ
   }
 }
-

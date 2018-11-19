@@ -91,10 +91,10 @@ void loop()
   }
   else // Master Connected
   {
-    if (Serial.available() > 0) //recieve from operator processing
+    if (Serial.available() > 0) // команда принята от оператора
     {
       String input = Serial.readStringUntil('\n');
-      if (input.startsWith("CC")) // Start-signal of DATA recieve from Operator
+      if (input.startsWith("CC")) // операторский старт-байт
       {
         for (int i = 0; i < gadgetCount; i++)
         {
@@ -107,11 +107,11 @@ void loop()
           }
           else passGStates[i] = false;
         }
-        if (input.endsWith("FF")) //All Data Recieved marker
+        if (input.endsWith("FF")) // Данные приняты от оператора
         {
           digitalWrite(13, HIGH);
           // Prepare to send states to Master
-          digitalWrite(serialTXControl, HIGH);  // Init Transmitter
+          digitalWrite(serialTXControl, HIGH);  // передаем состояния мастеру
           masterSerial.write(0xBB);
           delay(10);
           //Sending...
@@ -121,43 +121,40 @@ void loop()
             else masterSerial.write(0x01);
             delay(10);
           }
-          masterSerial.write(0xFF); // End sending
+          masterSerial.write(0xFF); // конец передачи состояний мастеру
           delay(10);
           digitalWrite(serialTXControl, LOW);  // Stop Transmitter
           digitalWrite(13, LOW);
         }
       }
-      else if (input.startsWith("CD")) // Voice Hint Resender
+      else if (input.startsWith("CD")) // Прием от мастера голосовых подсказок
       {
+        Serial.println(input);
         int endCD = input.indexOf("FF");
         if (endCD > 1)
         {
-          String index = "";
-          for (int i = 0; i < input.length(); i++)
-          {
-            if (isDigit(input[i])) index += input[i];
-          }
-          int voiceIndex = index.toInt();
-          byte indexToSend = voiceIndex & 0xFF;
-          if (indexToSend >= 0)
-          {
-            digitalWrite(serialTXControl, HIGH);  // Init
-            masterSerial.write(0xBD);
-            delay(10);
-            masterSerial.write(indexToSend);
-            delay(10);
-            masterSerial.write(0xFF);
-            delay(10);
-            digitalWrite(serialTXControl, LOW);  // Stop
-          }
+          int voiceIndextoSend = input.substring(2, endCD).toInt();
+          byte sendVoiceByte = lowByte(voiceIndextoSend);
+          digitalWrite(13, HIGH);
+          // Prepare to send states to Master
+          digitalWrite(serialTXControl, HIGH);  // передаем состояния мастеру
+          masterSerial.write(0xBD);
+          delay(10);
+          //Sending...
+          masterSerial.write(sendVoiceByte);
+          delay(10);
+          masterSerial.write(0xFF); // конец передачи состояний мастеру
+          delay(10);
+          digitalWrite(serialTXControl, LOW);  // Stop Transmitter
+          digitalWrite(13, LOW);
         }
       }
-      else if (input.startsWith("ClearStates")) // Reset Resender
+      else if (input.startsWith("ClearStates")) // прием команды оператора на сброс состояний
       {
         digitalWrite(13, HIGH);
         // Prepare to send states to Master
         digitalWrite(serialTXControl, HIGH);  // Init
-        masterSerial.write(0xCF);
+        masterSerial.write(0xBC);
         delay(10);
         digitalWrite(serialTXControl, LOW);  // Stop
         digitalWrite(13, LOW);
@@ -165,7 +162,7 @@ void loop()
       else Serial.flush();
     }
 
-    if (masterSerial.available() > 0) //recieve from master
+    if (masterSerial.available() > 0) //прием команды от мастера
     {
       byte input[gadgetCount];
       for (byte i = 0; i < gadgetCount; i++) input[i] = 0x00;
@@ -177,18 +174,18 @@ void loop()
         masterConnected = false;
         for (int s = 0; s < gadgetCount; s++) passGStates[s] = false;
       }
-      else if (inByte == 0xA9)
+      else if (inByte == 0xA9) // контроль подключения
       {
         mLastA9Rec = tick;
       }
-      else if (inByte == 0xA5)
+      else if (inByte == 0xA5) // сброс состояний со стороны мастера
       {
         for (int s = 0; s < gadgetCount; s++) passGStates[s] = false;
         if (!monitorConnected) Serial.println("Send to operator clear states and run");
         Serial.write("masterStart\n");
         //Sending...
       }
-      else if (inByte == 0xAA)
+      else if (inByte == 0xAA) // информация о гаджетах
       {
         delay(350);
         if (!monitorConnected) Serial.print("Recieving data from master: ");
@@ -219,7 +216,7 @@ void loop()
         }
       }
       while (masterSerial.available()) masterSerial.read();
-      if (tick - mLastA9Rec > masterConnTimeOut)
+      if (tick - mLastA9Rec > masterConnTimeOut) // при отсутствии контрольного сигнала переподключаемся к мастеру
       {
         digitalWrite(serialTXControl, HIGH);  // Init Transmitter
         masterSerial.write(0xBC);

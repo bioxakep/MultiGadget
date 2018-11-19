@@ -1,5 +1,3 @@
-unsigned long lastRec = 0;
-
 void getOperSkips()
 {
   if (Serial1.available() > 0)
@@ -23,12 +21,14 @@ void getOperSkips()
     }
     if (inByte == 0xBD) // if recieved voice-hints
     {
+      delay(50);
       byte voiceHintIndex = Serial1.read();
+      Serial.println("Recieved voiceHint# "+String(voiceHintIndex,HEX));
       if(voiceHintIndex >= 0 && voiceHintIndex < 33)
       {
-        Serial.println("Voice hint of gadget " + String(voiceHintIndex) + " number "+ String(voiceStates[voiceHintIndex]) + " started");
-        //Comand to Player...
-        voiceStates[voiceHintIndex] = (voiceStates[voiceHintIndex] + 1) % 3;
+        Serial.println("Voice hint of gadget " + String(voiceHintIndex) + " number "+ String(voiceHintStates[voiceHintIndex]) + " started");
+        mp3_set_serial(Serial3);
+        playVoice(voiceHintIndex);
       }
       byte last = Serial1.read();
       if (last == 0xFF) Serial.println("Voice hints recieved.");
@@ -133,6 +133,7 @@ void resetStates()
   {
     operGStates[g] = false;
     passGStates[g] = false;
+    voiceHintStates[g] = 0;
   }
   level = 10;
   start = 0;

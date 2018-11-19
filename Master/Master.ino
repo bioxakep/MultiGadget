@@ -1,4 +1,4 @@
-// 22.10.2018
+// 30.OCT.2018  - 31.OCT.2018 - 17.NOV.2018
 // Rewrote Connection
 
 // Master SKY  - Mega
@@ -17,8 +17,6 @@
 
 LiquidCrystal_I2C lcd(0x3F, 16, 2); // set the LCD address to 0x27 for a 16 chars and 2 line display
 
-byte devCount = 21;//Under calculate volitile gadgets...
-
 int windRFPin  = A0;    // RFID key to start
 int underRFPin  = 9;    // RFID key to the underground door
 int rainRFPin = 12;
@@ -31,6 +29,7 @@ int firePin = 3;
 //Итого:  , worldAdd (факел) = 3
 
 int curHighPin = -1;
+
 //address i2c
 int lightConAddr = 20;
 int motorConAddr = 21;
@@ -38,7 +37,7 @@ int motorConAddr = 21;
 //Gadget states
 boolean operGStates[32];
 boolean passGStates[32];
-byte voiceStates[32];
+byte voiceHintStates[32];
 // lev 0
 //
 /*
@@ -89,14 +88,16 @@ byte voiceStates[32];
   END (cmds 0x6x)
   31 WIN
 */
-
 String gadgetNames[32] = {"Baloon", "Press", "Gate",
                           "Poseidon", "Trident", "Demetra-1", "Rain", "Vine", "Dionis-1", "Hercules", "Narcis", "Thunder",
                           "Afina-1", "Afina-2", "Time", "Octopus", "Note", "Wind", "Ghera-1",
                           "Fire", "Flower-1", "Flower-2", "Arpha", "Dionis-2", "Ghera-2",
-                          "Under","Zodiak", "Minot", "Gorgona", "Cristals", "Light",
+                          "BigKey", "Under", "Zodiak", "Minot", "Gorgona", "Cristals",
                           "End"
                          };
+//Voice pin
+int voicePin = 6;
+boolean voiceStates[2] = {HIGH, HIGH};
 //START
 int start = 0;
 int startPin = 8;
@@ -151,16 +152,16 @@ byte dionis1 = 8;
 byte dionis2 = 23;
 int dioniIN  = 22;   //f.
 int dioniOUT = 34;
-int dioniHD1 = A2;   // piston
+int dioniHD1 = A5;   // piston
 int dioniHD2 = A3;
 
 //HERCULES
-byte hercul = 9;
+byte hercul  = 9;
 int hercuIN  = 7;
 int hercuHD  = A4;
 
 //NARCIS
-byte narcis = 10;
+byte narcis  = 10;
 int narciIN  = 51;   // i.  /// video seen
 int narciOUT = 41;          /// launch video
 
@@ -178,9 +179,9 @@ int afinaHD1 = A7;
 int afinaHD2 = A8;
 
 //TIME
-byte Time = 14;
-int timeOUT = A5;
-int timeIN = 46;
+byte Time    = 14;
+int timeOUT  = 38;
+int timeIN   = 46;
 
 //OCTOPUS
 byte octopus = 15;
@@ -195,8 +196,6 @@ int noteHD   = A6;
 
 //WIND
 byte wind = 17;
-ArdCPZ *cpz1; //Wind
-int windBeacon = 499;
 boolean windRFWait = true;
 
 //MUSES
@@ -221,48 +220,51 @@ int flowrHD  = A13;
 
 //ARPHA
 byte arpha = 22;
-int arphaIN  = 6;
 int arphaHD  = A9;
 
+//BIGKEY
+byte bigkey = 25;
+int bigKeyIN = 16;
+
 //UNDERGROUND
-byte under = 25;
+byte under = 26;
 ArdCPZ *cpz2; //Under
 int underBeacon = 328;
 boolean underRFWait = true;
 
 //ZODIAK
-byte zodiak = 26;
+byte zodiak = 27;
 int zodiaIN  = 5;
 int zodiaHD  = A11;
 
 //MINOT
-byte minot = 27;
+byte minot = 28;
 int minotIN  = 29;   // B.
 int minotOUT = 45;
 int minotHD  = A10;
 
 //GORGONA
-byte gorgona = 28;
+byte gorgona = 29;
 int gorgoIN  = 28;   // A.
 int gorgoOUT = 30;
 int gorgoHD  = A12;
 
 //CRISTALS
-byte crystals = 29;
+byte crystals = 30;
 boolean crystStates[3] = {false, false, false};
 boolean crystDone = false;
 boolean crystReciever = false;
 int crystRecBut = 16;
 
-byte light = 30;
+
 byte win = 31;
 
 int totalGadgets = 32;
 
 int freeIN = 46;
 int freeOUT = 40;
-//int worldIN   = 12; free
-//int worldOUT  = 11; free
+
+int spare = A2;
 
 byte level = 10;
 
@@ -282,10 +284,10 @@ void setup()
   Serial1.begin(9600);  //RS-485 to Bridge
   delay(10);
   Serial.println("SKY Master v2.1");
-  Serial.println("18 Okt 2018");
+  Serial.println("30 OCT 2018   -  17 NOV - 2018");
   Serial.println("RS485 Started.");
   pinSetup(); //from pinWorker
-  
+
   delay(100);
   mp3_set_serial(Serial);
   delay(100);
@@ -296,34 +298,34 @@ void setup()
 
   Serial.println("\n--------------");
 
-  cpz1 = new ArdCPZ(windRFPin);
+  // cpz1 = new ArdCPZ(windRFPin);
   cpz2 = new ArdCPZ(underRFPin);
   cpz3 = new ArdCPZ(gateRFPin);
-  cpz4 = new ArdCPZ(rainRFPin);
+  // cpz4 = new ArdCPZ(rainRFPin);
   Serial.println("RFID Connected");
   for (int g = 0; g < totalGadgets; g++)
   {
     operGStates[g] = false;
     passGStates[g] = false;
-    voiceStates[g] = 0;
+    voiceHintStates[g] = 0;
   }
-  
+
   //I2C Start
   Wire.begin();
   Serial.println("I2C Started");
-  
+
   delay(10);
   checkInputs();
-  Serial.println("Inputs Checked");
+  Serial.println("\nInputs Checked");
   delay(10);
   openLocks();
-  Serial.println("Locks Opened");
+  Serial.println("\nLocks Opened");
   lcd.init();
   lcd.backlight();
-  lcd.print("Initialising...");
-  
+  lcd.print("Initialising....");
+
   connectToBridge();
-  
+
   lcd.clear();
   lcd.print("Connected");
   lcd.setCursor(0, 1);
@@ -335,7 +337,9 @@ void loop()
   unsigned long tick = millis();
 
   startStates[0] = debounce(startStates[1], startPin); // READ START BUTTON
+  voiceStates[0] = debounce(voiceStates[1], voicePin);
   if (level > 10 && !startStates[0] && startStates[1]) skipNextGadget(); // SKIP BY START BUTTON
+  if (level > 10 && !voiceStates[0] && voiceStates[1]) voiceCurGadget();
   if (curHighPin > 0) // WATCH FOR ACTIVE PIN
   {
     if (tick - startHighPin > 250)
@@ -405,19 +409,20 @@ void loop()
       Arpha();//#23
       Ghera2();//#24
       /*
-       * String gadgetNames[32] = {0 "Baloon", 1 "Press", 2 "Gate",
+         String gadgetNames[32] = {0 "Baloon", 1 "Press", 2 "Gate",
                           3 "Poseidon", 4 "Trident", 5 "Demetra-1", 6 "Rain", 7 "Vine", 8 "Dionis-1", 9 "Hercules”, 10 “Narcis", 11 "Thunder",
                           12 "Afina-1", 13 "Afina-2", 14 "Time", 15 "Octopus", 16 "Note", 17 "Wind", 18 "Ghera-1",
                           19 "Fire", 20 "Flower-1", 21 "Flower-2", 22 "Arpha", 23 "Dionis-2", 24 "Ghera-2",
                           25 "Under",26 "Zodiak", 27 "Minot", 28 "Gorgona", 29 "Cristals", 30 "Light",
                           31 "End"
                          };
-       */
+      */
     }
     // ==================================== CRYSTALS ==================================
     if (!passGStates[crystals])
     { // underground level
       //OPEN UNDER
+      BigKey();
       if (underRFWait) Underground();//#25
       else
       {
@@ -436,7 +441,7 @@ void loop()
   }
 
   sendGStates(); // if need
-  
+
   if (tick - lastA9SentTime > 10000) // send sync signal to confirm connection to bridge
   {
     digitalWrite(SSerialTxControl, HIGH);
@@ -446,6 +451,7 @@ void loop()
     Serial.println("Send sync signal");
     lastA9SentTime = tick;
   }
+  voiceStates[1] = voiceStates[0];
   startStates[1] = startStates[0];
 } // LOOP END
 
@@ -475,8 +481,24 @@ void skipNextGadget()
   sendGStates();
   operGStates[curGadget] = true;
   passGStates[curGadget] = false;
-  Serial.println("Gadget #(from 0): "+ String(curGadget) + " Named: " + String(gadgetNames[curGadget]) + " passed by start button");
+  Serial.println("Gadget #(from 0): " + String(curGadget) + " Named: " + String(gadgetNames[curGadget]) + " passed by start button");
   lcd.clear();
   lcd.print("SKIPPED " + String(curGadget));
+}
+
+void voiceCurGadget()
+{
+  int curGadget = 0;
+  while (passGStates[curGadget]) {
+    curGadget++;
+  }
+  playVoice(curGadget);
+}
+
+void playVoice(byte vhi)
+{
+  int playFile = (int)(vhi * 10) + voiceHintStates[vhi];
+  Serial.println("Playing " + String(playFile) + ".mp3 file");
+  voiceHintStates[vhi] = (voiceHintStates[vhi] + 1) % 3;
 }
 

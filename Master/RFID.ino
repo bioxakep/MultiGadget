@@ -5,24 +5,12 @@ int underBeaconB  = 385;
 
 
 boolean getWindRFID() {
-  cpz1->check();
-  if(cpz1->isBeaconConnecting())
-  {
-    byte addr[6];
-    int ficha1 = 0;
-    cpz1->getAddress(addr);
-    //Serial.print("\nBeacon-Wind: ");
-    for(int i = 0; i < 6; i++) 
-    {                               
-      ficha1 = ficha1 + addr[i];    // Serial.print(addr[i], HEX);
-    }
-    //Serial.print(" sum = ");
-    //Serial.println(ficha1);
-    if (ficha1 == windBeacon) return true;
-    else return false;
-  }
-  else return false;
+  if(digitalRead(windRFPin)==HIGH)
+  { 
+    return true; 
+    }else return false;
 }
+ 
 
 boolean getUnderRFID() {
   cpz2->check();
@@ -64,22 +52,8 @@ boolean getGateRFID() {
 }
 
 boolean getRainRFID() {
-  cpz4->check();
-  if(cpz4->isBeaconConnecting())
-  {
-    byte addr[6];
-    int ficha4 = 0;
-    cpz4->getAddress(addr);
-    //Serial.print("\nBeacon-Rain: ");
-    for(int i = 0; i < 6; i++) 
-    {                               
-      ficha4 = ficha4 + addr[i];    // Serial.print(addr[i], HEX);
-    }
-    //Serial.print(" sum = ");
-    //Serial.println(ficha4);
-    if (ficha4 == rainBeacon) return true;
-    else return false;
-  }
-  else return false;
+  if(digitalRead(rainRFPin)==HIGH)
+  { 
+    return true; 
+    }else return false;
 }
-

@@ -3,7 +3,7 @@
 // I2C enabled - slave for master // xBee removed - receives commands from Master and World
 // 23 AGO 2018 flowers added
 // 13 Sep 2018 windows and colors corrected
-
+// 
 // bright on all windows
 // red on selected window
 // blue on selected window
@@ -13,9 +13,9 @@
 /// PWM color control for windows
 #include "Wire.h" // I2C
 
-int oknoA_R   = 6;
-int oknoA_G   = 5;
-int oknoA_B   = 4;
+int oknoA_R   =  6;
+int oknoA_G   =  5;
+int oknoA_B   =  4;
 
 int oknoB_R   =  9;
 int oknoB_G   =  8;
@@ -25,10 +25,10 @@ int oknoC_R   =  12;
 int oknoC_G   =  11;
 int oknoC_B   =  10;
 
-int dvor_W    = 46;
-int dvor_R    = 45;
-int dvor_G    = 3;
-int dvor_B    = 2;
+int dvor_W    =  46;
+int dvor_R    =  45;
+int dvor_G    =  3;
+int dvor_B    =  2;
 
 int wind      = A8; //  AC relay to control Wind blower
 int mainLight = A2; //  main light in game, will turn on after ballon
@@ -39,10 +39,10 @@ int crystPins[3] = {23,24,25};
 
 int flowerR   = 53;
 int flowerB   = 51;
-int fastled   = 7;
+// int fastled   = 7;  // not used
 
-int motor     = 49;
-int north     = 47;
+int motor     = 49;  // now is just a pulse signal to change a picture on a video player
+int north     = 47;  // not used anymore
 int turner    = 43;
 
 byte command = 0;
@@ -76,8 +76,7 @@ int lStep = 10;
 boolean moonSun = true; // TEST
 
 
-void setup()
-{
+void setup() {
   Serial.begin(9600);
   Wire.begin(thisI2CAddr);
   Wire.onReceive(receiveEvent);
@@ -120,7 +119,7 @@ void setup()
     pinMode(crystPins[c], INPUT_PULLUP);
   }
 
-  Serial.println("\nLight Controller v1  \nSep_2018 ");
+  Serial.println("\nLight Controller v1  \nSep_2018 - 17.Nov.2018");
   Serial.println("Hardware = Mega\n");
 
   //testing();
@@ -145,6 +144,13 @@ void loop() {
     // считаем число замыканий, делим на 3. если счетчик увеличился
     // сменяем цвета в цикле и мотор на 12 сек
     // если срабатывает north сравниваем 0 у нас или нет в модуле и если нет - обновляем счетчик
+
+    // north больше не существует
+    // посылаем короткий сигнал на мотор каждый раз когда меняем положение sun - moon
+    // digitalWrite(motor,HIGH);
+    // delay(50);
+    // digitalWrite(motor,LOW);
+    
     if (!digitalRead(turner))
     {
       turnCount++;
@@ -167,6 +173,12 @@ void loop() {
         byte currCol = currPosInds[(p + dir) % 4]; // dir - текущее направление (N,E,W,S), currCol - цвет для конкретного окна в текщем направлении.
         byte prevCol = currPosInds[(p + dir - 1) % 4]; // Для будущего написания плавности, цвет для конкретного окна в предыдущем направлении.
 
+        // --------------- IMPORTANT ----------------
+        // required every change to shift the picture
+        // digitalWrite(motor, HIGH);
+        // delay(50);
+        // digitalWrite(motor, LOW);
+    
         Serial.print(String(places[p]) + " is " + String(colors[currCol]));
         if (prevCol > currCol)
         {
@@ -330,4 +342,3 @@ void requestEvent()
   }
   Wire.write(ans);
 }
-

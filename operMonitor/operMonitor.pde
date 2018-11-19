@@ -8,7 +8,7 @@ PrintWriter data;
 boolean game;
 boolean endGame = false;
 boolean connected;
-boolean allowTouch = false;
+boolean allowTouch = true;
 boolean rec = false;
 int recCount = 0;
 String portName;
@@ -19,8 +19,9 @@ String teamNameStr;
 int nameLen = 0;
 float scrW = 1000;
 float scrH = 0;
-float gadButW, gadButH;
+float gadButW, gadVoiW, gadButH;
 float gadMarX, gadMarY;
+float marX, marY;
 float timerW, timerH, timerX, timerY;
 float timerTextW;
 float scoreW, scoreH, scoreX, scoreY;
@@ -42,11 +43,11 @@ boolean calculated = false;
 
 int[] levGadCount = {3, 9, 7, 6, 6, 1};
 String[] levelNames = {"START", "THUNDER", "SHIELDS", "SEALS", "UNDERGROUND", "END"};
-String[] gadgetNames = {"Baloon", "Press", "Gate", "Poseidon", "Trident", "Demetra-1", "Rain", "Vine", "Dionis-1", "Hercules", "Narcis", "Thunder", "Afina-1", "Afina-2", "Time", "Octopus", "Note", "Wind", "Ghera-1", "Fire", "Flower-1", "Flower-2", "Arpha", "Dionis-2", "Ghera-2", "Under", "Zodiak", "Minot", "Gorgona", "Cristals", "Light", "End"};
+String[] gadgetNames = {"Baloon", "Press", "Gate", "Poseidon", "Trident", "Demetra-1", "Rain", "Vine", "Dionis-1", "Hercules", "Narcis", "Thunder", "Afina-1", "Afina-2", "Time", "Octopus", "Note", "Wind", "Ghera-1", "Fire", "Flower-1", "Flower-2", "Arpha", "Dionis-2", "Ghera-2", "BigKey", "Under", "Zodiak", "Minot", "Gorgona", "Cristals", "End"};
 boolean[] passedGadgets = new boolean[32];
 boolean[] hintedGadgets = new boolean[32];
 int[] passedTimes = new int[32];
-byte[] gadVoiceHintNum = new byte[32];
+//int[] gadVoiceHintNum = new int[32];
 int sendVoiceNumber = -1;
 int passTimesIndex = 0;
 
@@ -58,7 +59,7 @@ int timerHours = 0;
 int timerMinutes = 0;  
 int timerSeconds = 0;
 long totalSeconds = 0;
-
+long lastVoiceSend = 0;
 int startScores = 10000;
 int currScores = 10000;
 int hintDec = 500;
@@ -66,9 +67,18 @@ int hintDec = 500;
 int hintCount = 0;
 int playersCount = 0;
 
+// draw
+//LEVELS
+//-[]-[]-[]-
+//-[]-[]-[]-[]-[]-[]-[]-[]-[]-
+//-[]-[]-[]-[]-[]-[]-[]-
+//-[]-[]-[]-[]-[]-[]-
+//-[]-[]-[]-[]-[]-[]-
+//-[]-                   TIME
+
 void setup()
 {
-  size(1200, 675);
+  size(1200, 600);
   //fullScreen();
   fill(255);
   teamName = new char[15];
@@ -79,30 +89,31 @@ void setup()
   gadgetFont = createFont("Silom", 16);
   scrW = width;
   scrH = height;
-  topH = scrH/9;
+  marX = scrW/50;
+  marY = marX;
+  //topH = scrH/9;
   textFont(timerFont);
-  timerW = scrW/4;
-  timerH = topH * 0.7;//calcTSize("00:00:00", timerW);
-  timerY = topH * 0.85;
-  scoreW = scrW/3;
-  scoreH = timerH;
-  scoreY = timerY;
+  gadButW = (5*(scrW - 2*marX))/71;
+  gadVoiW = (2*(scrW - 2*marX))/71;
+  gadMarX = (1*(scrW - 2*marX))/71;
+  gadButH = (3*(scrH - 2*marY))/24; //(6 slices by 4 parts each , 1 part - margin, 3 part - gadButH)
+  gadMarY = (scrH - 2*marY)/24;
 
-  gadMarX = scrW/55;
-  gadMarY = (scrH-topH)/24;
-  gadButW = gadMarX*5-5;
-  gadButH = gadMarY*3-2;
+
+  timerW = scrW/4;
+  timerH = gadButH;
+  timerY = scrH - marY;
+
 
   t = new StopWatchTimer();
-  t.setStartTime(1, 30, 0);
-  totalSeconds = 0 + 1 * 60 + 30;
+  totalSeconds = t.setStartTime(1, 30, 0);
   arduinoConnect();
-  
+  lastVoiceSend = totalSeconds;
   for (int g = 0; g < 32; g++)
   {
     passedGadgets[g] = false;
     hintedGadgets[g] = false;
-    gadVoiceHintNum[g] = 0;
+    //gadVoiceHintNum[g] = 0;
     passedTimes[g] = 0;
   }
 }
@@ -120,49 +131,9 @@ void draw()
     textFont(timerFont, timerH);
     timerTextW = textWidth(currTime);
     fill(textCol);
-    text(currTime, 0, timerY);
-    float scoreTextW = textWidth(str(currScores));
-    text(currScores, scrW - scoreTextW, timerY);
+    text(currTime, scrW - timerTextW - marX, timerY);
 
     textFont(timerFont, timerH * 0.35);
-    text("ELAPSED TIME", 5, timerH * 0.35);
-    float scoresTextW = textWidth("SCORES");
-    text("SCORES", scrW - scoresTextW - 5, timerH * 0.35);
-
-    float playersTextW = textWidth("PLAYERS: "+ str(playersCount));
-    text("PLAYERS: "+ str(playersCount), scrW/2 - playersTextW/2, timerH * 0.35);
-
-    // HINT DRAW
-    textFont(timerFont, timerH);
-    float hintTextW = textWidth("HINTS: "+ str(hintCount));
-    text("HINTS: "+ str(hintCount), scrW/2 - hintTextW/2, timerY);
-    fill(butCol);
-    strokeWeight(0);
-    ellipse(scrW/2 - hintTextW/2 - 30, timerY - timerH/2 + 6, 50, 50); // minus circle
-    ellipse(scrW/2 + hintTextW/2 + 30, timerY - timerH/2 + 6, 50, 50); // plus circle
-
-    fill(background);
-    rect(scrW/2 - hintTextW/2 - 48, timerY - timerH/2 + 4, 36, 4); // minus for minus
-    rect(scrW/2 + hintTextW/2 + 12, timerY - timerH/2 + 4, 36, 4); // minus for plus
-    rect(scrW/2 + hintTextW/2 + 28, timerY - timerH/2 - 12, 4, 36); // plus vertical
-
-    // Hint Inc and Dec Mouse Click
-    if (!prevMouseState && currMouseState) //hint + -
-    {
-      //hint minus
-      if (allowTouch && mouseX > (scrW/2 - hintTextW/2 - 55) && mouseX < scrW/2 - hintTextW/2 - 5  && mouseY > timerY - timerH/2 - 44 && mouseY < timerY - timerH/2 + 56)
-      {
-        hintCount--;
-        if (hintCount < 0) hintCount = 0;
-        currScores += 100;
-      }
-      if (allowTouch && mouseX > (scrW/2 + hintTextW/2 + 5) && mouseX < scrW/2 + hintTextW/2 + 55  && mouseY > timerY - timerH/2 - 44 && mouseY < timerY - timerH/2 + 56)
-      {
-        hintCount++;
-        currScores -= 100;
-      }
-    }
-
     //GADGETS
     stroke(textCol);
     int gadCount = 0;
@@ -171,46 +142,52 @@ void draw()
     {
       textFont(topFont, timerH * 0.35);
       fill(textCol);
-      text(levelNames[lev], gadMarX, topH + gadMarY*(lev+1) + gadButH*lev - 2);
+      text(levelNames[lev], marX, marY + gadMarY*(lev+1) + gadButH*lev - 2);
       for (int g = 0; g < levGadCount[lev]; g++)
       {
         if (!prevMouseState && currMouseState)
         {
-          if (allowTouch && !hintedGadgets[gadCount] && !passedGadgets[gadCount] && mouseX > ((g+1) * gadMarX + gadButW * g) && mouseX < ((g+1) * (gadMarX + gadButW))  && mouseY > (topH + gadMarY * (lev+1) + gadButH*lev) && mouseY < (topH + (lev+1) * (gadMarY + gadButH)))
+          if (allowTouch && !hintedGadgets[gadCount] && !passedGadgets[gadCount] && mouseX > marX + g * (gadMarX + gadButW + gadVoiW) && mouseX < marX + g * (gadMarX + gadButW + gadVoiW) + gadButW && mouseY > marY + gadMarY*(lev+1) + gadButH*lev && mouseY < marY + (gadButH + gadMarY)*(lev+1))
           { 
             hintedGadgets[gadCount] = true;
-            passedTimes[gadCount] = int(t.passedTime()/1000);
+            passedTimes[gadCount] = int((totalSeconds-t.getElapsedTime())/1000);
             println("mouse touch button "+str(gadCount) + " MX="+str(mouseX)+" and MY="+str(mouseY));
           }
-          if (allowTouch && !hintedGadgets[gadCount] && !passedGadgets[gadCount] && mouseX > ((gadMarX + gadButW)*(g+1)) && mouseX < (gadMarX + gadButW)*(g+1)+gadMarX/2  && mouseY > (topH + gadMarY * (lev+1) + gadButH*lev) && mouseY < (topH + (lev+1) * (gadMarY + gadButH)))
-          { 
-            hintedGadgets[gadCount] = true;
-            gadVoiceHintNum[gadCount]++;
-            sendVoiceNumber = gadCount;
-            println("mouse touch button "+str(gadCount) + " MX="+str(mouseX)+" and MY="+str(mouseY));
+          if (allowTouch && mouseX > marX + (g+1)*gadButW + (gadVoiW+gadMarX)*g && mouseX < marX + (g+1)*(gadButW+gadVoiW) + gadMarX*g  && mouseY > marY + gadMarY*(lev+1) + gadButH*lev && mouseY < marY + (gadButH + gadMarY)*(lev+1))
+          {
+            long elTime = t.getElapsedTime();
+            println("ELT="+str(elTime)+" lastST="+str(lastVoiceSend));
+            if (lastVoiceSend - elTime > 500)
+            {
+              //gadVoiceHintNum[gadCount] = (gadVoiceHintNum[gadCount]+1) % 3;
+              //hintedGadgets[gadCount] = true;
+              sendVoiceNumber = gadCount;
+              lastVoiceSend = elTime;
+              //println("mouse touch button "+str(gadCount) + " MX="+str(mouseX)+" and MY="+str(mouseY));
+            }
           }
         }
         fill(butCol);
         if (passedGadgets[gadCount]) fill(color(0, 200, 100, 60));
         else fill(color(100, 100, 100, 60));
         if (hintedGadgets[gadCount]) fill(color(255, 180, 130, 60));
-        rect((g+1) * gadMarX + gadButW * g, topH + gadMarY*(lev+1) + gadButH*lev, gadButW, gadButH);
-        fill(color(20,20,200,60));
-        textFont(topFont, timerH * 0.3);
+        rect(marX + g * (gadMarX + gadButW + gadVoiW), marY + gadMarY*(lev+1) + gadButH*lev, gadButW, gadButH); // Level-Rects
+
+        fill(color(20, 20, 200, 60));
+        textFont(topFont, timerH * 0.24);
         float gtxtW = textWidth(gadgetNames[gadCount]);
         fill(textCol);
-        text(gadgetNames[gadCount], (g+1) * gadMarX + gadButW * g + gadButW/2 - gtxtW/2, topH + gadMarY*(lev+1) + gadButH*(lev+0.6) - 2); // Gadget Names
-        
-        rect((gadMarX + gadButW)*(g+1), topH + gadMarY*(lev+1) + gadButH*lev, gadMarX/2, gadButH); //Voice rect
-        float voiceHintTextWidth = textWidth(str(gadVoiceHintNum[gadCount]));
-        fill(textCol);
-        text(gadVoiceHintNum[gadCount], (gadMarX + gadButW)*(g+1) + gadMarX/4 - voiceHintTextWidth/2, topH + gadMarY*(lev+1) + gadButH*(lev+0.6) - 2); // Voice hint count by gadget
+        text(gadgetNames[gadCount], marX + g * (gadMarX + gadButW + gadVoiW) + gadButW/2 - gtxtW/2, marY + gadMarY*(lev+1) + gadButH*(lev+0.6) - 2); // Gadget Names
 
+        rect(marX + (g+1) * gadButW + (gadVoiW+gadMarX)*g, marY + gadMarY*(lev+1) + gadButH*lev, gadVoiW, gadButH); //Voice rect
+        //float voiceHintTextWidth = textWidth(str(gadVoiceHintNum[gadCount]));
+        //fill(textCol);
+        //text(gadVoiceHintNum[gadCount], marX + (g+1)*(gadButW+gadVoiW/2) + g*(gadMarX+gadVoiW/2) - voiceHintTextWidth/2, marY + gadMarY*(lev+1) + gadButH*(lev+0.6) - 2); // Voice hint count by gadget
         gadCount++;
       }
       strokeWeight(2);
       fill(textCol);
-      line(gadMarX, topH + gadMarY*(lev+1) + gadButH*lev, (levGadCount[lev]) * (gadMarX + gadButW), topH + gadMarY*(lev+1) + gadButH*lev);
+      line(marX, marY + gadMarY*(lev+1) + gadButH*lev, (levGadCount[lev]) * (gadMarX + gadButW + gadVoiW), marY + gadMarY*(lev+1) + gadButH*lev);
       strokeWeight(1);
     }
 
@@ -227,19 +204,17 @@ void draw()
       t.start();
       allowTouch = true;
       println("Run game");
-    } 
-    else if (fromBridge.equals("masterConnected"))
+    } else if (fromBridge.equals("masterConnected"))
     {
       t = new StopWatchTimer();
-      t.setStartTime(1, 30, 0);
+      totalSeconds = t.setStartTime(1, 30, 0);
       println("Connecting to Master: true");
       for (int g = 0; g < 32; g++)
       {
         passedGadgets[g] = false;
         hintedGadgets[g] = false;
       }
-    } 
-    else if (fromBridge.startsWith("BB") && fromBridge.endsWith("FF"))
+    } else if (fromBridge.startsWith("BB") && fromBridge.endsWith("FF"))
     {
       println(fromBridge);
       for (int i = 0; i < fromBridge.length()-4; i++)
@@ -252,7 +227,7 @@ void draw()
           print("Gadget "); 
           print(i);
           println(" passed by player");
-          passedTimes[i] = int(t.passedTime()/1000);
+          passedTimes[i] = int((totalSeconds-t.getElapsedTime())/1000);
         }
       }
     }
@@ -285,15 +260,17 @@ void draw()
       println("OK");
       sendToBridge = false;
     }
-    
-    if(sendVoiceNumber >= 0)
+
+    if (sendVoiceNumber >= 0)
     {
       print("sending voice hint...");
-      arduino.write("CC");
-      arduino.write(sendVoiceNumber);
+      arduino.write("CD");
+      arduino.write(str(sendVoiceNumber+1));
       arduino.write("FF");
       println("OK");
+      sendVoiceNumber = -1;
     }
+
     boolean allDone = true;
     for (int g = 0; g < gadCount; g++)
     {
@@ -313,7 +290,7 @@ void draw()
       textFont(topFont, scrH/20);
       float statTextWidth = textWidth("STATISTICS");
       text("Game over", scrW/2 - statTextWidth/2, scrH/19);
-      
+
       if (!prevMouseState && currMouseState) //RESET GAME AFTER DONE
       {
         endGame = false;
@@ -324,11 +301,12 @@ void draw()
           passedGadgets[g] = false;
           hintedGadgets[g] = false;
           passedTimes[g] = 0;
-          gadVoiceHintNum[g] = 0;
+          //gadVoiceHintNum[g] = 0;
         }
         t = new StopWatchTimer();
-        t.setStartTime(1, 30, 0);
-        //arduino.write(0xCF);//rewrite
+        totalSeconds = t.setStartTime(1, 30, 0);
+        lastVoiceSend = totalSeconds;
+        arduino.write("ClearStates");//rewrite
         //RESET GAME
       }
     }
