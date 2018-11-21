@@ -165,10 +165,18 @@ void remoteControl() {
     grapeUpCom();
   }  
 
+  // TEMPORAL -- TEST ONLY
+  if (digitalRead(remote1)==LOW &&  grapeOnTop == true) {            // manual  control by radio remote control
+    Serial.println("\nRemote control (1)-D gate UP");
+    gateUpCom();
+  }  
+
+
   if (digitalRead(remote2)==LOW &&  grapeOnBot == false) {           // manual  control by radio remote control
     Serial.println("\nRemote control (2)-C grapeDown");
     grapeDownCom();
   }
+
   
   if (digitalRead(remote3)==LOW &&  columnOnTop == false) {            // manual  control by radio remote control
     Serial.println("\nRemote control (3) column up");

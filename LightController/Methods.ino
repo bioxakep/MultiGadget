@@ -2,7 +2,7 @@ void setLightBri(int value)
 {
   if (value >= 0 && value <= 255)
   {
-    Serial.println("Light set to " + String(value) + " percent");
+    Serial.println("Light set to " + String(value) + " 0-255");
     digitalWrite(oknoA_R, value);
     delay(50);
     digitalWrite(oknoA_G, value);
@@ -54,3 +54,8 @@ void randWind()
   digitalWrite(wind, windState);
 }
 
+void shiftPic() {
+  digitalWrite(motor,HIGH);
+  delay(50);
+  digitalWrite(motor,LOW);
+}

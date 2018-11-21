@@ -1,4 +1,8 @@
 void testing(){
+  digitalWrite(flowerR, HIGH);
+  digitalWrite(flowerB, HIGH);
+
+  
   analogWrite(oknoA_R, 100);
   delay(200);
   analogWrite(oknoA_G, 100);
@@ -59,5 +63,7 @@ void testing(){
   digitalWrite(dvor_B, LOW);
   delay(200);
 
-}
+  digitalWrite(flowerR, HIGH);
+  digitalWrite(flowerB, HIGH);
 
+}

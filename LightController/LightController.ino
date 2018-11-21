@@ -1,8 +1,9 @@
-// Light Controller v1 (beta)
+// Light Controller v1
 // 17 AGO 2018
 // I2C enabled - slave for master // xBee removed - receives commands from Master and World
 // 23 AGO 2018 flowers added
 // 13 Sep 2018 windows and colors corrected
+// 18 NOV 2018 flower start adjusted
 // 
 // bright on all windows
 // red on selected window
@@ -72,8 +73,8 @@ int colorPins[4][2] = {{10, 12}, {7, 9}, {4, 6}, {2, 45}};
 String places[4] = {"OknoA", "OknoB", "OknoC", "Dvor"};
 String colors[3] = {"BLK", "BLU", "RED"};
 int lStep = 10;
-
-boolean moonSun = true; // TEST
+long turnMoment = 0;
+bool moonSun = true; // TEST
 
 
 void setup() {
@@ -108,8 +109,8 @@ void setup() {
   pinMode(flowerR, OUTPUT);
   pinMode(flowerB, OUTPUT);
 
-  digitalWrite(flowerR, LOW);
-  digitalWrite(flowerB, LOW);
+  digitalWrite(flowerR, HIGH);
+  digitalWrite(flowerB, HIGH);
   digitalWrite(wind,    LOW);
   digitalWrite(underLight, HIGH);
   digitalWrite(extraLight, LOW);
@@ -122,7 +123,7 @@ void setup() {
   Serial.println("\nLight Controller v1  \nSep_2018 - 17.Nov.2018");
   Serial.println("Hardware = Mega\n");
 
-  //testing();
+  testing();
 
   for(int c = 0; c < 3; c++)
   {
@@ -132,7 +133,7 @@ void setup() {
   Serial.println("turner     = " + String(digitalRead(turner)));
   randomSeed(A0);
 
-  setLightBri(0);
+  setLightBri(50);
   Serial.println("\nReady\n");
 
 }
@@ -142,36 +143,34 @@ void loop() {
   if (moonSun)
   {
     // считаем число замыканий, делим на 3. если счетчик увеличился
-    // сменяем цвета в цикле и мотор на 12 сек
-    // если срабатывает north сравниваем 0 у нас или нет в модуле и если нет - обновляем счетчик
+    // сменяем цвета в цикле и ///  мотор на 12 сек
+    // если срабатывает ///north сравниваем 0// у нас или нет в модуле и если нет - обновляем счетчик
 
     // north больше не существует
     // посылаем короткий сигнал на мотор каждый раз когда меняем положение sun - moon
-    // digitalWrite(motor,HIGH);
-    // delay(50);
-    // digitalWrite(motor,LOW);
-    
-    if (!digitalRead(turner))
+    // shiftPic();    
+    if (!digitalRead(turner) && millis() - turnMoment > 3000)
     {
       turnCount++;
       //Serial.print("Turn detected");
       delay(100);
     }
-    if (!digitalRead(north))
-    {
-      dir = 0;
-      turnCount = 0;
-    }
+//    if (!digitalRead(north))
+//    {
+//      dir = 0;
+//      turnCount = 0;
+//    }
     if (turnCount == 3) // BLK -- RED -- BLK -- BLU
     {
+      turnMoment = millis();
       //Windows Color Control
       Serial.print("Next Turn::");
       turnCount = 0;
       dir = (dir + 1) % 4;
       for (int p = 0; p < 4; p++)
       {
-        byte currCol = currPosInds[(p + dir) % 4]; // dir - текущее направление (N,E,W,S), currCol - цвет для конкретного окна в текщем направлении.
-        byte prevCol = currPosInds[(p + dir - 1) % 4]; // Для будущего написания плавности, цвет для конкретного окна в предыдущем направлении.
+        int currCol = currPosInds[(p + dir) % 4] - 1; // dir - текущее направление (N,E,W,S), currCol - цвет для конкретного окна в текщем направлении.
+        int prevCol = currPosInds[(p + dir - 1) % 4] - 1; // Для будущего написания плавности, цвет для конкретного окна в предыдущем направлении.
 
         // --------------- IMPORTANT ----------------
         // required every change to shift the picture
@@ -179,27 +178,34 @@ void loop() {
         // delay(50);
         // digitalWrite(motor, LOW);
     
-        Serial.print(String(places[p]) + " is " + String(colors[currCol]));
-        if (prevCol > currCol)
+        Serial.print(String(places[p]) + " is " + String(colors[currCol+1]));
+        // currCol in (-1,0,1)
+        // prevCol in (-1,0,1)
+        if (prevCol > currCol) // prev = 0|1, curr = -1, not else
         {
-          for (int r = 255; r > 0; r = r - lStep) analogWrite(colorPins[p][prevCol], r);
+          for (int r = 255; r > 0; r = r - lStep) analogWrite(colorPins[p][prevCol], r); //light-down prevColorPin in window "p"
         }
-        else
+        else // curr = 0|1, prev = -1, not else
         {
-          for (int r = 0; r > 255; r = r + lStep) analogWrite(colorPins[p][currCol], r);
+          for (int r = 0; r > 255; r = r + lStep) analogWrite(colorPins[p][currCol], r); //light-Up currColorPin in wondow "p"
         }
       }
       //Flowers Control
       digitalWrite(flowerB, dir == 0);
       digitalWrite(flowerR, dir == 2);
-      Serial.print(", FloB is " + String(dir == 0));
-      Serial.println(", FloR is " + String(dir == 2));
+      Serial.print(", FlowerB is " + String(dir == 0));
+      Serial.println(", FloweR is " + String(dir == 2));
     }
   }
 
   if (command > 0) Serial.println("Command = " + String(command));
   
-  if (command == 0x10) setLightBri(0); // Выключить весь свет
+  if (command == 0x10) {
+    setLightBri(0); // Выключить весь свет
+    digitalWrite(flowerR, LOW); // turn off the flowers after first start
+    digitalWrite(flowerB, LOW);
+    shiftPic();
+  }
   else if (command == 0x11) randomWind = true;
   else if (command == 0x12) // Baloon passed
   {
