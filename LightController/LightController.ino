@@ -195,8 +195,8 @@ void loop() {
         }
       }
       //Flowers Control
-      digitalWrite(flowerB, dir == 0);
-      digitalWrite(flowerR, dir == 2);
+      digitalWrite(flowerB, dir == 3);
+      digitalWrite(flowerR, dir == 1);
       Serial.print(", FlowerB is " + String(dir == 0));
       Serial.println(", FloweR is " + String(dir == 2));
     }
