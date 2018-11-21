@@ -3,34 +3,34 @@ void setLightBri(int value)
   if (value >= 0 && value <= 255)
   {
     Serial.println("Light set to " + String(value) + " 0-255");
-    digitalWrite(oknoA_R, value);
+    analogWrite(oknoA_R, value);
     delay(50);
-    digitalWrite(oknoA_G, value);
+    analogWrite(oknoA_G, value);
     delay(50);
-    digitalWrite(oknoA_B, value);
-    delay(50);
-
-    digitalWrite(oknoB_R, value);
-    delay(50);
-    digitalWrite(oknoB_G, value);
-    delay(50);
-    digitalWrite(oknoB_B, value);
+    analogWrite(oknoA_B, value);
     delay(50);
 
-    digitalWrite(oknoC_R, value);
+    analogWrite(oknoB_R, value);
     delay(50);
-    digitalWrite(oknoC_G, value);
+    analogWrite(oknoB_G, value);
     delay(50);
-    digitalWrite(oknoC_B, value);
+    analogWrite(oknoB_B, value);
     delay(50);
 
-    digitalWrite(dvor_W, value);
+    analogWrite(oknoC_R, value);
     delay(50);
-    digitalWrite(dvor_R, value);
+    analogWrite(oknoC_G, value);
     delay(50);
-    digitalWrite(dvor_G, value);
+    analogWrite(oknoC_B, value);
     delay(50);
-    digitalWrite(dvor_B, value);
+
+    analogWrite(dvor_W, 255-value);
+    delay(50);
+    analogWrite(dvor_R, 255-value);
+    delay(50);
+    analogWrite(dvor_G, 255-value);
+    delay(50);
+    analogWrite(dvor_B, 255-value);
     delay(50);
   }
 }
