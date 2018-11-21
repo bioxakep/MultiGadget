@@ -135,6 +135,8 @@ void setup() {
 
   setLightBri(50);
   Serial.println("\nReady\n");
+  delay(1000);
+  setLightBri(0);
 
 }
 
@@ -183,11 +185,13 @@ void loop() {
         // prevCol in (-1,0,1)
         if (prevCol > currCol) // prev = 0|1, curr = -1, not else
         {
-          for (int r = 255; r > 0; r = r - lStep) analogWrite(colorPins[p][prevCol], max(r,0)); //light-down prevColorPin in window "p"
+          if (p < 3) for (int r = 255; r > 0; r = r - lStep) analogWrite(colorPins[p][prevCol], max(r,0)); //light-down prevColorPin in window "p"
+          else for (int r = 0; r < 255; r = r + lStep) analogWrite(colorPins[p][prevCol], min(r,255)); 
         }
         else // curr = 0|1, prev = -1, not else
         {
-          for (int r = 0; r < 255; r = r + lStep) analogWrite(colorPins[p][currCol], min(r,255)); //light-Up currColorPin in wondow "p"
+          if (p < 3) for (int r = 0; r < 255; r = r + lStep) analogWrite(colorPins[p][currCol], min(r,255)); //light-Up currColorPin in window "p"
+          else for (int r = 255; r > 0; r = r - lStep) analogWrite(colorPins[p][currCol], max(r,0)); 
         }
       }
       //Flowers Control
