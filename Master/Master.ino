@@ -135,7 +135,7 @@ byte demetra = 5;
 int demetIN  = 26;   // d.
 int demetOUT = 38;
 int demetHD  = A1;
-long demetTimer = 0;
+unsigned long demetTimer = 0;
 
 //RAIN
 byte rain = 6;
@@ -154,15 +154,15 @@ byte dionis2 = 23;
 int dioniIN  = 22;   //f.
 int dioniOUT = 34;
 int dioniHD1 = A5;   // piston
-long dioni1Timer = 0;
-long dioni2Timer = 0;
+unsigned long dioni1Timer = 0;
+unsigned long dioni2Timer = 0;
 int dioniHD2 = A3;
 
 //HERCULES
 byte hercul  = 9;
 int hercuIN  = 7;
 int hercuHD  = A4;
-long hercuTimer = 0;
+unsigned long hercuTimer = 0;
 
 //NARCIS
 byte narcis  = 10;
@@ -180,7 +180,7 @@ byte afina2 = 13;
 int afinaIN  = 27;   // m.
 int afinaOUT = 35;   //
 int afinaHD1 = A7;
-long afinaTimer = 0;
+unsigned long afinaTimer = 0;
 int afinaHD2 = A8;
 
 //TIME
@@ -198,7 +198,7 @@ byte note = 16;
 int noteIN   = 49;   // j.
 int noteOUT  = 39;
 int noteHD   = A6;
-long noteTimer = 0;
+unsigned long noteTimer = 0;
 
 //WIND
 byte wind = 17;
@@ -223,11 +223,12 @@ byte flower2 = 21;
 int flowrIN  = 25;
 int flowrOUT = 33;   //n.
 int flowrHD  = A13;
-long flowerTimer = 0;
+unsigned long flowerTimer = 0;
+
 //ARPHA
 byte arpha = 22;
 int arphaHD  = A9;
-long arphaTimer = 0;
+unsigned long arphaTimer = 0;
 
 //BIGKEY
 byte bigkey = 25;
@@ -284,13 +285,14 @@ unsigned long startHighPin = 0;
 unsigned long lastA9SentTime = 0;
 unsigned long lastRFIDCheck = 0;
 
-long HDDelay = 0;
+unsigned long HDDelay = 3000;
 
 void setup()
 {
   Serial.begin (9600);
   delay(10);
   Serial1.begin(9600);  //RS-485 to Bridge
+  Serial3.begin(9600);  //RS-485 to Bridge
   delay(10);
   Serial.println("SKY Master v2.1");
   Serial.println("30 OCT 2018   -  17 NOV - 2018");
