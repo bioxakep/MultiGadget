@@ -135,6 +135,7 @@ byte demetra = 5;
 int demetIN  = 26;   // d.
 int demetOUT = 38;
 int demetHD  = A1;
+long demetTimer = 0;
 
 //RAIN
 byte rain = 6;
@@ -153,12 +154,15 @@ byte dionis2 = 23;
 int dioniIN  = 22;   //f.
 int dioniOUT = 34;
 int dioniHD1 = A5;   // piston
+long dioni1Timer = 0;
+long dioni2Timer = 0;
 int dioniHD2 = A3;
 
 //HERCULES
 byte hercul  = 9;
 int hercuIN  = 7;
 int hercuHD  = A4;
+long hercuTimer = 0;
 
 //NARCIS
 byte narcis  = 10;
@@ -176,6 +180,7 @@ byte afina2 = 13;
 int afinaIN  = 27;   // m.
 int afinaOUT = 35;   //
 int afinaHD1 = A7;
+long afinaTimer = 0;
 int afinaHD2 = A8;
 
 //TIME
@@ -193,6 +198,7 @@ byte note = 16;
 int noteIN   = 49;   // j.
 int noteOUT  = 39;
 int noteHD   = A6;
+long noteTimer = 0;
 
 //WIND
 byte wind = 17;
@@ -217,10 +223,11 @@ byte flower2 = 21;
 int flowrIN  = 25;
 int flowrOUT = 33;   //n.
 int flowrHD  = A13;
-
+long flowerTimer = 0;
 //ARPHA
 byte arpha = 22;
 int arphaHD  = A9;
+long arphaTimer = 0;
 
 //BIGKEY
 byte bigkey = 25;
@@ -276,6 +283,8 @@ boolean bridgeConnected = false;
 unsigned long startHighPin = 0;
 unsigned long lastA9SentTime = 0;
 unsigned long lastRFIDCheck = 0;
+
+long HDDelay = 0;
 
 void setup()
 {
@@ -370,14 +379,32 @@ void loop()
       Poseidon();//#3
       Trident();//#4
       Demetra();//#5
+      if(demetTimer > 0 && tick - demetTimer > HDDelay) 
+      {
+        digitalWrite(demetHD, LOW); // open demetra HD
+        demetTimer = 0;
+      }
       Rain();//#6
       Vine();//#7
       Dionis1();//#8
+      if(dioni1Timer > 0 && tick - dioni1Timer > HDDelay) 
+      {
+        digitalWrite(dioniHD1, LOW); // open first dionis vault
+        dioni1Timer = 0;
+      }
+      
       // demetra gives players the water > they should put it int the World
       // that will activate Grape grow , if players take grape an put it in the  - vineMkr
       // players will get vine wich they can use to fill bottle for dionis
       // world send signal (i2c) to motor_controller to grape grow
       Hercules();//#9
+      if(hercuTimer > 0 && tick - hercuTimer > HDDelay) 
+      {
+        digitalWrite(hercuHD, HIGH);
+        delay(120);                   // this lock should be re-unlocked every 3 minutes after this moment
+        digitalWrite(hercuHD, LOW);
+        hercuTimer = 0;
+      }
       Narcis();//#10
       Thunder();//#11
     }
@@ -385,10 +412,20 @@ void loop()
     if (!shieldDone)
     {
       Afina1();//#12
+      if(afinaTimer > 0 && tick - afinaTimer > HDDelay) 
+      {
+        digitalWrite(afinaHD1, LOW);
+        afinaTimer = 0;
+      }
       Afina2();//#13
       TimeG();//#14
       Octopus();//#15
       Note();//#16
+      if(noteTimer > 0 && tick - noteTimer > HDDelay) 
+      {
+        noteTimer = 0;
+        digitalWrite(noteHD, LOW); // here note open wind box gives players wind power
+      }
       Wind();//#17
       Ghera1();//#18
     }
@@ -405,8 +442,23 @@ void loop()
       Fire();//#19
       Flower1();//#20
       Flower2();//#21
+      if(flowerTimer > 0 && tick - flowerTimer > HDDelay) 
+      {
+        flowerTimer = 0;
+        digitalWrite(flowrHD, LOW); // players get seal 1
+      }
       Dionis2();//#22
+      if(dioni2Timer > 0 && tick - dioni2Timer > HDDelay) 
+      {
+        digitalWrite(dioniHD2, LOW); // open first dionis vault
+        dioni2Timer = 0;
+      }
       Arpha();//#23
+      if(arphaTimer > 0 && tick - arphaTimer > HDDelay)
+      {
+        arphaTimer = 0;
+        digitalWrite(arphaHD, LOW);  // give players seal 3
+      }
       Ghera2();//#24
       /*
          String gadgetNames[32] = {0 "Baloon", 1 "Press", 2 "Gate",

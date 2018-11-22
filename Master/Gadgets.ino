@@ -116,8 +116,8 @@ void Demetra()
   {
     passGStates[demetra] = true;
     if (operGStates[demetra]) send250ms(demetOUT);
-    digitalWrite(demetHD, LOW); // open demetra HD
     Serial.println("Demetra 1 part Done");
+    demetTimer = millis();
   }
 }
 
@@ -152,12 +152,11 @@ void Dionis1()
     // dioniHD1 opens > players gets another thunder
     if (operGStates[dionis1]) send250ms(dioniOUT);
     passGStates[dionis1] = true;
-    digitalWrite(dioniHD1, HIGH); // open first dionis vault
+    dioni1Timer = millis();
     // MP3 FILE
     Serial.println("Dionis-1 Done");
     delay(300);
   }
-
 }
 
 void Hercules()
@@ -166,9 +165,7 @@ void Hercules()
   { // shoud be skippable from master console
     // hercu > players gets third part of thundi
     passGStates[hercul] = true;
-    digitalWrite(hercuHD, HIGH);
-    delay(120);                   // this lock should be re-unlocked every 3 minutes after this moment
-    digitalWrite(hercuHD, LOW);
+    
     Serial.println("Hercules Done");
   }
 }
@@ -201,7 +198,7 @@ void Afina1()
 {
   if ((!digitalRead(afinaIN) || operGStates[afina1]) && !passGStates[afina1])
   { // afina  first signal > open afinaHD1  > players get knife
-    digitalWrite(afinaHD1, LOW);
+    
     if (operGStates[afina1]) send250ms(afinaOUT);
     passGStates[afina1] = true;
     Serial.println("Afina 1 part Done > small vault open");
@@ -279,7 +276,7 @@ void Note()
   {
     // note > players get escu3
     if (operGStates[note]) send250ms(noteOUT);
-    digitalWrite(noteHD, LOW); // here note open wind box gives players wind power
+    
     // MP3 FILE
     Serial.println("Note Done");
     passGStates[note] = true;
@@ -340,7 +337,6 @@ void Flower2()
   if ((!digitalRead(flowrIN) || operGStates[flower2]) && !passGStates[flower2] && passGStates[flower1])
   { // second level of flower
     delay(50);
-    digitalWrite(flowrHD, LOW); // players get seal 1
     sendToSlave(lightConAddr, 0x42); // turner off, light switch
     if (operGStates[flower2]) send250ms(flowrOUT);
     passGStates[flower2] = true;
@@ -352,7 +348,6 @@ void Dionis2()
 {
   if ((!digitalRead(dioniIN) || operGStates[dionis2]) && !passGStates[dionis2])
   { // dionis(2) cold heart if all done
-    digitalWrite(dioniHD2, LOW);  // open second dionis vault > players get seal 2
     if (operGStates[dionis2]) send250ms(dioniOUT);
     passGStates[dionis2] = true;
     Serial.println("Dionis-2 Done");

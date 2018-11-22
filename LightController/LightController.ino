@@ -137,7 +137,6 @@ void setup() {
   Serial.println("\nReady\n");
   delay(1000);
   setLightBri(0);
-
 }
 
 void loop() {
