@@ -546,6 +546,7 @@ void voiceCurGadget()
   while (passGStates[curGadget]) {
     curGadget++;
   }
+  currGadget++;
   playVoice(curGadget);
 }
 
