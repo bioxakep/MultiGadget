@@ -182,13 +182,13 @@ void draw()
       if (lev == 4)
       {
         //Draw light button
-        String lightState = lightUp? "Light is ON":"Light is OFF";
+        String lightState = lightUp? "Light is On":"Light is Off";
         if (lightUp) fill(color(10, 10, 150));
         else fill(butCol);
         rect(scrW - (marX + gadButW + gadVoiW), marY + gadMarY*(lev+1) + gadButH*lev, gadButW+gadVoiW, gadButH); // light rect
         fill(textCol);
         float lightTextWid = textWidth(lightState);
-        text(lightState, scrW - marX - (gadButW + gadVoiW)/2 - lightTextWid/2, marY + (gadMarY+gadButH)*(lev+1) - gadButH/2);
+        text(lightState, scrW - marX - (gadButW + gadVoiW)/2 - lightTextWid/2, marY + (gadMarY+gadButH)*(lev+1) - gadButH/3);
         if (!prevMouseState && currMouseState)
         {
           if (allowTouch && mouseX > scrW - (marX + gadButW + gadVoiW) && mouseX < scrW - marX && mouseY > marY + gadMarY*(lev+1) + gadButH*lev && mouseY < marY + (gadMarY+gadButH)*(lev+1))
@@ -206,7 +206,7 @@ void draw()
 
     //RECIEVE FROM BRIDGE
     //String fromBridge = getInput(true);
-    /*
+    
     if (fromBridge.equals("masterStart"))
      {
      for (int g = 0; g < 32; g++)
@@ -244,7 +244,7 @@ void draw()
      }
      }
      }
-     */
+     
     //SEND TO BRIDGE
     boolean sendToBridge = false;
     for (int i = 0; i < 32; i++)
