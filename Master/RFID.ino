@@ -5,7 +5,7 @@ int underBeaconB  = 385;
 
 
 boolean getWindRFID() {
-  if(digitalRead(windRFPin)==HIGH)
+  if(digitalRead(windRFPin)==LOW)
   { 
     return true; 
     }else return false;
@@ -52,7 +52,7 @@ boolean getGateRFID() {
 }
 
 boolean getRainRFID() {
-  if(digitalRead(rainRFPin)==HIGH)
+  if(digitalRead(rainRFPin)==LOW)
   { 
     return true; 
     }else return false;

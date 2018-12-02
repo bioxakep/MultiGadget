@@ -1,6 +1,7 @@
-// 30.OCT.2018  - 31.OCT.2018 - 17.NOV.2018
+// 30.OCT.2018  - 31.OCT.2018 - 27.NOV.2018
 // Rewrote Connection
-
+// 27.nov.2018 crystalRec removed (now located on light controller as bigKey)
+// 28 .nov.2018 voicePin reversed 
 // Master SKY  - Mega
 // I2C master - linked to Motor_Controller & Lights_Controller & World
 // RS-485 interface - Serial1 - link to Admin
@@ -96,7 +97,7 @@ String gadgetNames[32] = {"Baloon", "Press", "Gate",
                           "End"
                          };
 //Voice pin
-int voicePin = 6;
+int voicePin = 6;     // HIGH then pressed, normally LOW 
 boolean voiceStates[2] = {HIGH, HIGH};
 //START
 int start = 0;
@@ -230,7 +231,7 @@ byte arpha = 22;
 int arphaHD  = A9;
 unsigned long arphaTimer = 0;
 
-//BIGKEY
+//BIGKEY         
 byte bigkey = 25;
 int bigKeyIN = 16;
 
@@ -262,17 +263,14 @@ byte crystals = 30;
 boolean crystStates[3] = {false, false, false};
 boolean crystDone = false;
 boolean crystReciever = false;
-int crystRecBut = 16;
+// int crystRecBut = 16;
 
 
 byte win = 31;
 
 int totalGadgets = 32;
 
-int freeIN = 46;
-int freeOUT = 40;
-
-int spare = A2;
+int spare = A2;  ////////////////////  TIP  controlled spare OUTPUT
 
 byte level = 10;
 
@@ -289,22 +287,32 @@ unsigned long HDDelay = 3000;
 
 void setup()
 {
+  Wire.begin();
   Serial.begin (9600);
   delay(10);
   Serial1.begin(9600);  //RS-485 to Bridge
   Serial3.begin(9600);  //RS-485 to Bridge
   delay(10);
   Serial.println("SKY Master v2.1");
-  Serial.println("30 OCT 2018   -  17 NOV - 2018");
+  Serial.println("30 OCT 2018   -  27 NOV - 2018");
   Serial.println("RS485 Started.");
   pinSetup(); //from pinWorker
 
+  Serial.println("\nmain mp3 player test");
   delay(100);
   mp3_set_serial(Serial);
   delay(100);
   mp3_set_volume (28);
   delay(100);
   mp3_play(1); // test startup sound
+  delay(200);
+
+  Serial.println("\nhint mp3 player test");
+  mp3_set_serial(Serial3);
+  delay(100);
+  mp3_set_volume (28);
+  delay(100);
+  mp3_play(4); // test hint sound
   delay(200);
 
   Serial.println("\n--------------");
@@ -322,7 +330,7 @@ void setup()
   }
 
   //I2C Start
-  Wire.begin();
+//  Wire.begin();
   Serial.println("I2C Started");
 
   delay(10);
@@ -350,7 +358,7 @@ void loop()
   startStates[0] = debounce(startStates[1], startPin); // READ START BUTTON
   voiceStates[0] = debounce(voiceStates[1], voicePin);
   if (level > 10 && !startStates[0] && startStates[1]) skipNextGadget(); // SKIP BY START BUTTON
-  if (level > 10 && !voiceStates[0] && voiceStates[1]) voiceCurGadget();
+  if (level > 10 && voiceStates[0] && !voiceStates[1]) voiceCurGadget();
   if (curHighPin > 0) // WATCH FOR ACTIVE PIN
   {
     if (tick - startHighPin > 250)
@@ -381,7 +389,7 @@ void loop()
       Poseidon();//#3
       Trident();//#4
       Demetra();//#5
-      if(demetTimer > 0 && tick - demetTimer > HDDelay) 
+      if(demetTimer > 0 && (tick - demetTimer > HDDelay)) 
       {
         digitalWrite(demetHD, LOW); // open demetra HD
         demetTimer = 0;
@@ -485,7 +493,7 @@ void loop()
         Gorgona();//#28
         Crystals();//#29
       }
-      if (tick % 5000 == 0) openOpened();  // open (and re-open if closed) underground locks
+      if (tick % 35000 == 0) openOpened();  // open (and re-open if closed) underground locks
     } // eof_cristals
   } // eof.level_50
 
@@ -518,11 +526,9 @@ void sendToSlave(int address, byte data)
 
 void send250ms(int pin)
 {
-  digitalWrite(13, HIGH);
   digitalWrite(pin, HIGH);
   delay(250);
   digitalWrite(pin, LOW);
-  digitalWrite(13, LOW);
 }
 
 void skipNextGadget()
@@ -546,13 +552,19 @@ void voiceCurGadget()
   while (passGStates[curGadget]) {
     curGadget++;
   }
-  playVoice(curGadget);
+  playVoice(++curGadget);
 }
 
 void playVoice(byte vhi)
 {
   int playFile = (int)(vhi * 10) + voiceHintStates[vhi];
   Serial.println("Playing " + String(playFile) + ".mp3 file");
+  mp3_set_serial(Serial3);
+  delay(20);
+  mp3_play(playFile); 
+  delay(20);
+  mp3_set_serial(Serial);
+  delay(20);
+ 
   voiceHintStates[vhi] = (voiceHintStates[vhi] + 1) % 3;
 }
-

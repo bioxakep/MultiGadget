@@ -149,6 +149,28 @@ void loop()
           digitalWrite(13, LOW);
         }
       }
+      else if (input.startsWith("CF"))
+      {
+        Serial.println(input);
+        int endCD = input.indexOf("FF");
+        if (endCD > 1)
+        {
+          digitalWrite(13, HIGH);
+          // Prepare to send states to Master
+          digitalWrite(serialTXControl, HIGH);
+          masterSerial.write(0xBF);
+          delay(10);
+          byte light = 0x00;
+          if(input.substring(2,4) == "LU") light = 0x05;
+          else if (input.substring(2,4) == "LD") light = 0x01;
+          masterSerial.write(light);
+          delay(10);
+          masterSerial.write(0xFF);
+          delay(10);
+          digitalWrite(serialTXControl, LOW);  // Stop Transmitter
+          digitalWrite(13, LOW);
+        }
+      }
       else if (input.startsWith("ClearStates")) // прием команды оператора на сброс состояний
       {
         digitalWrite(13, HIGH);

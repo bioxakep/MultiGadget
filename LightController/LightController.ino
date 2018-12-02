@@ -4,7 +4,8 @@
 // 23 AGO 2018 flowers added
 // 13 Sep 2018 windows and colors corrected
 // 18 NOV 2018 flower start adjusted
-// 
+// 27 NOV 2018 underlight deleted/moved to motor controller
+// 28 NOV 2018 light control while Ghera speaks added
 // bright on all windows
 // red on selected window
 // blue on selected window
@@ -33,17 +34,17 @@ int dvor_B    =  2;
 
 int wind      = A8; //  AC relay to control Wind blower
 int mainLight = A2; //  main light in game, will turn on after ballon
-int underLight = A7; //  (U light)relay to control underground lighting (not used in game but remotely by operator)
-int extraLight = 41;
+//int underLight = A7; //  (U light)relay to control underground lighting (not used in game but remotely by operator)
+int extraLight = A7;
 
-int crystPins[3] = {23,24,25};
+int crystPins[3] = {23, 25, 27};
 
 int flowerR   = 53;
 int flowerB   = 51;
 // int fastled   = 7;  // not used
 
 int motor     = 49;  // now is just a pulse signal to change a picture on a video player
-int north     = 47;  // not used anymore
+//int freeInput     = 47;  // not used anymore
 int turner    = 43;
 
 byte command = 0;
@@ -62,13 +63,13 @@ unsigned long blowTime = 10000;
 boolean windState = false;
 boolean randomWind = false;
 
-int crystRecPin = 48;
+//int crystRecPin = 48;
 boolean crystStates[3] = {false, false, false};
 boolean flowerBState = false;
 int turnCount = 0;
 byte dir = 0;
-byte prevPosInds[4] = {1, 0, 2, 0};
-byte currPosInds[4] = {1, 0, 2, 0};
+byte prevPosInds[4] = {2, 0, 1, 0};
+byte currPosInds[4] = {2, 0, 1, 0};
 int colorPins[4][2] = {{10, 12}, {7, 9}, {4, 6}, {2, 45}};
 String places[4] = {"OknoA", "OknoB", "OknoC", "Dvor"};
 String colors[3] = {"BLK", "BLU", "RED"};
@@ -76,9 +77,10 @@ int lStep = 10;
 long turnMoment = 0;
 bool moonSun = true; // TEST
 
+long lightTimer = 0;
+long lightDelay = 0;
 
 void setup() {
-  Serial.begin(9600);
   Wire.begin(thisI2CAddr);
   Wire.onReceive(receiveEvent);
   Wire.onRequest(requestEvent);
@@ -100,43 +102,58 @@ void setup() {
   pinMode(dvor_G, OUTPUT);
   pinMode(dvor_B, OUTPUT);
 
-  pinMode(wind,   OUTPUT);
-  pinMode(underLight, OUTPUT);
+  pinMode(motor,      OUTPUT);
+  pinMode(wind,       OUTPUT);
   pinMode(extraLight, OUTPUT);
-  pinMode(turner, INPUT_PULLUP);
-  pinMode(north, INPUT_PULLUP);
+  pinMode(mainLight,  OUTPUT);
 
+  pinMode(turner,  INPUT_PULLUP);
+  //  pinMode(freeInput,  INPUT_PULLUP);
+
+  digitalWrite(extraLight, HIGH);  // LOW = ON
+  digitalWrite(mainLight,  HIGH);  // LOW = ON
   pinMode(flowerR, OUTPUT);
   pinMode(flowerB, OUTPUT);
 
-  digitalWrite(flowerR, HIGH);
-  digitalWrite(flowerB, HIGH);
-  digitalWrite(wind,    LOW);
-  digitalWrite(underLight, HIGH);
-  digitalWrite(extraLight, LOW);
+  digitalWrite(flowerR,    LOW);
+  digitalWrite(flowerB,    LOW);
+  digitalWrite(wind,        LOW);
+  digitalWrite(motor,       LOW);
 
-  for(int c = 0; c < 3; c++)
+  Serial.begin(9600);
+
+  for (int c = 0; c < 3; c++)
   {
     pinMode(crystPins[c], INPUT_PULLUP);
+    Serial.println("Crystal " + String(c) + "  = " + String(digitalRead(crystPins[c])));
   }
 
-  Serial.println("\nLight Controller v1  \nSep_2018 - 17.Nov.2018");
+  Serial.println("\nLight Controller v1  \nSep_2018 - 28.Nov.2018");
   Serial.println("Hardware = Mega\n");
 
   testing();
 
-  for(int c = 0; c < 3; c++)
-  {
-    Serial.println("Crystal "+String(c)+"  = " + String(digitalRead(crystPins[c])));
-  }
-  
-  Serial.println("turner     = " + String(digitalRead(turner)));
+  Serial.println("\nturner     = " + String(digitalRead(turner)));
+
+  //  while (true) {
+  //    testA();
+  //  }
+
+
   randomSeed(A0);
 
-  setLightBri(50);
   Serial.println("\nReady\n");
+  setLightBri(250);
+  //  analogWrite(dvor_W, 255-0);
+  //  digitalWrite(dvor_R, HIGH);
+  //  digitalWrite(dvor_G, HIGH);
+  //  digitalWrite(dvor_B, HIGH);
   delay(1000);
-  setLightBri(0);
+  digitalWrite(flowerR,    HIGH);
+  digitalWrite(flowerB,    HIGH);
+  digitalWrite(extraLight, LOW);  // LOW = ON
+  digitalWrite(mainLight,  LOW);  // LOW = ON
+
 }
 
 void loop() {
@@ -145,24 +162,21 @@ void loop() {
   {
     // считаем число замыканий, делим на 3. если счетчик увеличился
     // сменяем цвета в цикле и ///  мотор на 12 сек
-    // если срабатывает ///north сравниваем 0// у нас или нет в модуле и если нет - обновляем счетчик
-
-    // north больше не существует
+    // если срабатывает ///bigKey сравниваем 0// у нас или нет в модуле и если нет - обновляем счетчик
+    // bigKey больше не существует тут
     // посылаем короткий сигнал на мотор каждый раз когда меняем положение sun - moon
-    // shiftPic();    
+
     if (!digitalRead(turner) && millis() - turnMoment > 3000)
     {
       turnCount++;
       //Serial.print("Turn detected");
       delay(100);
     }
-//    if (!digitalRead(north))
-//    {
-//      dir = 0;
-//      turnCount = 0;
-//    }
+
     if (turnCount == 3) // BLK -- RED -- BLK -- BLU
     {
+      shiftPic();
+      delay(2000);
       turnMoment = millis();
       //Windows Color Control
       Serial.print("Next Turn::");
@@ -173,24 +187,18 @@ void loop() {
         int currCol = currPosInds[(p + dir) % 4] - 1; // dir - текущее направление (N,E,W,S), currCol - цвет для конкретного окна в текщем направлении.
         int prevCol = currPosInds[(p + dir - 1) % 4] - 1; // Для будущего написания плавности, цвет для конкретного окна в предыдущем направлении.
 
-        // --------------- IMPORTANT ----------------
-        // required every change to shift the picture
-        // digitalWrite(motor, HIGH);
-        // delay(50);
-        // digitalWrite(motor, LOW);
-    
-        Serial.print(String(places[p]) + " is " + String(colors[currCol+1]));
+        Serial.print(String(places[p]) + " is " + String(colors[currCol + 1]));
         // currCol in (-1,0,1)
         // prevCol in (-1,0,1)
         if (prevCol > currCol) // prev = 0|1, curr = -1, not else
         {
-          if (p < 3) for (int r = 255; r > 0; r = r - lStep) analogWrite(colorPins[p][prevCol], max(r,0)); //light-down prevColorPin in window "p"
-          else for (int r = 0; r < 255; r = r + lStep) analogWrite(colorPins[p][prevCol], min(r,255)); 
+          if (p < 3) for (int r = 255; r > 0; r = r - lStep) analogWrite(colorPins[p][prevCol], max(r, 0)); //light-down prevColorPin in window "p"
+          else for (int r = 0; r < 255; r = r + lStep) analogWrite(colorPins[p][prevCol], min(r, 255));
         }
         else // curr = 0|1, prev = -1, not else
         {
-          if (p < 3) for (int r = 0; r < 255; r = r + lStep) analogWrite(colorPins[p][currCol], min(r,255)); //light-Up currColorPin in window "p"
-          else for (int r = 255; r > 0; r = r - lStep) analogWrite(colorPins[p][currCol], max(r,0)); 
+          if (p < 3) for (int r = 0; r < 255; r = r + lStep) analogWrite(colorPins[p][currCol], min(r, 255)); //light-Up currColorPin in window "p"
+          else for (int r = 255; r > 0; r = r - lStep) analogWrite(colorPins[p][currCol], max(r, 0));
         }
       }
       //Flowers Control
@@ -199,48 +207,123 @@ void loop() {
       Serial.print(", FlowerB is " + String(dir == 0));
       Serial.println(", FloweR is " + String(dir == 2));
     }
-  }
+  } // eof_moonSun
 
-  if (command > 0) Serial.println("Command = " + String(command));
-  
-  if (command == 0x10) {
+  //-------------------------------------------------------------------------------------------
+
+  if (command > 0) Serial.println("Command = " + String(command, HEX));
+
+  if (command == 0x11) // main start
+  {
     setLightBri(0); // Выключить весь свет
-    digitalWrite(flowerR, LOW); // turn off the flowers after first start
+    randomWind = true;
+    digitalWrite(mainLight, HIGH); // HIGH = turn off all the light
+    digitalWrite(extraLight, HIGH); // OFF
+    digitalWrite(flowerR, LOW);
     digitalWrite(flowerB, LOW);
-    shiftPic();
+    shiftPic();  // move son-moon to black screen
+    command = 0;
   }
-  else if (command == 0x11) randomWind = true;
   else if (command == 0x12) // Baloon passed
   {
     randomWind = false;
     windState = false;
     digitalWrite(wind, windState);
-    setLightBri(125); // okna 50 % all
+    digitalWrite(mainLight,  LOW);  //ON
+    digitalWrite(extraLight, HIGH); //OFF
+
+    analogWrite(dvor_W, 125);
+    analogWrite(dvor_R, 125);
+    analogWrite(dvor_G, 125);
+    analogWrite(dvor_B, 125);
+    command = 0;
   }
-  else if(command == 0x31)
+  else if (command == 0x14) // turn ALL light on
+  {
+    shiftPic();  // lightup the world
+    lightTimer = millis();
+    lightDelay = 5000;
+    setLightBri(125); // okna 50 % all
+    //    lightOff   = 15000;
+    //    digitalWrite(extraLight, LOW);
+    command = 0;
+  }
+  else if (command == 0x23)
+  {
+    // dim the light while Ghera speaks after Thunder
+    lightTimer = millis();
+    lightDelay = 5500;
+    //digitalWrite(extraLight, HIGH); //OFF
+    //setLightBri(125); // okna 50 % all
+    command = 0;
+  }
+  else if (command == 0x30)
+  {
+    // dim the light while Ghera speaks after Shields done
+    lightTimer = millis();
+    lightDelay = 6000;
+    //digitalWrite(extraLight, HIGH);
+    //setLightBri(125); // okna 50 % all
+    command = 0;
+  }
+  else if (command == 0x31)
   {
     // wind for 10-15 secs
     startWind = millis();
     windState = true;
     digitalWrite(wind, windState);
+    command = 0;
   }
-  else if(command == 0x41)
+  else if (command == 0x41)
   {
     // wind for 10-15 secs
+    setLightBri(0);
     moonSun = true;
+    shiftPic();  // start sun-moon show
+    digitalWrite(extraLight, HIGH); //dark the room
+    delay(200);
+    analogWrite(oknoA_B, 150);
+    analogWrite(oknoC_R, 150);
+    command = 0;
   }
-  else if(command == 0x42)
+  else if (command == 0x42)
   {
     // wind for 10-15 secs
     moonSun = false;
-    setLightBri(0); // okna 50 % all
+    setLightBri(125); // okna 50 % all
+    lightTimer = millis();
+    lightDelay = 4000;
+    digitalWrite(flowerB, LOW);
+    digitalWrite(flowerR, LOW);
+    command = 0;
   }
-  else if(command == 0x55)
+  else if (command == 0x45)
   {
-    digitalWrite(crystRecPin, LOW);
+    // dim the light while Ghera speaks after Seals done
+    lightTimer = millis();
+    lightDelay = 5200;
+    digitalWrite(extraLight, HIGH); //dark the room
+    //setLightBri(125); // okna 50 % all
+    command = 0;
   }
-  command = 0;
-  
+  else if (command == 0x55)
+  {
+    //  digitalWrite(crystRecPin, LOW);  // ?????????????????????????????????/
+    command = 0;
+  }
+
+  //---------------------------------------------------------------------------------------//
+
+  //turn the room light off while Ghera speaks (time varies depend on level)
+  if (lightTimer > 0) {
+    if (lightDelay + lightTimer > millis()) {
+      digitalWrite(extraLight, HIGH); //OFF
+    } else {
+      digitalWrite(extraLight, LOW); //ON
+      lightTimer = 0;
+    }
+  }
+
   if (randomWind) randWind();
   else if (windState) // for stop wind after comand 0x80
   {
@@ -251,12 +334,12 @@ void loop() {
     }
   }
 
-  for(int c = 0; c < 3; c++)
+  for (int c = 0; c < 3; c++)
   {
-    if(!digitalRead(crystPins[c]) && !crystStates[c])
+    if (!digitalRead(crystPins[c]) && !crystStates[c])
     {
       delay(10);
-      if(!digitalRead(crystPins[c]))
+      if (!digitalRead(crystPins[c]))
       {
         crystStates[c] = true;
       }
@@ -265,7 +348,7 @@ void loop() {
 
   /*
 
-    North = 1
+    bigKey = 1
     West  = 2
     South = 3                              1 2 3 4
     East  = 4                              N W S E
@@ -338,7 +421,7 @@ void receiveEvent(int howMany)
   if (Wire.available() > 0) // пройтись по всем до последнего
   {
     byte c = Wire.read();    // принять байт как символ
-    if (c>0) command = c;
+    if (c > 0) command = c;
   }
 }
 
@@ -347,7 +430,7 @@ void requestEvent()
   byte ans = 0x00;
   for (int i = 0; i < 3; i++)
   {
-    if (crystStates[i]) ans |= (1 << i*2);
+    if (crystStates[i]) ans |= (1 << i * 2);
   }
   Wire.write(ans);
 }

@@ -2,30 +2,27 @@ void Start()
 {
   if (!startStates[0] && startStates[1])
   {
-    start++;   // wait for prestart signal ( any RFID from startRF )
+    start++;   // wait for prestart signal
     if (start == 1)
     {
-      // if received send command to Motor_controller and Light_controller
       mp3_set_serial(Serial);
       mp3_play(2); // prestart message
       delay(200);
       Serial.println("\nFirst START pressed, all locks closed...");
-      //commands to light and motor controllers
-      sendToSlave(lightConAddr, 0x10); // выключаем весь свет
       delay(10);
       sendToSlave(motorConAddr, 0x10);
+      lcd.clear();
+      lcd.print("Prestart done.");
       // поднимает облако [cloud up], поднимает колонну[column up],
-      // поднимают виноград [grape up]
+      // поднимают виноград [grape up], шторки спускает
       closeLocks();
     }
-    else if (start == 2)
+    else if (start == 2)       //start game
     {
       mp3_set_serial(Serial);
       mp3_play(3); // start message
-      //start game
       delay(200);
-      //send random wind to lightController
-      sendToSlave(lightConAddr, 0x11); // random Wind
+      sendToSlave(lightConAddr, 0x11); // send random wind to lightController
       Serial.println("Go to level 12");
       level = 12;
       digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
@@ -45,7 +42,7 @@ void Baloon()
   {
     passGStates[baloon] = true;
     if (operGStates[baloon]) send250ms(balloOUT);
-    Serial.println("Ballon signal recieved. Turn on the lights ad roll up the curtain");
+    Serial.println("Ballon signal recieved. Turn on the lights and roll up the curtain");
     // send (i2c) signal to motor_controller >rollUp and light_controller  >lights and stop wind
     sendToSlave(lightConAddr, 0x12); // wind off
     delay(10);
@@ -78,11 +75,10 @@ void Gate()
   {
     passGStates[gate] = true;
     sendToSlave(motorConAddr, 0x14); // send signal to motor_controller >openGate
-    send250ms(gheraOUT);  // ghera start speaking, 20 level of Ghera ---- 'thunder' level
-    //door1 10s отдельно
+    send250ms(gheraOUT);  // ghera start speaking, shift Ghera forward - 'thunder' level
     level = 90;
-    Serial.println("Gate Done, Go to level 90");
-    //START MP3 FILE
+    Serial.println("Gate Done, command 0x14 sent to motor and light , Go to level 90");
+    sendToSlave(lightConAddr, 0x14); // send signal to light_controller >turnOnTheLights
   }
 }
 
@@ -126,7 +122,7 @@ void Rain()
   if ((!rainRFWait || operGStates[rain]) && !passGStates[rain] && passGStates[demetra])
   {
     sendToSlave(motorConAddr, 0x22); // send signal to motor_controller > grapeGrow
-    // MP3 FILE
+    // MP3 FILE rain
     passGStates[rain] = true;
     Serial.println("Rain Done");
   }
@@ -163,7 +159,7 @@ void Hercules()
 {
   if ((!digitalRead(hercuIN) || operGStates[hercul]) && !passGStates[hercul])
   { // shoud be skippable from master console
-    // hercu > players gets third part of thundi
+    // hercu > players gets third part of thunders
     passGStates[hercul] = true;
     
     Serial.println("Hercules Done");
@@ -187,10 +183,12 @@ void Thunder()
   if ((!digitalRead(thundIN) || operGStates[thunder]) && !passGStates[thunder])
   { // shoud be triggerable from master console
     // may add some extra storm effects thru light_controller
-    //if all thundi are done >   // gheraLevel = 2 >  speaks > opend HD2 (shields)
+    //if all thunders are done >   // gheraLevel = 2 >  speaks > opend HD2 (shields)
     send250ms(gheraOUT);  // moves ghera to 'shields' level, ALWAYS OR BY OPERATOR?
+    sendToSlave(lightConAddr, 0x23); // send signal to light_controller > GheraSpeaks, dim the light
     passGStates[thunder] = true;
     thunderDone = true;
+    // play mp3 thunder
     Serial.println("Thunder Done");
   }
 }
@@ -219,34 +217,6 @@ void Afina2()
     // here afina gives players another part of the shield
   }
 }
-
-/*
-  {
-  if ((!digitalRead(afinaIN) || operGStates[afina2]) && !passGStates[afina2] && passGStates[afina1])
-  { // afina  second signal > open afinaHD2  > players get escu1
-    digitalWrite(afinaHD2, LOW); // here afina gives players another part of the shield
-    if (operGStates[afina1]) send250ms(afinaOUT);
-    passGStates[afina2] = true;
-    Serial.println("Afina 2 part Done > large vault open");
-    delay(300);
-  }
-  }
-
-  void Afina2()
-  {
-  if ((!digitalRead(afinaIN) || operGStates[afina1]) && !passGStates[afina1])
-  { // afina first signal opens afinaHD1
-    if (operGStates[afina2]) send250ms(afinaOUT);
-    digitalWrite(afinaHD1, LOW); // here afina gives players a key to open next vault
-    passGStates[afina1] = true;
-    Serial.println("Afina 1 part Done > small vault open");
-    delay(200);
-  }
-  }
-*/
-
-
-
 
 void TimeG()
 {
@@ -306,6 +276,7 @@ void Ghera1()
     //send250ms(musesOUT);
     if (operGStates[ghera1]) send250ms(gheraOUT);
     Serial.println("Ghera level 30 Done, SHIELDs Done");
+    sendToSlave(lightConAddr, 0x30); // turn lights off while Ghera speaks
   }
 }
 
@@ -315,7 +286,7 @@ void Fire()
   if ((!digitalRead(firePin) || operGStates[fire]) && !passGStates[fire])
   {
     // turner start
-    sendToSlave(lightConAddr, 0x41); //turner start
+    sendToSlave(lightConAddr, 0x41); //turner start  - dim the room light 
     passGStates[fire] = true;
     Serial.println("Fire Done");
   }
@@ -337,7 +308,7 @@ void Flower2()
   if ((!digitalRead(flowrIN) || operGStates[flower2]) && !passGStates[flower2] && passGStates[flower1])
   { // second level of flower
     delay(50);
-    sendToSlave(lightConAddr, 0x42); // turner off, light switch
+    sendToSlave(lightConAddr, 0x42); // turner off, light switch on
     if (operGStates[flower2]) send250ms(flowrOUT);
     passGStates[flower2] = true;
     Serial.println("Flower-2 part Done");
@@ -381,13 +352,14 @@ void Ghera2()
       Serial.println("Seals Done");
       // if all seals are in ghera are in place  > ghera Level = 60   >>   sealsDone = true;
       // ((((  ghera speaks > open HD3 (key for underground) ))))
+      sendToSlave(lightConAddr, 0x45); // turn lights off while Ghera speaks
     }
   }
 }
 
 void BigKey()
 {
-  if ((!digitalRead(bigKeyIN) || operGStates[bigkey]) && !passGStates[bigkey])
+  if ((digitalRead(bigKeyIN) || operGStates[bigkey]) && !passGStates[bigkey])
   { //send to MotorController
     //if (operGStates[bigkey]) send250ms(bigKeyOUT);
     passGStates[bigkey] = true;
@@ -402,6 +374,7 @@ void Underground()
   {
     sendToSlave(motorConAddr, 0x51);
     passGStates[under] = true;
+    send250ms(minotOUT);  // activate Minotavr
     underRFWait = false;
     Serial.println("Underground Opened");
   }
@@ -412,7 +385,7 @@ void Zodiak()
   if ((!digitalRead(zodiaIN) || operGStates[zodiak]) && !passGStates[zodiak] && passGStates[under])
   { // if zodia done > players get cryst1
     // shoud be skippable from master console
-    // click lock
+    // click lock 
     passGStates[zodiak] = true;
     Serial.println("Zodiak Done");
   }
@@ -423,7 +396,7 @@ void Minotavr()
   if ((!digitalRead(minotIN) || operGStates[minot]) && !passGStates[minot] && passGStates[under])
   { // if minotavr done > players get cryst2
     // shoud be skippable from master console
-    // click lock
+    // click lock 
     passGStates[minot] = true;
     Serial.println("Minot Done");
   }
@@ -434,7 +407,7 @@ void Gorgona()
   if ((!digitalRead(gorgoIN) || operGStates[gorgona]) && !passGStates[gorgona] && passGStates[under])
   { // if gorgona done > players get cryst3
     // shoud be skippable from master console
-    // click lock
+    // click lock 
     passGStates[gorgona] = true;
     Serial.println("Gorgona Done");
   }
@@ -467,17 +440,18 @@ void Crystals()
         //column up motor add!!!!!
         sendToSlave(motorConAddr, 0x99);
         send250ms(gheraOUT); // victory signal for Ghera
+   //   sendToSlave(lightConAddr, 0x31); // turn lights off while Ghera speaks
         if (operGStates[crystals]) passGStates[crystals] = true;
       }
     }
     else
     {
-      if (!digitalRead(crystRecBut) || operGStates[crystals])
-      {
-        //Open Cryst Reciever throw lightController
-        sendToSlave(lightConAddr, 0x55);
-        crystReciever = true;
-      }
+     // if (!digitalRead(crystRecBut) || operGStates[crystals])
+     // {
+     //   //Open Cryst Reciever throw lightController
+     //   sendToSlave(lightConAddr, 0x55);
+     //   crystReciever = true;
+     // }
     }
   }
 }

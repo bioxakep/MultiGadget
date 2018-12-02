@@ -70,7 +70,7 @@ void closeLocks() {
   digitalWrite(zodiaHD,  LOW);
   digitalWrite(poseiHD,  LOW);
   digitalWrite(flowrHD,  HIGH);
-  digitalWrite(spare,    HIGH);
+  digitalWrite(spare,    LOW);
   Serial.println("locks Closed");
 } // eof_closeLocks
 
@@ -79,7 +79,7 @@ void openOpened()
   if (passGStates[zodiak])  digitalWrite(zodiaHD, HIGH);
   if (passGStates[minot])   digitalWrite(minotHD, HIGH);
   if (passGStates[gorgona]) digitalWrite(gorgoHD, HIGH);
-  delay(200);
+  delay(220);
   digitalWrite(zodiaHD, LOW);
   digitalWrite(minotHD, LOW);
   digitalWrite(gorgoHD, LOW);
@@ -87,6 +87,7 @@ void openOpened()
 
 void checkInputs()
 {
+  Serial.print(" timeIN  = "); Serial.print  (digitalRead(timeIN) ? "HIGH" : "LOW ");
   Serial.print(" balloIN = "); Serial.println (digitalRead(balloIN) ? "HIGH" : "LOW ");
   Serial.print(" pressIN = "); Serial.print   (digitalRead(pressIN) ? "HIGH" : "LOW ");
   Serial.print(" demetIN = "); Serial.println (digitalRead(demetIN) ? "HIGH" : "LOW ");
@@ -108,8 +109,8 @@ void checkInputs()
   Serial.print(" triPin  = "); Serial.println  (digitalRead(triPin)  ? "HIGH" : "LOW ");
   Serial.print(" windRF  = ");  Serial.print (digitalRead(windRFPin) ? "HIGH" : "LOW ");
   Serial.print(" rainRF  = "); Serial.println  (digitalRead(rainRFPin)  ? "HIGH" : "LOW ");
-  Serial.print(" timeIN  = "); Serial.print  (digitalRead(timeIN) ? "HIGH" : "LOW ");
-  //Serial.print(" arphaIN = "); Serial.print  (digitalRead(arphaIN) ? "HIGH" : "LOW ");
+  Serial.print(" voicePi = "); Serial.print  (digitalRead(voicePin) ? "HIGH" : "LOW ");
+  Serial.print(" bigKey  = "); Serial.println  (digitalRead(bigKeyIN) ? "HIGH" : "LOW ");
 }
 
 boolean debounce(boolean prevstate , int pin)

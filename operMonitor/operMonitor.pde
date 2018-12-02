@@ -9,6 +9,8 @@ boolean game;
 boolean endGame = false;
 boolean connected;
 boolean allowTouch = true;
+boolean lightUp = false;
+boolean sendLightCmd = false;
 boolean rec = false;
 int recCount = 0;
 String portName;
@@ -107,7 +109,7 @@ void setup()
 
   t = new StopWatchTimer();
   totalSeconds = t.setStartTime(1, 30, 0);
-  arduinoConnect();
+  //arduinoConnect();
   lastVoiceSend = totalSeconds;
   for (int g = 0; g < 32; g++)
   {
@@ -142,10 +144,10 @@ void draw()
     {
       textFont(topFont, timerH * 0.35);
       fill(textCol);
-      text(levelNames[lev], marX, marY + gadMarY*(lev+1) + gadButH*lev - 2);
+      text(levelNames[lev], marX, marY + gadMarY*(lev+1) + gadButH*lev - 2); // LEVEL NAME
       for (int g = 0; g < levGadCount[lev]; g++)
       {
-        if (!prevMouseState && currMouseState)
+        if (!prevMouseState && currMouseState) // mouse click detection
         {
           if (allowTouch && !hintedGadgets[gadCount] && !passedGadgets[gadCount] && mouseX > marX + g * (gadMarX + gadButW + gadVoiW) && mouseX < marX + g * (gadMarX + gadButW + gadVoiW) + gadButW && mouseY > marY + gadMarY*(lev+1) + gadButH*lev && mouseY < marY + (gadButH + gadMarY)*(lev+1))
           { 
@@ -159,11 +161,8 @@ void draw()
             println("ELT="+str(elTime)+" lastST="+str(lastVoiceSend));
             if (lastVoiceSend - elTime > 500)
             {
-              //gadVoiceHintNum[gadCount] = (gadVoiceHintNum[gadCount]+1) % 3;
-              //hintedGadgets[gadCount] = true;
               sendVoiceNumber = gadCount;
               lastVoiceSend = elTime;
-              //println("mouse touch button "+str(gadCount) + " MX="+str(mouseX)+" and MY="+str(mouseY));
             }
           }
         }
@@ -172,66 +171,80 @@ void draw()
         else fill(color(100, 100, 100, 60));
         if (hintedGadgets[gadCount]) fill(color(255, 180, 130, 60));
         rect(marX + g * (gadMarX + gadButW + gadVoiW), marY + gadMarY*(lev+1) + gadButH*lev, gadButW, gadButH); // Level-Rects
-
         fill(color(20, 20, 200, 60));
         textFont(topFont, timerH * 0.24);
         float gtxtW = textWidth(gadgetNames[gadCount]);
         fill(textCol);
         text(gadgetNames[gadCount], marX + g * (gadMarX + gadButW + gadVoiW) + gadButW/2 - gtxtW/2, marY + gadMarY*(lev+1) + gadButH*(lev+0.6) - 2); // Gadget Names
-
         rect(marX + (g+1) * gadButW + (gadVoiW+gadMarX)*g, marY + gadMarY*(lev+1) + gadButH*lev, gadVoiW, gadButH); //Voice rect
-        //float voiceHintTextWidth = textWidth(str(gadVoiceHintNum[gadCount]));
-        //fill(textCol);
-        //text(gadVoiceHintNum[gadCount], marX + (g+1)*(gadButW+gadVoiW/2) + g*(gadMarX+gadVoiW/2) - voiceHintTextWidth/2, marY + gadMarY*(lev+1) + gadButH*(lev+0.6) - 2); // Voice hint count by gadget
         gadCount++;
+      }
+      if (lev == 4)
+      {
+        //Draw light button
+        String lightState = lightUp? "Light is ON":"Light is OFF";
+        if (lightUp) fill(color(10, 10, 150));
+        else fill(butCol);
+        rect(scrW - (marX + gadButW + gadVoiW), marY + gadMarY*(lev+1) + gadButH*lev, gadButW+gadVoiW, gadButH); // light rect
+        fill(textCol);
+        float lightTextWid = textWidth(lightState);
+        text(lightState, scrW - marX - (gadButW + gadVoiW)/2 - lightTextWid/2, marY + (gadMarY+gadButH)*(lev+1) - gadButH/2);
+        if (!prevMouseState && currMouseState)
+        {
+          if (allowTouch && mouseX > scrW - (marX + gadButW + gadVoiW) && mouseX < scrW - marX && mouseY > marY + gadMarY*(lev+1) + gadButH*lev && mouseY < marY + (gadMarY+gadButH)*(lev+1))
+          {
+            lightUp = !lightUp;
+            sendLightCmd = true;
+          }
+        }
       }
       strokeWeight(2);
       fill(textCol);
-      line(marX, marY + gadMarY*(lev+1) + gadButH*lev, (levGadCount[lev]) * (gadMarX + gadButW + gadVoiW), marY + gadMarY*(lev+1) + gadButH*lev);
+      line(marX, marY + gadMarY*(lev+1) + gadButH*lev, marX + (levGadCount[lev]) * (gadMarX + gadButW + gadVoiW) - gadMarX, marY + gadMarY*(lev+1) + gadButH*lev);
       strokeWeight(1);
     }
 
     //RECIEVE FROM BRIDGE
-    String fromBridge = getInput(true);
-
+    //String fromBridge = getInput(true);
+    /*
     if (fromBridge.equals("masterStart"))
-    {
-      for (int g = 0; g < 32; g++)
-      {
-        passedGadgets[g] = false;
-        hintedGadgets[g] = false;
-      }
-      t.start();
-      allowTouch = true;
-      println("Run game");
-    } else if (fromBridge.equals("masterConnected"))
-    {
-      t = new StopWatchTimer();
-      totalSeconds = t.setStartTime(1, 30, 0);
-      println("Connecting to Master: true");
-      for (int g = 0; g < 32; g++)
-      {
-        passedGadgets[g] = false;
-        hintedGadgets[g] = false;
-      }
-    } else if (fromBridge.startsWith("BB") && fromBridge.endsWith("FF"))
-    {
-      println(fromBridge);
-      for (int i = 0; i < fromBridge.length()-4; i++)
-      {
-        //print(fromBridge.charAt(i));
-        int data = Integer.parseInt(String.valueOf(fromBridge.charAt(i+2)));
-        if (data > 3)
-        {
-          passedGadgets[i] = true;
-          print("Gadget "); 
-          print(i);
-          println(" passed by player");
-          passedTimes[i] = int((totalSeconds-t.getElapsedTime())/1000);
-        }
-      }
-    }
-
+     {
+     for (int g = 0; g < 32; g++)
+     {
+     passedGadgets[g] = false;
+     hintedGadgets[g] = false;
+     }
+     t.start();
+     allowTouch = true;
+     println("Run game");
+     } else if (fromBridge.equals("masterConnected"))
+     {
+     t = new StopWatchTimer();
+     totalSeconds = t.setStartTime(1, 30, 0);
+     println("Connecting to Master: true");
+     for (int g = 0; g < 32; g++)
+     {
+     passedGadgets[g] = false;
+     hintedGadgets[g] = false;
+     }
+     } else if (fromBridge.startsWith("BB") && fromBridge.endsWith("FF"))
+     {
+     println(fromBridge);
+     for (int i = 0; i < fromBridge.length()-4; i++)
+     {
+     //print(fromBridge.charAt(i));
+     int data = Integer.parseInt(String.valueOf(fromBridge.charAt(i+2)));
+     if (data > 3)
+     {
+     passedGadgets[i] = true;
+     print("Gadget "); 
+     print(i);
+     println(" passed by player");
+     passedTimes[i] = int((totalSeconds-t.getElapsedTime())/1000);
+     }
+     }
+     }
+     */
     //SEND TO BRIDGE
     boolean sendToBridge = false;
     for (int i = 0; i < 32; i++)
@@ -271,45 +284,57 @@ void draw()
       sendVoiceNumber = -1;
     }
 
+    if (sendLightCmd)
+    {
+      print("sending voice hint...");
+      arduino.write("CF");
+      if (lightUp) arduino.write("LU"); 
+      else arduino.write("LD");
+      arduino.write("FF");
+      println("OK");
+      sendLightCmd = false;
+      ;
+    }
+
     boolean allDone = true;
     for (int g = 0; g < gadCount; g++)
     {
       if (!hintedGadgets[g] && !passedGadgets[g]) allDone = false;
     }
+
     if (allDone) 
     {
-      game = false;
-      endGame = true;
+      allowTouch = false;
+      fill(textCol);
+      stroke(0);
+      rect(scrW/2 - (gadButW+gadVoiW)/2, scrH - gadButH - marY, gadButW+gadVoiW, gadButH);
+      float restartTextWid = textWidth("RESTART");
+      fill(color(10, 10, 200));
+      text("RESTART", scrW/2 - restartTextWid/2, scrH - marY - 10);
+      if (!prevMouseState && currMouseState)
+      {
+        if (allowTouch && mouseX > scrW/2 - (gadButW+gadVoiW)/2 && mouseX < scrW/2 + (gadButW+gadVoiW)/2 && mouseY > scrH - gadButH - marY && mouseY < scrH - marY)
+        {
+          allDone = false;
+          for (int c = 0; c < 15; c++) teamName[c] = ' ';
+          for (int g = 0; g < 32; g++)
+          {
+            passedGadgets[g] = false;
+            hintedGadgets[g] = false;
+            passedTimes[g] = 0;
+            lightUp = false;
+          }
+          t = new StopWatchTimer();
+          totalSeconds = t.setStartTime(1, 30, 0);
+          lastVoiceSend = totalSeconds;
+          arduino.write("ClearStates");//rewrite
+          //RESET GAME
+        }
+      }
     }
   } else // Enter params to enter the game
   {
-    if (endGame)
-    {
-      background(0);
-      fill(color(200, 200, 200));
-      textFont(topFont, scrH/20);
-      float statTextWidth = textWidth("STATISTICS");
-      text("Game over", scrW/2 - statTextWidth/2, scrH/19);
-
-      if (!prevMouseState && currMouseState) //RESET GAME AFTER DONE
-      {
-        endGame = false;
-        game = true;
-        for (int c = 0; c < 15; c++) teamName[c] = ' ';
-        for (int g = 0; g < 32; g++)
-        {
-          passedGadgets[g] = false;
-          hintedGadgets[g] = false;
-          passedTimes[g] = 0;
-          //gadVoiceHintNum[g] = 0;
-        }
-        t = new StopWatchTimer();
-        totalSeconds = t.setStartTime(1, 30, 0);
-        lastVoiceSend = totalSeconds;
-        arduino.write("ClearStates");//rewrite
-        //RESET GAME
-      }
-    }
+    
   }
   prevMouseState = currMouseState;
 }
