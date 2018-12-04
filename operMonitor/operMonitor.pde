@@ -292,13 +292,14 @@ void draw()
     if (allDone) 
     {
       allowTouch = false;
+      t.stop();
       fill(textCol);
       stroke(0);
       rect(scrW/2 - (gadButW+gadVoiW)/2, scrH - gadButH - marY, gadButW+gadVoiW, gadButH);
       float restartTextWid = textWidth("RESTART");
       fill(color(10, 10, 200));
       text("RESTART", scrW/2 - restartTextWid/2, scrH - marY - 10);
-      if (!prevMouseState && currMouseState)
+      /*if (!prevMouseState && currMouseState)
       {
         if (allowTouch && mouseX > scrW/2 - (gadButW+gadVoiW)/2 && mouseX < scrW/2 + (gadButW+gadVoiW)/2 && mouseY > scrH - gadButH - marY && mouseY < scrH - marY)
         {
@@ -318,6 +319,7 @@ void draw()
           //RESET GAME
         }
       }
+      */
     }
   } else // Enter params to enter the game
   {
