@@ -86,8 +86,9 @@ void sendGStates() // Проверяем прошел ли игрок какой
     delay(10);
     digitalWrite(SSerialTxControl, LOW);  // Stop Transmitter
     Serial.println(", level = " + String(level)); // DEBUG
-    lcd.clear();
-    lcd.print("SENT");
+    lcd.setCursor(0,0);
+    lcd.print("SENT on ");
+    lcd.print(millis());
   }
 }
 

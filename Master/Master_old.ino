@@ -89,12 +89,12 @@ byte voiceHintStates[32];
   END (cmds 0x6x)
   31 WIN
 */
-String gadgetNames[32] = {"Baloon    ", "Press    ", "Gate     ",
-                          "Poseidon  ", "Trident  ", "Demetra-1", "Rain     ", "Vine     ", "Dionis-1 ", "Hercules ", "Narcis   ", "Thunder  ",
-                          "Afina-1   ", "Afina-2  ", "Time     ", "Octopus  ", "Note     ", "Wind     ", "Ghera-1  ",
-                          "Fire      ", "Flower-1 ", "Flower-2 ", "Arpha    ", "Dionis-2 ", "Ghera-2  ",
-                          "BigKey    ", "Under    ", "Zodiak   ", "Minot    ", "Gorgona  ", "Cristals ",
-                          "End       "
+String gadgetNames[32] = {"Baloon", "Press", "Gate",
+                          "Poseidon", "Trident", "Demetra-1", "Rain", "Vine", "Dionis-1", "Hercules", "Narcis", "Thunder",
+                          "Afina-1", "Afina-2", "Time", "Octopus", "Note", "Wind", "Ghera-1",
+                          "Fire", "Flower-1", "Flower-2", "Arpha", "Dionis-2", "Ghera-2",
+                          "BigKey", "Under", "Zodiak", "Minot", "Gorgona", "Cristals",
+                          "End"
                          };
 //Voice pin
 int voicePin = 6;     // HIGH then pressed, normally LOW 
@@ -129,8 +129,6 @@ int poseiHD = 21; // CHOOSE PIN
 
 //TRIDENT
 byte trident = 4;
-unsigned long tridentTimer = 0;
-unsigned long tridentDelay = 5000;
 boolean tridentWait = true;
 
 //DEMETRA
@@ -184,7 +182,6 @@ int afinaIN  = 27;   // m.
 int afinaOUT = 35;   //
 int afinaHD1 = A7;
 unsigned long afinaTimer = 0;
-unsigned long afinaHDdelay = 4000;
 int afinaHD2 = A8;
 
 //TIME
@@ -291,16 +288,13 @@ unsigned long HDDelay = 3000;
 void setup()
 {
   Wire.begin();
-  Wire.setClock(10000);
-
   Serial.begin (9600);
-  Serial.println("I2C Started");
   delay(10);
   Serial1.begin(9600);  //RS-485 to Bridge
   Serial3.begin(9600);  //RS-485 to Bridge
   delay(10);
   Serial.println("SKY Master v2.1");
-  Serial.println("30 OCT 2018   -  03 DEC - 2018");
+  Serial.println("30 OCT 2018   -  27 NOV - 2018");
   Serial.println("RS485 Started.");
   pinSetup(); //from pinWorker
 
@@ -323,10 +317,11 @@ void setup()
 
   Serial.println("\n--------------");
 
+  // cpz1 = new ArdCPZ(windRFPin);
   cpz2 = new ArdCPZ(underRFPin);
   cpz3 = new ArdCPZ(gateRFPin);
+  // cpz4 = new ArdCPZ(rainRFPin);
   Serial.println("RFID Connected");
-
   for (int g = 0; g < totalGadgets; g++)
   {
     operGStates[g] = false;
@@ -334,6 +329,9 @@ void setup()
     voiceHintStates[g] = 0;
   }
 
+  //I2C Start
+//  Wire.begin();
+  Serial.println("I2C Started");
 
   delay(10);
   checkInputs();
@@ -390,13 +388,6 @@ void loop()
     {
       Poseidon();//#3
       Trident();//#4
-      if(tridentTimer > 0 && (tick - tridentTimer > tridentDelay)) 
-      {
-       sendToSlave(motorConAddr, 0x21); // Column Down ++++ EARTHQUAKE !!!!!!!!!!!!!!!!!!!!!!
-       Serial.println("Trident done");
-       tridentTimer = 0;
-      }
-
       Demetra();//#5
       if(demetTimer > 0 && (tick - demetTimer > HDDelay)) 
       {
@@ -406,14 +397,18 @@ void loop()
       Rain();//#6
       Vine();//#7
       Dionis1();//#8
-      if(dioni1Timer > 0 && (tick - dioni1Timer > HDDelay)) 
+      if(dioni1Timer > 0 && tick - dioni1Timer > HDDelay) 
       {
         digitalWrite(dioniHD1, LOW); // open first dionis vault
         dioni1Timer = 0;
       }
-
+      
+      // demetra gives players the water > they should put it int the World
+      // that will activate Grape grow , if players take grape an put it in the  - vineMkr
+      // players will get vine wich they can use to fill bottle for dionis
+      // world send signal (i2c) to motor_controller to grape grow
       Hercules();//#9
-      if(hercuTimer > 0 && (tick - hercuTimer > HDDelay)) 
+      if(hercuTimer > 0 && tick - hercuTimer > HDDelay) 
       {
         digitalWrite(hercuHD, HIGH);
         delay(120);                   // this lock should be re-unlocked every 3 minutes after this moment
@@ -427,7 +422,7 @@ void loop()
     if (!shieldDone)
     {
       Afina1();//#12
-      if(afinaTimer > 0 && (tick - afinaTimer > afinaHDdelay)) 
+      if(afinaTimer > 0 && tick - afinaTimer > HDDelay) 
       {
         digitalWrite(afinaHD1, LOW);
         afinaTimer = 0;
@@ -436,7 +431,7 @@ void loop()
       TimeG();//#14
       Octopus();//#15
       Note();//#16
-      if(noteTimer > 0 && (tick - noteTimer > HDDelay)) 
+      if(noteTimer > 0 && tick - noteTimer > HDDelay) 
       {
         noteTimer = 0;
         digitalWrite(noteHD, LOW); // here note open wind box gives players wind power
@@ -444,6 +439,12 @@ void loop()
       Wind();//#17
       Ghera1();//#18
     }
+    // note gives players the wind element > they should put it int the World
+    // wind will activate fastled backlight on world and windSensor
+    // if players blow in the sensor World wil send signal to master, master will send signal to motor_controller (windBlow)
+    // motor_controller will activate (cloudDOWN)
+    // players will get part of the shield , that they shoud give to ghera later
+    //eof_shields
 
     // ==================================== SEALS ==================================
     if (!sealsDone)
@@ -451,19 +452,19 @@ void loop()
       Fire();//#19
       Flower1();//#20
       Flower2();//#21
-      if(flowerTimer > 0 && (tick - flowerTimer > HDDelay)) 
+      if(flowerTimer > 0 && tick - flowerTimer > HDDelay) 
       {
         flowerTimer = 0;
         digitalWrite(flowrHD, LOW); // players get seal 1
       }
       Dionis2();//#22
-      if(dioni2Timer > 0 && (tick - dioni2Timer > HDDelay)) 
+      if(dioni2Timer > 0 && tick - dioni2Timer > HDDelay) 
       {
         digitalWrite(dioniHD2, LOW); // open first dionis vault
         dioni2Timer = 0;
       }
       Arpha();//#23
-      if(arphaTimer > 0 && (tick - arphaTimer > HDDelay))
+      if(arphaTimer > 0 && tick - arphaTimer > HDDelay)
       {
         arphaTimer = 0;
         digitalWrite(arphaHD, LOW);  // give players seal 3
@@ -516,9 +517,6 @@ void loop()
   startStates[1] = startStates[0];
 } // LOOP END
 
-
-
-
 void sendToSlave(int address, byte data)
 {
   Wire.beginTransmission(address); // transmit to device #8
@@ -544,9 +542,8 @@ void skipNextGadget()
   operGStates[curGadget] = true;
   passGStates[curGadget] = false;
   Serial.println("Gadget #(from 0): " + String(curGadget) + " Named: " + String(gadgetNames[curGadget]) + " passed by start button");
-//  lcd.clear();
-  lcd.setCursor(0,1);
-  lcd.print("Skpd " + String(gadgetNames[curGadget]));
+  lcd.clear();
+  lcd.print("SKIPPED " + String(curGadget));
 }
 
 void voiceCurGadget()
