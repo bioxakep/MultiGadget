@@ -69,15 +69,6 @@ int hintDec = 500;
 int hintCount = 0;
 int playersCount = 0;
 
-// draw
-//LEVELS
-//-[]-[]-[]-
-//-[]-[]-[]-[]-[]-[]-[]-[]-[]-
-//-[]-[]-[]-[]-[]-[]-[]-
-//-[]-[]-[]-[]-[]-[]-
-//-[]-[]-[]-[]-[]-[]-
-//-[]-                   TIME
-
 void setup()
 {
   size(1200, 600);
@@ -93,7 +84,6 @@ void setup()
   scrH = height;
   marX = scrW/50;
   marY = marX;
-  //topH = scrH/9;
   textFont(timerFont);
   gadButW = (5*(scrW - 2*marX))/71;
   gadVoiW = (2*(scrW - 2*marX))/71;
@@ -101,21 +91,18 @@ void setup()
   gadButH = (3*(scrH - 2*marY))/24; //(6 slices by 4 parts each , 1 part - margin, 3 part - gadButH)
   gadMarY = (scrH - 2*marY)/24;
 
-
   timerW = scrW/4;
   timerH = gadButH;
   timerY = scrH - marY;
 
-
   t = new StopWatchTimer();
   totalSeconds = t.setStartTime(1, 30, 0);
-  //arduinoConnect();
+  arduinoConnect();
   lastVoiceSend = totalSeconds;
   for (int g = 0; g < 32; g++)
   {
     passedGadgets[g] = false;
     hintedGadgets[g] = false;
-    //gadVoiceHintNum[g] = 0;
     passedTimes[g] = 0;
   }
 }
@@ -205,7 +192,7 @@ void draw()
     }
 
     //RECIEVE FROM BRIDGE
-    //String fromBridge = getInput(true);
+    String fromBridge = getInput(true);
     
     if (fromBridge.equals("masterStart"))
      {
