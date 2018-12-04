@@ -5,6 +5,7 @@
 // 17 NOV 2018 automatic sequences corrected 
 // 18 NOV 2018 curtain1 and 2 added, megaColumn
 // 27 NOV 2018 uWhiteLitr added
+//  1 DEC 2018 wire speed at 10000
 #include "Wire.h" // I2C
 #include <DFPlayer_Mini_Mp3.h>
 
@@ -72,13 +73,12 @@ void setup() {
   Serial.begin(9600);
   Serial3.begin(9600); // df_player
   Wire.begin(thisI2CAddr);
+  Wire.setClock(10000);
   Wire.onReceive(receiveEvent);
   mp3_set_serial(Serial3);
   delay(100);
   mp3_set_volume (25);
   delay(100);
-  mp3_play(1); // test startup sound
-  delay(200);
 
   
   pinMode(remote1, INPUT_PULLUP);
@@ -155,7 +155,7 @@ void setup() {
   digitalWrite(poseiPump,   LOW);
   digitalWrite(poseiLock,   LOW);   // lock the cover of the vault while if full of water
 
-  Serial.println("Motor Controller \n21_AGO_2018 - 26_NOV \nHardware  = Mega\n");
+  Serial.println("Motor Controller \n21_AGO_2018 - 1_DEC_2018 \nHardware  = Mega\n");
   checkInputs();
   digitalWrite(led, LOW);
   Serial.println("\nReady.");
@@ -164,40 +164,46 @@ void setup() {
 if ( digitalRead(curtain1TOP)==HIGH || digitalRead(curtain2TOP)==LOW ) curtainMove = false; else curtainMove = true; 
 
 columnUpCom();
-grapeDownCom();
+// grapeDownCom();
+//digitalWrite(grapeUP,HIGH);
+//delay(3000);
+//digitalWrite(grapeUP,LOW);
+
+ // mp3_play(999); // test startup sound
+
 }
 
 void loop() {
 
-// remoteControl();
+remoteControl();
 
   // receives command from master via i2c
   if (command == 0x10) 
   { 
     Serial.println("Initial command from master , at first START...");
    // cloudUpCom();
-   //grapeUpCom();
-  // columnDownCom();
-   // curtainDownCom();
+//   grapeUpCom();
+   columnDownCom();
+//   curtainDownCom();
    // lock all locks
     Serial.println("Initialize command Done.");
-    mp3_play(1);
-    command = 0;
+    mp3_play(999);
+   command = 0;
   }
   else if (command == 0x12)  
   {  // поднимаем шторы (их две)
      Serial.println("curtainUP command from master");
-     //curtainUpCom();
+  //   curtainUpCom();
      Serial.println("curtainUP command done");
-    mp3_play(2);
-    command = 0;
+     mp3_play(999);
+     command = 0;
   }
   else if (command == 0x14)
   { 
-    Serial.print("\nGate UP command from master...");
     digitalWrite(gateUP, HIGH);
+    Serial.print("\nGate UP command from master...");
     Serial.println("Done.");
-    mp3_play(4);
+    mp3_play(999);
     command = 0;
  }
   else if(command == 0x20)
@@ -205,33 +211,38 @@ void loop() {
     digitalWrite(gateUP, HIGH);
     poseiVaultOpen();
     digitalWrite(gateUP, LOW);
-    mp3_play(5);
+    mp3_play(999);
     command = 0;
+
   }
   else if(command == 0x21)
   {//sendToSlave(motorConAddr, 0x21); // Column Up
+    columnUpCom();
     Serial.print("\nColumn Up command from master...");
-    columnDownCom();
+    mp3_play(999);
     Serial.println("Done.");
-    command = 0;
+   command = 0;
   }
   else if(command == 0x22)
-  {//sendToSlave(motorConAddr, 0x22); // send signal to motor_controller > grapeGrow
-    Serial.print("\nGrape Dn command from master");
-    grapeDownCom();
-    Serial.println("Done.");
+  { //sendToSlave(motorConAddr, 0x22); // send signal to motor_controller > grapeGrow
+    Serial.print("\nGrape Dn command from master Start");
+  //  grapeDownCom();
+    Serial.println("Grape Dn command from master Done.");
+    mp3_play(999);
     command = 0;
-  }
+ }
   else if (command == 0x31)
   { //cloudDown
     Serial.println("\nCloud Down command from master...");
+    //mp3_play(2); // wind sound
+    mp3_play(999);
     cloudDownCom();
     command = 0;
   }
   else if (command == 0x51)
   { //Under doors Open
    Serial.println("\nunderDoor command from master...");
-   digitalWrite(underDoor, HIGH);
+   digitalWrite(megaColumn, HIGH);
    command = 0;
   }
   else if (command == 0x61)
@@ -240,6 +251,7 @@ void loop() {
    digitalWrite(megaColumn, HIGH);
    command = 0;
   }
+
 }
 
 void receiveEvent(int howMany) {

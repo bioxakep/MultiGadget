@@ -1,9 +1,9 @@
 void curtainDownCom() {
  long startTime = millis();
 
-  while ( startTime + 12000 > millis() ) {
+  while ( startTime + 20000 > millis() ) {
    digitalWrite(curtain2DN, LOW);
-     if ( startTime +6000 > millis() ) digitalWrite(curtain1DN, LOW); else digitalWrite(curtain1DN, HIGH);
+     if ( startTime +10000 > millis() ) digitalWrite(curtain1DN, LOW); else digitalWrite(curtain1DN, HIGH);
      if ( startTime +1000 > millis() )  {
         if ( digitalRead(curtain1TOP)) digitalWrite(curtain1DN, HIGH);
         if (!digitalRead(curtain2TOP)) digitalWrite(curtain2DN, HIGH);
@@ -16,7 +16,7 @@ void curtainDownCom() {
   
 }
 
-void curtainUPCom() {
+void curtainUpCom() {
  if (curtainMove == true) {
   if ( digitalRead(curtain1TOP))  curtain1OnTop = true; else curtain1OnTop = false;   
   if (!digitalRead(curtain2TOP))  curtain2OnTop = true; else curtain2OnTop = false;
@@ -95,6 +95,8 @@ void columnUpCom() {                    /// if step is passed, after the eartqua
  int mover = 0;
  while (columnOnTop == false) {    
     Serial.println("\ncolumnUpCommand started... " + String(millis()));
+    digitalWrite(uWhiteLite,  LOW); //test
+
     digitalWrite(columnUP, HIGH);
       while(  digitalRead(columnTOP)==LOW && mover < 1300) {
         mover++;
@@ -111,7 +113,7 @@ void columnUpCom() {                    /// if step is passed, after the eartqua
     columnOnTop = true; 
     columnOnBot = false;   
     // command = 0x0x;
-  
+  digitalWrite(uWhiteLite,  HIGH); //TEST
   digitalWrite(columnUP, LOW);
   Serial.println("columnUpCommand done. "  + String(millis()));
  }
@@ -133,7 +135,7 @@ void columnDownCom() {           // position to play since start of the game
 
 void poseiVaultOpen() {
  digitalWrite(poseiValv, LOW);    //drain the water
- delay(5000);
+ delay(2000);
  digitalWrite(poseiLock, HIGH);     // water drained, open the top cover
  digitalWrite(poseiValv, HIGH);
  //UNLOAD GATE RELAY,OPTIONAL
@@ -179,7 +181,12 @@ if (digitalRead(remote1) == LOW ){
 digitalWrite(cloudDN, LOW);
 } else digitalWrite(cloudDN, HIGH);
 
-
+if (digitalRead(remote2) == LOW ){
+curtainUpCom();
+}
+if (digitalRead(remote4) == LOW ){
+curtainDownCom();
+}
 /*
 // Working auto UP of both curtains
 if (digitalRead(remote3) == LOW ){
@@ -211,14 +218,14 @@ if (digitalRead(remote1)==LOW) {
 //     } else digitalWrite(curtain1DN, HIGH);
 
 
-
+/*
   // working manual cuartain 2 down
   if (digitalRead(remote4)==LOW) { // &&  grapeOnBot == false) {           // manual  control by radio remote control
   if (digitalRead(curtain2TOP)==LOW)  Serial.println("\nRemote control (2)-A go down Curtain 2 TOP");
      digitalWrite(curtain2DN, LOW);
      curtainMove = true;
      } else digitalWrite(curtain2DN, HIGH);
-
+*/
 
 /* 
   // working
