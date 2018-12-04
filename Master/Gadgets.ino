@@ -5,22 +5,21 @@ void Start()
     start++;   // wait for prestart signal
     if (start == 1)
     {
-      mp3_set_serial(Serial);
-      mp3_play(2); // prestart message
-      delay(200);
       Serial.println("\nFirst START pressed, all locks closed...");
-      delay(10);
       sendToSlave(motorConAddr, 0x10);
-      lcd.clear();
-      lcd.print("Prestart done.");
       // поднимает облако [cloud up], поднимает колонну[column up],
       // поднимают виноград [grape up], шторки спускает
+      sendToSlave(lightConAddr, 0x10);
       closeLocks();
+      lcd.clear();
+      lcd.print("Prestart done.");
+      mp3_set_serial(Serial);
+      mp3_play(100); // prestart message
     }
     else if (start == 2)       //start game
     {
       mp3_set_serial(Serial);
-      mp3_play(3); // start message
+      mp3_play(100); // start message
       delay(200);
       sendToSlave(lightConAddr, 0x11); // send random wind to lightController
       Serial.println("Go to level 12");
@@ -44,13 +43,12 @@ void Baloon()
     if (operGStates[baloon]) send250ms(balloOUT);
     Serial.println("Ballon signal recieved. Turn on the lights and roll up the curtain");
     // send (i2c) signal to motor_controller >rollUp and light_controller  >lights and stop wind
-    sendToSlave(lightConAddr, 0x12); // wind off
-    delay(10);
-    sendToSlave(motorConAddr, 0x12);  // turn on the lights
+    sendToSlave(lightConAddr, 0x12); // wind off + lights on
     send250ms(pressOUT);
     send250ms(gheraOUT);  // moves ghera to level 10
     level = 13;
     Serial.println("Go to level 13");
+    sendToSlave(motorConAddr, 0x12);  // turn on the lights
   }
 }
 
@@ -75,10 +73,12 @@ void Gate()
   {
     passGStates[gate] = true;
     sendToSlave(motorConAddr, 0x14); // send signal to motor_controller >openGate
-    send250ms(gheraOUT);  // ghera start speaking, shift Ghera forward - 'thunder' level
     level = 90;
     Serial.println("Gate Done, command 0x14 sent to motor and light , Go to level 90");
     sendToSlave(lightConAddr, 0x14); // send signal to light_controller >turnOnTheLights
+    mp3_play(1);
+    send250ms(gheraOUT);  // ghera start speaking, shift Ghera forward - 'thunder' level
+    //sendToSlave(motorConAddr, 0x14); // send signal to motor_controller >openGate
   }
 }
 
@@ -90,8 +90,9 @@ void Poseidon()
     // shoud be skippable from master console
     passGStates[poseidon] = true;
     if (operGStates[poseidon]) send250ms(poseiOUT);
-    sendToSlave(motorConAddr, 0x20); // Открываем тайник Посейдона, даем игрокам трезубец
     Serial.println("Poseidon Done");
+    mp3_play(5);
+    sendToSlave(motorConAddr, 0x20); // Открываем тайник Посейдона, даем игрокам трезубец
   }
 }
 
@@ -99,10 +100,10 @@ void Trident()
 {
   if ((!digitalRead(triPin) || operGStates[trident]) && !passGStates[trident] && passGStates[poseidon])
   {
-    sendToSlave(motorConAddr, 0x21); // Column Down ++++ EARTHQUAKE !!!!!!!!!!!!!!!!!!!!!!
-    // START MP3 - FILE
+    mp3_play(4); // START MP3 - FILE
     passGStates[trident] = true;
-    Serial.println("Trident Done");
+    tridentTimer = millis();
+    Serial.println("Trident started");
   }
 }
 
@@ -122,8 +123,8 @@ void Rain()
   if ((!rainRFWait || operGStates[rain]) && !passGStates[rain] && passGStates[demetra])
   {
     sendToSlave(motorConAddr, 0x22); // send signal to motor_controller > grapeGrow
-    // MP3 FILE rain
     passGStates[rain] = true;
+    mp3_play(3);     // MP3 FILE rain
     Serial.println("Rain Done");
   }
 }
@@ -151,7 +152,8 @@ void Dionis1()
     dioni1Timer = millis();
     // MP3 FILE
     Serial.println("Dionis-1 Done");
-    delay(300);
+    delay(300);  //rem on dec 3 to test - bad
+       // delay while finish first command from dionis
   }
 }
 
@@ -161,7 +163,7 @@ void Hercules()
   { // shoud be skippable from master console
     // hercu > players gets third part of thunders
     passGStates[hercul] = true;
-    
+    openHercuHD();
     Serial.println("Hercules Done");
   }
 }
@@ -199,6 +201,7 @@ void Afina1()
     
     if (operGStates[afina1]) send250ms(afinaOUT);
     passGStates[afina1] = true;
+    afinaTimer = millis();
     Serial.println("Afina 1 part Done > small vault open");
     delay(300);
     // here afina gives players a key to open next vault
@@ -246,7 +249,7 @@ void Note()
   {
     // note > players get escu3
     if (operGStates[note]) send250ms(noteOUT);
-    
+    digitalWrite(noteHD, LOW);    
     // MP3 FILE
     Serial.println("Note Done");
     passGStates[note] = true;
@@ -264,7 +267,7 @@ void Wind()
     sendToSlave(motorConAddr, 0x31); // CloudDown - отдать 3 часть щита
     delay(10);
     sendToSlave(lightConAddr, 0x31); // windBlow 10-15 secs
-    // MP3 FILE
+    mp3_play(2);    // MP3 FILE
   }
 }
 
@@ -274,6 +277,13 @@ void Ghera1()
   { //if all shields in ghera are in  place (gheraLevel = 40 ) gera speaks - open sealHD
     passGStates[ghera1] = true;
     //send250ms(musesOUT);
+    // all gods to traitor level (level 40)
+    send250ms(dioniOUT); 
+    send250ms(demetOUT); 
+    send250ms(afinaOUT); 
+    send250ms(noteOUT); 
+    send250ms(poseiOUT); 
+    // and send same signa to all Gods
     if (operGStates[ghera1]) send250ms(gheraOUT);
     Serial.println("Ghera level 30 Done, SHIELDs Done");
     sendToSlave(lightConAddr, 0x30); // turn lights off while Ghera speaks
@@ -317,10 +327,11 @@ void Flower2()
 
 void Dionis2()
 {
-  if ((!digitalRead(dioniIN) || operGStates[dionis2]) && !passGStates[dionis2])
+  if ((!digitalRead(dioniIN) || operGStates[dionis2]) && !passGStates[dionis2] && passGStates[ghera1])
   { // dionis(2) cold heart if all done
     if (operGStates[dionis2]) send250ms(dioniOUT);
     passGStates[dionis2] = true;
+    send250ms(dioniOUT); // send final signal  to shut up Dionis
     Serial.println("Dionis-2 Done");
   }
 }
@@ -329,13 +340,13 @@ void Arpha()
 {
   if ((!digitalRead(musesIN) || operGStates[arpha]) && !passGStates[arpha])
   { //  signal from arpha received
-    //    send250ms(musesOUT); // send signal to shut up the muses
+    send250ms(musesOUT); // send signal to shut up the muses
 
     if (operGStates[arpha]) send250ms(musesOUT);
 
     digitalWrite(arphaHD, LOW);  // give players seal 3
     passGStates[arpha] = true;
-    Serial.println("Arpha Done");
+    Serial.println("Arpha Done + siganl to muses sent");
 
   }
 }
@@ -362,6 +373,8 @@ void BigKey()
   if ((digitalRead(bigKeyIN) || operGStates[bigkey]) && !passGStates[bigkey])
   { //send to MotorController
     //if (operGStates[bigkey]) send250ms(bigKeyOUT);
+    sendToSlave(motorConAddr, 0x51);
+ 
     passGStates[bigkey] = true;
     Serial.println("BigKey Done");
   }
@@ -372,7 +385,7 @@ void Underground()
   underRFWait = !getUnderRFID();
   if ((!underRFWait || operGStates[under]) && !passGStates[under])
   {
-    sendToSlave(motorConAddr, 0x51);
+//    sendToSlave(motorConAddr, 0x51);
     passGStates[under] = true;
     send250ms(minotOUT);  // activate Minotavr
     underRFWait = false;

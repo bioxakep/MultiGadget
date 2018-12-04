@@ -209,3 +209,9 @@ void pinSetup()
   pinMode(SSerialTxControl, OUTPUT);
   digitalWrite(SSerialTxControl, LOW);  // Init Recieve RS485
 }
+
+void openHercuHD(){
+  digitalWrite(hercuHD,HIGH);
+  delay(200);
+  digitalWrite(hercuHD,LOW);
+}
