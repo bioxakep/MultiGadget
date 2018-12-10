@@ -99,7 +99,7 @@ void setup()
   timerY = scrH - marY;
 
   t = new StopWatchTimer();
-  totalSeconds = t.setStartTime(0, 0, 10);
+  totalSeconds = t.setStartTime(1, 30, 0);
   //arduinoConnect();
   lastVoiceSend = totalSeconds;
   for (int g = 0; g < 32; g++)
