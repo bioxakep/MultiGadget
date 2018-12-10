@@ -19,17 +19,7 @@ void getOperSkips()
       byte last = Serial1.read();
       if (last == 0xFF) Serial.println("OK");
     }
-    else if(inByte == 0xBF)
-    {
-      Serial.print("Light cmd recieved...");
-      delay(100);
-      byte lightCmd = Serial1.read();
-      if(lightCmd == 0x01) digitalWrite(spare, LOW);
-      else if(lightCmd == 0x05) digitalWrite(spare, HIGH);
-      byte last = Serial1.read();
-      if (last == 0xFF) Serial.println("OK");
-    }
-    else if (inByte == 0xBD) // if recieved voice-hints
+    if (inByte == 0xBD) // if recieved voice-hints
     {
       delay(50);
       byte voiceHintIndex = Serial1.read();
@@ -86,9 +76,11 @@ void sendGStates() // Проверяем прошел ли игрок какой
     delay(10);
     digitalWrite(SSerialTxControl, LOW);  // Stop Transmitter
     Serial.println(", level = " + String(level)); // DEBUG
+//    lcd.clear();
     lcd.setCursor(0,0);
     lcd.print("SENT on ");
     lcd.print(millis());
+    
   }
 }
 
