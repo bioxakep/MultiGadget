@@ -1,16 +1,39 @@
+void megaColumnUpCom(){
+   digitalWrite(megaColumn, HIGH);
+   delay(30);
+   digitalWrite(megaColumn, LOW);
+   delay(1500);
+   digitalWrite(megaColumn, HIGH);
+   delay(40);
+   digitalWrite(megaColumn, LOW);
+   delay(2000);
+   digitalWrite(megaColumn, HIGH);
+   delay(50);
+   digitalWrite(megaColumn, LOW);
+   delay(2500);
+   digitalWrite(megaColumn, HIGH);
+   delay(60);
+   digitalWrite(megaColumn, LOW);
+   delay(3000);
+   digitalWrite(megaColumn, HIGH);
+
+}
+
 void curtainDownCom() {
  long startTime = millis();
 
-  while ( startTime + 20000 > millis() ) {
+  while ( startTime + 10000 > millis() ) {
    digitalWrite(curtain2DN, LOW);
-     if ( startTime +10000 > millis() ) digitalWrite(curtain1DN, LOW); else digitalWrite(curtain1DN, HIGH);
-     if ( startTime +1000 > millis() )  {
+     if ( startTime +5000 > millis() ) digitalWrite(curtain1DN, LOW); else digitalWrite(curtain1DN, HIGH);
+     if ( startTime  +800 > millis() )  {
         if ( digitalRead(curtain1TOP)) digitalWrite(curtain1DN, HIGH);
         if (!digitalRead(curtain2TOP)) digitalWrite(curtain2DN, HIGH);
      }
    }
  digitalWrite(curtain2DN, HIGH);
  digitalWrite(curtain1DN, HIGH); 
+ digitalWrite(curtain2UP, HIGH); 
+ digitalWrite(curtain1UP, HIGH); 
  curtainMove = true;
  Serial.println("Both Curtains down by timer...");
   
@@ -39,30 +62,27 @@ void curtainUpCom() {
  Serial.println("Both Curtains on TOP");
  digitalWrite(curtain2UP, HIGH); 
  digitalWrite(curtain1UP, HIGH); 
+ digitalWrite(curtain2DN, HIGH);
+ digitalWrite(curtain1DN, HIGH); 
  }  
 }
 
-void cloudUpCom() {         // remote send the cloud to the sky
- // if (digitalRead(cloudTOP) == HIGH && digitalRead(remote2)==LOW) {  
- //   while(digitalRead(cloudTOP) == HIGH ) digitalWrite(cloudUP, LOW);
- //   digitalWrite(cloudUP, HIGH);
- //   Serial.println("cloud is moved to Top position");
- //   cloudOnTop = true;
- //   cloudOnBot = false;
- // }
-}
-
-
-void cloudDownCom() {       // move cloud to the bottom if its on top only (no sensors)
-  if (cloudOnTop == true ) {
-    digitalWrite(cloudDN, LOW);
-    delay(5000);  // timer to go down 
-    digitalWrite(cloudDN, HIGH);
-    cloudOnBot = true;
-    cloudOnTop = false;
+void cloudUpCom() {         //  send the cloud to the sky
+ if ( cloudOnTop == false ) {  
+    cloudGoesUp = true;
+    Serial.println("cloud is movin to Top ...");
+    digitalWrite(cloudUP, LOW);
   }
 }
 
+
+void cloudDownCom() {       // start move cloud to the bottom if its on top
+  if (cloudOnTop == true ) {
+    digitalWrite(cloudDN, LOW);
+    Serial.println("cloud is movin Down ...");
+    cloudTimer = millis();
+  }
+}
 
 void grapeUpCom(){          // position to hold from start of the game
   while(grapeOnTop == false) {        
@@ -74,6 +94,7 @@ void grapeUpCom(){          // position to hold from start of the game
     grapeOnBot = false; 
   } 
   digitalWrite(grapeUP, LOW);
+  digitalWrite(grapeDN, LOW);
   Serial.println("grapeUp Command  done  " + String(millis()));
 }
 
@@ -87,6 +108,7 @@ void grapeDownCom() {                  /// if step is passed
     grapeOnTop = false; 
   } 
   digitalWrite(grapeDN, LOW);
+  digitalWrite(grapeUP, LOW);
   Serial.println("grapeDown Command done " + String(millis()));
 }
 
@@ -95,8 +117,6 @@ void columnUpCom() {                    /// if step is passed, after the eartqua
  int mover = 0;
  while (columnOnTop == false) {    
     Serial.println("\ncolumnUpCommand started... " + String(millis()));
-    digitalWrite(uWhiteLite,  LOW); //test
-
     digitalWrite(columnUP, HIGH);
       while(  digitalRead(columnTOP)==LOW && mover < 1300) {
         mover++;
@@ -113,7 +133,6 @@ void columnUpCom() {                    /// if step is passed, after the eartqua
     columnOnTop = true; 
     columnOnBot = false;   
     // command = 0x0x;
-  digitalWrite(uWhiteLite,  HIGH); //TEST
   digitalWrite(columnUP, LOW);
   Serial.println("columnUpCommand done. "  + String(millis()));
  }
@@ -174,105 +193,26 @@ void checkInputs() {
 void remoteControl() {
 
 if (digitalRead(remote3) == LOW ){
-digitalWrite(cloudUP, LOW);
-} else digitalWrite(cloudUP, HIGH);
+megaColumnUpCom();
+//grapeUpCom();
+}
 
 if (digitalRead(remote1) == LOW ){
-digitalWrite(cloudDN, LOW);
-} else digitalWrite(cloudDN, HIGH);
+digitalWrite(megaColumn, LOW);
+// grapeDownCom();
+}
 
 if (digitalRead(remote2) == LOW ){
-curtainUpCom();
-}
+// cloudUpCom();
+    Serial.println("\nRemote control UP");
+   // digitalWrite(cloudUP, LOW);
+
+ } else  digitalWrite(cloudUP, HIGH);
+ 
 if (digitalRead(remote4) == LOW ){
-curtainDownCom();
-}
-/*
-// Working auto UP of both curtains
-if (digitalRead(remote3) == LOW ){
- curtainUPCom();
-}
-*/
+// cloudDownCom();
+   // digitalWrite(cloudDN, LOW);
+    Serial.println("\nRemote control DOWN");
+ } else digitalWrite(cloudDN, HIGH);
 
-/*
-// Working auto Down for both curtains
-if (digitalRead(remote1)==LOW) {
- curtainDownCom();
-}
-*/
-
-/*  
-  // working auto
-  if (digitalRead(remote1)==LOW) { // &&  grapeOnTop == false) {            // manual  control by radio remote control
-    while (digitalRead(curtain1TOP)==LOW)    {  digitalWrite(curtain1UP, LOW); }
-     delay(20);
-     digitalWrite(curtain1UP, HIGH);
-  
-   }
- */
-  
-  
-//  if (digitalRead(curtain1TOP)==HIGH)  Serial.println("\nRemote control (2)-C Curtain 1 TOP");
-//     digitalWrite(curtain1DN, LOW);
-//     curtainMove = true;
-//     } else digitalWrite(curtain1DN, HIGH);
-
-
-/*
-  // working manual cuartain 2 down
-  if (digitalRead(remote4)==LOW) { // &&  grapeOnBot == false) {           // manual  control by radio remote control
-  if (digitalRead(curtain2TOP)==LOW)  Serial.println("\nRemote control (2)-A go down Curtain 2 TOP");
-     digitalWrite(curtain2DN, LOW);
-     curtainMove = true;
-     } else digitalWrite(curtain2DN, HIGH);
-*/
-
-/* 
-  // working
-  if (digitalRead(remote1)==LOW &&  grapeOnTop == false) {            // manual  control by radio remote control
-    Serial.println("\nRemote control (1)-D grapeUp");
-    grapeUpCom();
-  }  
-
-  // working
-  if (digitalRead(remote2)==LOW &&  grapeOnBot == false) {           // manual  control by radio remote control
-    Serial.println("\nRemote control (2)-C grapeDown");
-    grapeDownCom();
-  }
-*/
-
-// TEMPORAL -- TEST ONLY
-// working
-//  if (digitalRead(remote1)==LOW &&  grapeOnTop == true) {            // manual  control by radio remote control
-//    Serial.println("\nRemote control (1)-D gate UP");
-//    gateUpCom();
-//  }  
-
-
-/*
-  // Working Cloud 
-  if (digitalRead(remote3)==LOW ) { //&&  columnOnTop == false) {            // manual  control by radio remote control
-    Serial.println("\nRemote control (3) Cloud up");
-    digitalWrite(cloudUP, LOW);
-  } else digitalWrite(cloudUP, HIGH);
-  
-  if (digitalRead(remote4)==LOW ) { //&&  columnOnBot == false) {           // manual  control by radio remote control
-    Serial.println("\nRemote control (4) Cloud down");
-    digitalWrite(cloudDN, LOW);
-  } else digitalWrite(cloudDN, HIGH);
-*/
-
-/*  
-// working
-  if (digitalRead(remote3)==LOW &&  columnOnTop == false) {            
-  Serial.println("\nRemote control (3) column up");
-    columnUpCom();
-  }
-  
-// working
-  if (digitalRead(remote4)==LOW &&  columnOnBot == false) {    
-    Serial.println("\nRemote control (4) column down");
-     columnDownCom();
-  }
-*/
 }

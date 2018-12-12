@@ -6,6 +6,10 @@
 // 18 NOV 2018 curtain1 and 2 added, megaColumn
 // 27 NOV 2018 uWhiteLitr added
 //  1 DEC 2018 wire speed at 10000
+//  5 DEC 2018 remote shifted,  cloud included
+//  7 DEC 2018 remote turned OFF permanently
+// 11 dec 2018  adjusted timing
+
 #include "Wire.h" // I2C
 #include <DFPlayer_Mini_Mp3.h>
 
@@ -22,8 +26,8 @@ int columnTOP = A9;
 int columnBOT = A8;
 int columnOOO = A10;
 
-int grapeUP   = 27;
-int grapeDN   = 29;
+int grapeUP   = 29;
+int grapeDN   = 27;
 int grapeTOP  = 7;
 int grapeBOT  = 6;
 //int grapeOOO  = 5;
@@ -59,8 +63,10 @@ bool  grapeOnBot    = false;
 bool  columnOnTop   = false;
 bool  columnOnBot   = false;
 
+bool  cloudGoesUp   = false;
 bool  cloudOnTop    = false;
-bool  cloudOnBot    = true;
+long  cloudTimer    = 0;
+long  cloudDelay    = 45000;
 
 bool  curtain1OnTop = true;
 bool  curtain1OnBot = false;
@@ -155,7 +161,7 @@ void setup() {
   digitalWrite(poseiPump,   LOW);
   digitalWrite(poseiLock,   LOW);   // lock the cover of the vault while if full of water
 
-  Serial.println("Motor Controller \n21_AGO_2018 - 1_DEC_2018 \nHardware  = Mega\n");
+  Serial.println("Motor Controller \n21_AGO_2018 - 11_DEC_2018 \nHardware  = Mega\n");
   checkInputs();
   digitalWrite(led, LOW);
   Serial.println("\nReady.");
@@ -163,37 +169,66 @@ void setup() {
 //  curt1TOP  = HIGH  ,  curt2TOP  = LOW  both on top
 if ( digitalRead(curtain1TOP)==HIGH || digitalRead(curtain2TOP)==LOW ) curtainMove = false; else curtainMove = true; 
 
-columnUpCom();
-// grapeDownCom();
-//digitalWrite(grapeUP,HIGH);
-//delay(3000);
-//digitalWrite(grapeUP,LOW);
+if ( digitalRead(cloudTOP)==LOW ) cloudOnTop = true; else cloudOnTop = false; 
 
- // mp3_play(999); // test startup sound
+columnUpCom();
+grapeDownCom();
+cloudDownCom();
+
+// mp3_play(999); // test startup sound
 
 }
 
 void loop() {
 
-remoteControl();
+ if (cloudTimer > 0 && ((millis() - cloudTimer) > cloudDelay)) 
+    {
+      digitalWrite(cloudDN, HIGH);
+      digitalWrite(cloudUP, HIGH);
+      cloudOnTop = false;
+      cloudTimer = 0;
+      Serial.println("cloud is moved to Bottom position");
+    }
+ 
+ if (cloudGoesUp == true )
+    {
+     if (digitalRead(cloudTOP)==LOW) {
+      digitalWrite(cloudUP, HIGH);
+      digitalWrite(cloudDN, HIGH);
+      cloudOnTop = true;
+      cloudGoesUp = false; 
+      Serial.println("cloud is moved to Top position");
+     }
+    }
+
+
+ remoteControl();
 
   // receives command from master via i2c
   if (command == 0x10) 
   { 
     Serial.println("Initial command from master , at first START...");
-   // cloudUpCom();
-//   grapeUpCom();
+  // megaColumnUpCom();
+   grapeUpCom();
    columnDownCom();
-//   curtainDownCom();
+   curtainDownCom();
+   //cloudUpCom();
    // lock all locks
     Serial.println("Initialize command Done.");
     mp3_play(999);
    command = 0;
   }
+  else if (command == 0x11)  
+  {  // поднимаем cloud
+     Serial.println("cloudUP command from master");
+     cloudUpCom();
+     //mp3_play(999);
+     command = 0;
+  }
   else if (command == 0x12)  
   {  // поднимаем шторы (их две)
      Serial.println("curtainUP command from master");
-  //   curtainUpCom();
+     curtainUpCom();
      Serial.println("curtainUP command done");
      mp3_play(999);
      command = 0;
@@ -226,7 +261,7 @@ remoteControl();
   else if(command == 0x22)
   { //sendToSlave(motorConAddr, 0x22); // send signal to motor_controller > grapeGrow
     Serial.print("\nGrape Dn command from master Start");
-  //  grapeDownCom();
+    grapeDownCom();
     Serial.println("Grape Dn command from master Done.");
     mp3_play(999);
     command = 0;
@@ -245,10 +280,27 @@ remoteControl();
    digitalWrite(megaColumn, HIGH);
    command = 0;
   }
+  else if (command == 0x53)
+  { //underground open
+   mp3_play(1);
+   command = 0;
+  }
+  else if (command == 0x55)
+  { //Zodiak gone
+   Serial.println("\nZodiak gone...");
+   mp3_play(2);
+   command = 0;
+  }
   else if (command == 0x61)
   { //Mega Columns goes UP
    Serial.println("\n/Mega Columns command from master...");
-   digitalWrite(megaColumn, HIGH);
+   megaColumnUpCom();
+   command = 0;
+  }
+  else if (command == 0x99)
+  { //game over stop the music
+   Serial.println("\nGame over...");
+   mp3_stop();
    command = 0;
   }
 

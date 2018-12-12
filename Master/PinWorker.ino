@@ -70,7 +70,7 @@ void closeLocks() {
   digitalWrite(zodiaHD,  LOW);
   digitalWrite(poseiHD,  LOW);
   digitalWrite(flowrHD,  HIGH);
-  digitalWrite(spare,    LOW);
+  digitalWrite(spare,    HIGH);
   Serial.println("locks Closed");
 } // eof_closeLocks
 
@@ -206,12 +206,13 @@ void pinSetup()
   pinMode(triPin, INPUT_PULLUP);
   pinMode(firePin, INPUT_PULLUP);
   pinMode(13, OUTPUT);
+  pinMode(spare, OUTPUT);
   pinMode(SSerialTxControl, OUTPUT);
   digitalWrite(SSerialTxControl, LOW);  // Init Recieve RS485
 }
 
 void openHercuHD(){
   digitalWrite(hercuHD,HIGH);
-  delay(200);
+  delay(180);
   digitalWrite(hercuHD,LOW);
 }

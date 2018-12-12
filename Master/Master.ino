@@ -265,9 +265,6 @@ int gorgoHD  = A12;
 byte crystals = 30;
 boolean crystStates[3] = {false, false, false};
 boolean crystDone = false;
-boolean crystReciever = false;
-// int crystRecBut = 16;
-
 
 byte win = 31;
 

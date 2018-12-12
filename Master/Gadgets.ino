@@ -153,7 +153,7 @@ void Dionis1()
     // MP3 FILE
     Serial.println("Dionis-1 Done");
     delay(300);  //rem on dec 3 to test - bad
-       // delay while finish first command from dionis
+    // delay while finish first command from dionis
   }
 }
 
@@ -198,7 +198,7 @@ void Afina1()
 {
   if ((!digitalRead(afinaIN) || operGStates[afina1]) && !passGStates[afina1])
   { // afina  first signal > open afinaHD1  > players get knife
-    
+
     if (operGStates[afina1]) send250ms(afinaOUT);
     passGStates[afina1] = true;
     afinaTimer = millis();
@@ -249,7 +249,7 @@ void Note()
   {
     // note > players get escu3
     if (operGStates[note]) send250ms(noteOUT);
-    digitalWrite(noteHD, LOW);    
+    digitalWrite(noteHD, LOW);
     // MP3 FILE
     Serial.println("Note Done");
     passGStates[note] = true;
@@ -278,11 +278,11 @@ void Ghera1()
     passGStates[ghera1] = true;
     //send250ms(musesOUT);
     // all gods to traitor level (level 40)
-    send250ms(dioniOUT); 
-    send250ms(demetOUT); 
-    send250ms(afinaOUT); 
-    send250ms(noteOUT); 
-    send250ms(poseiOUT); 
+    send250ms(dioniOUT);
+    send250ms(demetOUT);
+    send250ms(afinaOUT);
+    send250ms(noteOUT);
+    send250ms(poseiOUT);
     // and send same signa to all Gods
     if (operGStates[ghera1]) send250ms(gheraOUT);
     Serial.println("Ghera level 30 Done, SHIELDs Done");
@@ -296,7 +296,7 @@ void Fire()
   if ((!digitalRead(firePin) || operGStates[fire]) && !passGStates[fire])
   {
     // turner start
-    sendToSlave(lightConAddr, 0x41); //turner start  - dim the room light 
+    sendToSlave(lightConAddr, 0x41); //turner start  - dim the room light
     passGStates[fire] = true;
     Serial.println("Fire Done");
   }
@@ -374,7 +374,7 @@ void BigKey()
   { //send to MotorController
     //if (operGStates[bigkey]) send250ms(bigKeyOUT);
     sendToSlave(motorConAddr, 0x51);
- 
+
     passGStates[bigkey] = true;
     Serial.println("BigKey Done");
   }
@@ -385,7 +385,7 @@ void Underground()
   underRFWait = !getUnderRFID();
   if ((!underRFWait || operGStates[under]) && !passGStates[under])
   {
-//    sendToSlave(motorConAddr, 0x51);
+    //    sendToSlave(motorConAddr, 0x51);
     passGStates[under] = true;
     send250ms(minotOUT);  // activate Minotavr
     underRFWait = false;
@@ -398,7 +398,7 @@ void Zodiak()
   if ((!digitalRead(zodiaIN) || operGStates[zodiak]) && !passGStates[zodiak] && passGStates[under])
   { // if zodia done > players get cryst1
     // shoud be skippable from master console
-    // click lock 
+    // click lock
     passGStates[zodiak] = true;
     Serial.println("Zodiak Done");
   }
@@ -409,7 +409,7 @@ void Minotavr()
   if ((!digitalRead(minotIN) || operGStates[minot]) && !passGStates[minot] && passGStates[under])
   { // if minotavr done > players get cryst2
     // shoud be skippable from master console
-    // click lock 
+    // click lock
     passGStates[minot] = true;
     Serial.println("Minot Done");
   }
@@ -420,7 +420,7 @@ void Gorgona()
   if ((!digitalRead(gorgoIN) || operGStates[gorgona]) && !passGStates[gorgona] && passGStates[under])
   { // if gorgona done > players get cryst3
     // shoud be skippable from master console
-    // click lock 
+    // click lock
     passGStates[gorgona] = true;
     Serial.println("Gorgona Done");
   }
@@ -430,41 +430,31 @@ void Crystals()
 {
   if (passGStates[gorgona] && passGStates[minot] && passGStates[zodiak])
   {
-    if (crystReciever)
+
+    Wire.requestFrom(lightConAddr, 1);
+    byte lightUnsw = Wire.requestFrom(lightConAddr, 1, false);
+    boolean crystSum = true;
+    if (lightUnsw == 1)
     {
-      Wire.requestFrom(lightConAddr, 1);
-      byte lightUnsw = Wire.requestFrom(lightConAddr, 1, false);
-      boolean crystSum = true;
-      if (lightUnsw == 1)
+      byte unswer = Wire.read();
+      Serial.println("CRYST STATES= " + String(unswer, BIN));
+      for (int u = 0; u < 3; u++)
       {
-        byte unswer = Wire.read();
-        Serial.println("CRYST STATES= " + String(unswer, BIN));
-        for (int u = 0; u < 3; u++)
-        {
-          crystStates[u] = 1 & (unswer >> 2 * u);
-          crystSum &= crystStates[u];
-        }
-        if (crystSum) passGStates[crystals] = true;
+        crystStates[u] = 1 & (unswer >> 2 * u);
+        crystSum &= crystStates[u];
       }
-      if (passGStates[crystals] || operGStates[crystals])
-      {
-        //level = 100;
-        Serial.println("Crystals Done");
-        //column up motor add!!!!!
-        sendToSlave(motorConAddr, 0x99);
-        send250ms(gheraOUT); // victory signal for Ghera
-   //   sendToSlave(lightConAddr, 0x31); // turn lights off while Ghera speaks
-        if (operGStates[crystals]) passGStates[crystals] = true;
-      }
+      if (crystSum) passGStates[crystals] = true;
     }
-    else
+    if (passGStates[crystals] || operGStates[crystals])
     {
-     // if (!digitalRead(crystRecBut) || operGStates[crystals])
-     // {
-     //   //Open Cryst Reciever throw lightController
-     //   sendToSlave(lightConAddr, 0x55);
-     //   crystReciever = true;
-     // }
+      //level = 100;
+      Serial.println("Crystals Done");
+      //column up motor add!!!!!
+      sendToSlave(motorConAddr, 0x99);
+      send250ms(gheraOUT); // victory signal for Ghera
+      //   sendToSlave(lightConAddr, 0x31); // turn lights off while Ghera speaks
+      if (operGStates[crystals]) passGStates[crystals] = true;
     }
+
   }
 }
