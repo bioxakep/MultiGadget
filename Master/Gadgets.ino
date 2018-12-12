@@ -19,9 +19,10 @@ void Start()
     else if (start == 2)       //start game
     {
       mp3_set_serial(Serial);
-      mp3_play(100); // start message
+      mp3_play(111); // First Soundtrack (last for master)
       delay(200);
       sendToSlave(lightConAddr, 0x11); // send random wind to lightController
+      sendToSlave(motorConAddr, 0x11); // lift the cloud
       Serial.println("Go to level 12");
       level = 12;
       digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
@@ -49,6 +50,8 @@ void Baloon()
     level = 13;
     Serial.println("Go to level 13");
     sendToSlave(motorConAddr, 0x12);  // turn on the lights
+    delay(1000);
+    mp3_stop();
   }
 }
 
@@ -78,7 +81,6 @@ void Gate()
     sendToSlave(lightConAddr, 0x14); // send signal to light_controller >turnOnTheLights
     mp3_play(1);
     send250ms(gheraOUT);  // ghera start speaking, shift Ghera forward - 'thunder' level
-    //sendToSlave(motorConAddr, 0x14); // send signal to motor_controller >openGate
   }
 }
 
@@ -103,7 +105,7 @@ void Trident()
     mp3_play(4); // START MP3 - FILE
     passGStates[trident] = true;
     tridentTimer = millis();
-    Serial.println("Trident started");
+    Serial.println("Trident started " + String(millis()));
   }
 }
 
@@ -149,8 +151,8 @@ void Dionis1()
     // dioniHD1 opens > players gets another thunder
     if (operGStates[dionis1]) send250ms(dioniOUT);
     passGStates[dionis1] = true;
-    dioni1Timer = millis();
     // MP3 FILE
+    digitalWrite(dioniHD1, LOW); // open first dionis vault
     Serial.println("Dionis-1 Done");
     delay(300);  //rem on dec 3 to test - bad
     // delay while finish first command from dionis
@@ -163,6 +165,7 @@ void Hercules()
   { // shoud be skippable from master console
     // hercu > players gets third part of thunders
     passGStates[hercul] = true;
+    mp3_play(66);
     openHercuHD();
     Serial.println("Hercules Done");
   }
@@ -190,6 +193,7 @@ void Thunder()
     sendToSlave(lightConAddr, 0x23); // send signal to light_controller > GheraSpeaks, dim the light
     passGStates[thunder] = true;
     thunderDone = true;
+    mp3_play(88);
     // play mp3 thunder
     Serial.println("Thunder Done");
   }
@@ -210,14 +214,13 @@ void Afina1()
 
 void Afina2()
 {
-  if ((!digitalRead(afinaIN) || operGStates[afina2]) && !passGStates[afina2])
+  if ( operGStates[afina2] && !passGStates[afina2]) //(!digitalRead(afinaIN) ||
   { // afina second signal opens afinaHD2
-    if (operGStates[afina2]) send250ms(afinaOUT);
+    //if (operGStates[afina2]) send250ms(afinaOUT);
     digitalWrite(afinaHD2, LOW);
     passGStates[afina2] = true;
     Serial.println("Afina 2 part Done > Large vault open");
     delay(200);
-    // here afina gives players another part of the shield
   }
 }
 
@@ -234,9 +237,7 @@ void TimeG()
 void Octopus()
 {
   if ((!digitalRead(octopIN) || operGStates[octopus]) && !passGStates[octopus]) // && passGStates[Time])
-  { // octop done > players get escu2
-    // octopus has its own hideout, so nothing happens here
-    // octopus gives players another part of the shield
+  {
     if (operGStates[octopus]) send250ms(octopOUT);
     passGStates[octopus] = true;
     Serial.println("Octopus Done");
@@ -271,19 +272,20 @@ void Wind()
   }
 }
 
-void Ghera1()
+void Ghera1() // SHIELDS done
 {
   if ((!digitalRead(gheraIN) || operGStates[ghera1]) && !passGStates[ghera1])
   { //if all shields in ghera are in  place (gheraLevel = 40 ) gera speaks - open sealHD
+    mp3_play(12);
     passGStates[ghera1] = true;
-    //send250ms(musesOUT);
+    send250ms(musesOUT);
     // all gods to traitor level (level 40)
     send250ms(dioniOUT);
     send250ms(demetOUT);
     send250ms(afinaOUT);
     send250ms(noteOUT);
     send250ms(poseiOUT);
-    // and send same signa to all Gods
+    passGStates[afina2] = true;
     if (operGStates[ghera1]) send250ms(gheraOUT);
     Serial.println("Ghera level 30 Done, SHIELDs Done");
     sendToSlave(lightConAddr, 0x30); // turn lights off while Ghera speaks
@@ -296,6 +298,7 @@ void Fire()
   if ((!digitalRead(firePin) || operGStates[fire]) && !passGStates[fire])
   {
     // turner start
+    mp3_play(77);
     sendToSlave(lightConAddr, 0x41); //turner start  - dim the room light
     passGStates[fire] = true;
     Serial.println("Fire Done");
@@ -306,6 +309,7 @@ void Flower1()
 {
   if ((!digitalRead(flowrIN) || operGStates[flower1]) && !passGStates[flower1])
   { // first level of flower
+    mp3_play(6);
     if (operGStates[flower1]) send250ms(flowrOUT);
     passGStates[flower1] = true;
     Serial.println("Flower-1 part Done");
@@ -317,6 +321,7 @@ void Flower2()
 {
   if ((!digitalRead(flowrIN) || operGStates[flower2]) && !passGStates[flower2] && passGStates[flower1])
   { // second level of flower
+    mp3_play(7);
     delay(50);
     sendToSlave(lightConAddr, 0x42); // turner off, light switch on
     if (operGStates[flower2]) send250ms(flowrOUT);
@@ -331,6 +336,7 @@ void Dionis2()
   { // dionis(2) cold heart if all done
     if (operGStates[dionis2]) send250ms(dioniOUT);
     passGStates[dionis2] = true;
+    dioni2Delay = 6000;
     send250ms(dioniOUT); // send final signal  to shut up Dionis
     Serial.println("Dionis-2 Done");
   }
@@ -340,18 +346,18 @@ void Arpha()
 {
   if ((!digitalRead(musesIN) || operGStates[arpha]) && !passGStates[arpha])
   { //  signal from arpha received
-    send250ms(musesOUT); // send signal to shut up the muses
+    send250ms(musesOUT); // send signal to PLAY 998 AND shut up the muses
 
     if (operGStates[arpha]) send250ms(musesOUT);
+    arphaTimer = millis();
 
-    digitalWrite(arphaHD, LOW);  // give players seal 3
     passGStates[arpha] = true;
     Serial.println("Arpha Done + siganl to muses sent");
 
   }
 }
 
-void Ghera2()
+void Ghera2()   // SEALS done
 {
   if (passGStates[flower2] && passGStates[arpha] && passGStates[dionis2])
   {
@@ -361,9 +367,12 @@ void Ghera2()
       passGStates[ghera2] = true;
       sealsDone = true;
       Serial.println("Seals Done");
+      delay(50);
       // if all seals are in ghera are in place  > ghera Level = 60   >>   sealsDone = true;
       // ((((  ghera speaks > open HD3 (key for underground) ))))
       sendToSlave(lightConAddr, 0x45); // turn lights off while Ghera speaks
+      mp3_play(13);
+      delay(3000);
     }
   }
 }
@@ -374,7 +383,7 @@ void BigKey()
   { //send to MotorController
     //if (operGStates[bigkey]) send250ms(bigKeyOUT);
     sendToSlave(motorConAddr, 0x51);
-
+    mp3_play(8);
     passGStates[bigkey] = true;
     Serial.println("BigKey Done");
   }
@@ -385,9 +394,11 @@ void Underground()
   underRFWait = !getUnderRFID();
   if ((!underRFWait || operGStates[under]) && !passGStates[under])
   {
-    //    sendToSlave(motorConAddr, 0x51);
+    sendToSlave(motorConAddr, 0x53);
+    mp3_play(9);
     passGStates[under] = true;
     send250ms(minotOUT);  // activate Minotavr
+    send250ms(narciOUT);  // shift Narcis to show underground map
     underRFWait = false;
     Serial.println("Underground Opened");
   }
@@ -399,6 +410,7 @@ void Zodiak()
   { // if zodia done > players get cryst1
     // shoud be skippable from master console
     // click lock
+    sendToSlave(motorConAddr, 0x55);
     passGStates[zodiak] = true;
     Serial.println("Zodiak Done");
   }
@@ -447,14 +459,16 @@ void Crystals()
     }
     if (passGStates[crystals] || operGStates[crystals])
     {
+      mp3_play(10); //each one (1-2)
+      mp3_play(11); // then all 3
+
       //level = 100;
       Serial.println("Crystals Done");
-      //column up motor add!!!!!
-      sendToSlave(motorConAddr, 0x99);
+      sendToSlave(motorConAddr, 0x99);  // game over = stop the underground music
       send250ms(gheraOUT); // victory signal for Ghera
       //   sendToSlave(lightConAddr, 0x31); // turn lights off while Ghera speaks
       if (operGStates[crystals]) passGStates[crystals] = true;
     }
-
   }
+}
 }

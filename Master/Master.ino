@@ -1,4 +1,4 @@
-// 30.OCT.2018  - 31.OCT.2018 - 27.NOV.2018
+// 30.OCT.2018  - 31.OCT.2018 - 11.DEC.2018
 // Rewrote Connection
 // 27.nov.2018 crystalRec removed (now located on light controller as bigKey)
 // 28 .nov.2018 voicePin reversed 
@@ -139,6 +139,7 @@ int demetIN  = 26;   // d.
 int demetOUT = 38;
 int demetHD  = A1;
 unsigned long demetTimer = 0;
+unsigned long demetDelay = 6300;
 
 //RAIN
 byte rain = 6;
@@ -157,9 +158,10 @@ byte dionis2 = 23;
 int dioniIN  = 22;   //f.
 int dioniOUT = 34;
 int dioniHD1 = A5;   // piston
+int dioniHD2 = A3;   // safe
 unsigned long dioni1Timer = 0;
 unsigned long dioni2Timer = 0;
-int dioniHD2 = A3;
+unsigned long dioni2Delay = 5000;
 
 //HERCULES
 byte hercul  = 9;
@@ -184,7 +186,7 @@ int afinaIN  = 27;   // m.
 int afinaOUT = 35;   //
 int afinaHD1 = A7;
 unsigned long afinaTimer = 0;
-unsigned long afinaHDdelay = 4000;
+unsigned long afinaHDdelay = 8000;
 int afinaHD2 = A8;
 
 //TIME
@@ -203,7 +205,7 @@ int noteIN   = 49;   // j.
 int noteOUT  = 39;
 int noteHD   = A6;
 unsigned long noteTimer = 0;
-
+unsigned long noteHDDelay = 3300;
 //WIND
 byte wind = 17;
 boolean windRFWait = true;
@@ -228,11 +230,13 @@ int flowrIN  = 25;
 int flowrOUT = 33;   //n.
 int flowrHD  = A13;
 unsigned long flowerTimer = 0;
+unsigned long flowerDelay = 5550;
 
 //ARPHA
 byte arpha = 22;
 int arphaHD  = A9;
 unsigned long arphaTimer = 0;
+unsigned long arphaDelay = 22000;
 
 //BIGKEY         
 byte bigkey = 25;
@@ -266,6 +270,7 @@ byte crystals = 30;
 boolean crystStates[3] = {false, false, false};
 boolean crystDone = false;
 
+
 byte win = 31;
 
 int totalGadgets = 32;
@@ -297,7 +302,7 @@ void setup()
   Serial3.begin(9600);  //RS-485 to Bridge
   delay(10);
   Serial.println("SKY Master v2.1");
-  Serial.println("30 OCT 2018   -  03 DEC - 2018");
+  Serial.println("30 OCT 2018   -  11 DEC - 2018");
   Serial.println("RS485 Started.");
   pinSetup(); //from pinWorker
 
@@ -307,7 +312,7 @@ void setup()
   delay(100);
   mp3_set_volume (28);
   delay(100);
-  mp3_play(1); // test startup sound
+  mp3_stop(); 
   delay(200);
 
   Serial.println("\nhint mp3 player test");
@@ -373,29 +378,30 @@ void loop()
   else if (level == 13) Press(); //#1 if players never finish press, operator can skip it here (send signal to press)
   else if (level == 14) Gate(); //#2 if players never find the key, operator can skip it here > gateOpen = true;
   else if (level == 90)
-  { // on level 50 all events may be done in any order/sequence
-    //Big request to World
+  { // on level 90 all events may be done in any order/sequence
     if (tick - lastRFIDCheck > 100)
     {
       lastRFIDCheck = tick;
       if (windRFWait) windRFWait = !getWindRFID();
       if (rainRFWait) rainRFWait = !getRainRFID();
     }
-
+    
+//    tick = millis();
+    
     // ==================================== THUNDER ==================================
     if (!thunderDone)
     {
       Poseidon();//#3
       Trident();//#4
-      if(tridentTimer > 0 && (tick - tridentTimer > tridentDelay)) 
+      if(tridentTimer > 0 && ((millis() - tridentTimer) > tridentDelay)) 
       {
        sendToSlave(motorConAddr, 0x21); // Column Down ++++ EARTHQUAKE !!!!!!!!!!!!!!!!!!!!!!
-       Serial.println("Trident done");
+       Serial.println("Trident done "+ String(tick));
        tridentTimer = 0;
       }
 
       Demetra();//#5
-      if(demetTimer > 0 && (tick - demetTimer > HDDelay)) 
+      if(demetTimer > 0 && ((millis() - demetTimer) > demetDelay)) 
       {
         digitalWrite(demetHD, LOW); // open demetra HD
         demetTimer = 0;
@@ -403,18 +409,11 @@ void loop()
       Rain();//#6
       Vine();//#7
       Dionis1();//#8
-      if(dioni1Timer > 0 && (tick - dioni1Timer > HDDelay)) 
-      {
-        digitalWrite(dioniHD1, LOW); // open first dionis vault
-        dioni1Timer = 0;
-      }
-
       Hercules();//#9
       if(hercuTimer > 0 && (tick - hercuTimer > HDDelay)) 
       {
-        digitalWrite(hercuHD, HIGH);
-        delay(120);                   // this lock should be re-unlocked every 3 minutes after this moment
-        digitalWrite(hercuHD, LOW);
+        openHercuHD();
+                         // this lock should be re-unlocked every 3 minutes after this moment
         hercuTimer = 0;
       }
       Narcis();//#10
@@ -424,7 +423,7 @@ void loop()
     if (!shieldDone)
     {
       Afina1();//#12
-      if(afinaTimer > 0 && (tick - afinaTimer > afinaHDdelay)) 
+      if(afinaTimer > 0 && ((millis() - afinaTimer) > afinaHDdelay)) 
       {
         digitalWrite(afinaHD1, LOW);
         afinaTimer = 0;
@@ -433,7 +432,7 @@ void loop()
       TimeG();//#14
       Octopus();//#15
       Note();//#16
-      if(noteTimer > 0 && (tick - noteTimer > HDDelay)) 
+      if(noteTimer > 0 && (tick - noteTimer > noteHDDelay)) 
       {
         noteTimer = 0;
         digitalWrite(noteHD, LOW); // here note open wind box gives players wind power
@@ -448,19 +447,19 @@ void loop()
       Fire();//#19
       Flower1();//#20
       Flower2();//#21
-      if(flowerTimer > 0 && (tick - flowerTimer > HDDelay)) 
+      if(flowerTimer > 0 && (tick - flowerTimer > flowerDelay)) 
       {
         flowerTimer = 0;
         digitalWrite(flowrHD, LOW); // players get seal 1
       }
       Dionis2();//#22
-      if(dioni2Timer > 0 && (tick - dioni2Timer > HDDelay)) 
+      if(dioni2Timer > 0 && (tick - dioni2Timer > dioni2Delay)) 
       {
         digitalWrite(dioniHD2, LOW); // open first dionis vault
         dioni2Timer = 0;
       }
       Arpha();//#23
-      if(arphaTimer > 0 && (tick - arphaTimer > HDDelay))
+      if(arphaTimer > 0 && (tick - arphaTimer > arphaDelay))
       {
         arphaTimer = 0;
         digitalWrite(arphaHD, LOW);  // give players seal 3
@@ -477,7 +476,7 @@ void loop()
       */
     }
     // ==================================== CRYSTALS ==================================
-    if (!passGStates[crystals])
+    if (!passGStates[crystals] && sealsDone)
     { // underground level
       //OPEN UNDER
       BigKey();
