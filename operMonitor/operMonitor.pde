@@ -1,7 +1,7 @@
 // 22.10.2018 version
 import processing.serial.*;
-import processing.sound.*;
-SoundFile sound;
+//import processing.sound.*;
+//SoundFile sound;
 Serial arduino;
 boolean recieved = false;
 
@@ -108,7 +108,7 @@ void setup()
     hintedGadgets[g] = false;
     passedTimes[g] = 0;
   }
-  sound = new SoundFile(this, "sample.mp3"); // Должен лежать в папке с именем "data", папка должна лежать рядом с программой Monitor.exe 
+  //sound = new SoundFile(this, "sample.mp3"); // Должен лежать в папке с именем "data", папка должна лежать рядом с программой Monitor.exe 
 }
 
 void draw()
@@ -303,7 +303,7 @@ void draw()
     {
       allowTouch = false;
       t.stop();
-      sound.play();
+      //sound.play();
       fill(textCol);
       stroke(0);
       rect(scrW/2 - (gadButW+gadVoiW)/2, scrH - gadButH - marY, gadButW+gadVoiW, gadButH);
