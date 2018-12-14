@@ -100,7 +100,7 @@ void setup()
 
   t = new StopWatchTimer();
   totalSeconds = t.setStartTime(1, 30, 0);
-  //arduinoConnect();
+  arduinoConnect();
   lastVoiceSend = totalSeconds;
   for (int g = 0; g < 32; g++)
   {
@@ -108,7 +108,7 @@ void setup()
     hintedGadgets[g] = false;
     passedTimes[g] = 0;
   }
-  //sound = new SoundFile(this, "sample.mp3"); // Должен лежать в папке с именем "data", папка должна лежать рядом с программой Monitor.exe 
+  //sound = new SoundFile(this, "sample.mp3"); // Должен лежать в папке с именем "data", папка должна лежать рядом с программой Monitor.exe
 }
 
 void draw()
@@ -122,7 +122,7 @@ void draw()
     stroke(0);
     long elpsTime = t.getElapsedTime();
     String currTime = getTime(hours(elpsTime), minutes(elpsTime), seconds(elpsTime));
-    if(t.overtime) 
+    if (t.overtime) 
     {
       currTime = "-" + currTime;
       fill(redTextCol); //color red
@@ -132,7 +132,7 @@ void draw()
     fill(textCol);
     text(currTime, scrW - timerTextW - marX, timerY);
     textFont(timerFont, timerH * 0.35);
-    
+
     //GADGETS
     stroke(textCol);
     int gadCount = 0;
@@ -200,48 +200,52 @@ void draw()
       line(marX, marY + gadMarY*(lev+1) + gadButH*lev, marX + (levGadCount[lev]) * (gadMarX + gadButW + gadVoiW) - gadMarX, marY + gadMarY*(lev+1) + gadButH*lev);
       strokeWeight(1);
     }
-
+    
+    if(allowTouch) fill(color(200,0,0));
+    else fill(color(0,200,0));
+    ellipse(width-25,25,20,20);
+    
     //RECIEVE FROM BRIDGE
     String fromBridge = getInput(true);
-    
+
     if (fromBridge.equals("masterStart"))
-     {
-     for (int g = 0; g < 32; g++)
-     {
-     passedGadgets[g] = false;
-     hintedGadgets[g] = false;
-     }
-     t.start();
-     allowTouch = true;
-     println("Run game");
-     } else if (fromBridge.equals("masterConnected"))
-     {
-     t = new StopWatchTimer();
-     totalSeconds = t.setStartTime(1, 30, 0);
-     println("Connecting to Master: true");
-     for (int g = 0; g < 32; g++)
-     {
-     passedGadgets[g] = false;
-     hintedGadgets[g] = false;
-     }
-     } else if (fromBridge.startsWith("BB") && fromBridge.endsWith("FF"))
-     {
-     println(fromBridge);
-     for (int i = 0; i < fromBridge.length()-4; i++)
-     {
-     //print(fromBridge.charAt(i));
-     int data = Integer.parseInt(String.valueOf(fromBridge.charAt(i+2)));
-     if (data > 3)
-     {
-     passedGadgets[i] = true;
-     print("Gadget "); 
-     print(i);
-     println(" passed by player");
-     passedTimes[i] = int((totalSeconds-t.getElapsedTime())/1000);
-     }
-     }
-     }
-     
+    {
+      for (int g = 0; g < 32; g++)
+      {
+        passedGadgets[g] = false;
+        hintedGadgets[g] = false;
+      }
+      t.start();
+      allowTouch = true;
+      println("Run game");
+    } else if (fromBridge.equals("masterConnected"))
+    {
+      t = new StopWatchTimer();
+      totalSeconds = t.setStartTime(1, 30, 0);
+      println("Connecting to Master: true");
+      for (int g = 0; g < 32; g++)
+      {
+        passedGadgets[g] = false;
+        hintedGadgets[g] = false;
+      }
+    } else if (fromBridge.startsWith("BB") && fromBridge.endsWith("FF"))
+    {
+      println(fromBridge);
+      for (int i = 0; i < fromBridge.length()-4; i++)
+      {
+        //print(fromBridge.charAt(i));
+        int data = Integer.parseInt(String.valueOf(fromBridge.charAt(i+2)));
+        if (data > 3)
+        {
+          passedGadgets[i] = true;
+          print("Gadget "); 
+          print(i);
+          println(" passed by player");
+          passedTimes[i] = int((totalSeconds-t.getElapsedTime())/1000);
+        }
+      }
+    }
+
     //SEND TO BRIDGE
     boolean sendToBridge = false;
     for (int i = 0; i < 32; i++)
@@ -302,7 +306,7 @@ void draw()
     if (allDone) 
     {
       allowTouch = false;
-      t.stop();
+      if(t.running) t.stop();
       //sound.play();
       fill(textCol);
       stroke(0);
@@ -311,30 +315,29 @@ void draw()
       fill(color(10, 10, 200));
       text("RESTART", scrW/2 - restartTextWid/2, scrH - marY - 10);
       /*if (!prevMouseState && currMouseState)
-      {
-        if (allowTouch && mouseX > scrW/2 - (gadButW+gadVoiW)/2 && mouseX < scrW/2 + (gadButW+gadVoiW)/2 && mouseY > scrH - gadButH - marY && mouseY < scrH - marY)
-        {
-          allDone = false;
-          for (int c = 0; c < 15; c++) teamName[c] = ' ';
-          for (int g = 0; g < 32; g++)
-          {
-            passedGadgets[g] = false;
-            hintedGadgets[g] = false;
-            passedTimes[g] = 0;
-            lightUp = false;
-          }
-          t = new StopWatchTimer();
-          totalSeconds = t.setStartTime(1, 30, 0);
-          lastVoiceSend = totalSeconds;
-          arduino.write("ClearStates");//rewrite
-          //RESET GAME
-        }
-      }
-      */
+       {
+       if (allowTouch && mouseX > scrW/2 - (gadButW+gadVoiW)/2 && mouseX < scrW/2 + (gadButW+gadVoiW)/2 && mouseY > scrH - gadButH - marY && mouseY < scrH - marY)
+       {
+       allDone = false;
+       for (int c = 0; c < 15; c++) teamName[c] = ' ';
+       for (int g = 0; g < 32; g++)
+       {
+       passedGadgets[g] = false;
+       hintedGadgets[g] = false;
+       passedTimes[g] = 0;
+       lightUp = false;
+       }
+       t = new StopWatchTimer();
+       totalSeconds = t.setStartTime(1, 30, 0);
+       lastVoiceSend = totalSeconds;
+       arduino.write("ClearStates");//rewrite
+       //RESET GAME
+       }
+       }
+       */
     }
   } else // Enter params to enter the game
   {
-    
   }
   prevMouseState = currMouseState;
 }
