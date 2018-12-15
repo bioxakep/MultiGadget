@@ -13,6 +13,7 @@ void Start()
       closeLocks();
       lcd.clear();
       lcd.print("Prestart done.");
+      send250ms(gorgoOUT);  // activate gorgona
       mp3_set_serial(Serial);
       mp3_play(100); // prestart message
     }
@@ -152,10 +153,10 @@ void Dionis1()
     if (operGStates[dionis1]) send250ms(dioniOUT);
     passGStates[dionis1] = true;
     // MP3 FILE
-    digitalWrite(dioniHD1, LOW); // open first dionis vault
+    digitalWrite(dioniHD1, HIGH); // open first dionis vault
     Serial.println("Dionis-1 Done");
     delay(300);  //rem on dec 3 to test - bad
-    // delay while finish first command from dionis
+       // delay while finish first command from dionis
   }
 }
 
@@ -200,21 +201,21 @@ void Thunder()
 }
 void Afina1()
 {
-  if ((!digitalRead(afinaIN) || operGStates[afina1]) && !passGStates[afina1])
+  if ( (!digitalRead(afinaIN) || operGStates[afina1] ) && !passGStates[afina1])
   { // afina  first signal > open afinaHD1  > players get knife
-
+    
     if (operGStates[afina1]) send250ms(afinaOUT);
     passGStates[afina1] = true;
     afinaTimer = millis();
     Serial.println("Afina 1 part Done > small vault open");
-    delay(300);
+    delay(350);
     // here afina gives players a key to open next vault
   }
 }
 
 void Afina2()
 {
-  if ( operGStates[afina2] && !passGStates[afina2]) //(!digitalRead(afinaIN) ||
+  if ( (!digitalRead(afinaIN) || operGStates[afina2] ) && !passGStates[afina2]) //(!digitalRead(afinaIN) ||
   { // afina second signal opens afinaHD2
     //if (operGStates[afina2]) send250ms(afinaOUT);
     digitalWrite(afinaHD2, LOW);
@@ -237,7 +238,7 @@ void TimeG()
 void Octopus()
 {
   if ((!digitalRead(octopIN) || operGStates[octopus]) && !passGStates[octopus]) // && passGStates[Time])
-  {
+  { 
     if (operGStates[octopus]) send250ms(octopOUT);
     passGStates[octopus] = true;
     Serial.println("Octopus Done");
@@ -250,10 +251,10 @@ void Note()
   {
     // note > players get escu3
     if (operGStates[note]) send250ms(noteOUT);
-    digitalWrite(noteHD, LOW);
-    // MP3 FILE
+    digitalWrite(noteHD, LOW);    
     Serial.println("Note Done");
     passGStates[note] = true;
+    // MP3 FILE
   }
 }
 
@@ -268,7 +269,7 @@ void Wind()
     sendToSlave(motorConAddr, 0x31); // CloudDown - отдать 3 часть щита
     delay(10);
     sendToSlave(lightConAddr, 0x31); // windBlow 10-15 secs
-    mp3_play(2);    // MP3 FILE
+    mp3_play(2);    // Wind MP3 FILE
   }
 }
 
@@ -280,12 +281,12 @@ void Ghera1() // SHIELDS done
     passGStates[ghera1] = true;
     send250ms(musesOUT);
     // all gods to traitor level (level 40)
-    send250ms(dioniOUT);
-    send250ms(demetOUT);
-    send250ms(afinaOUT);
-    send250ms(noteOUT);
-    send250ms(poseiOUT);
-    passGStates[afina2] = true;
+    send250ms(dioniOUT); 
+    send250ms(demetOUT); 
+    send250ms(afinaOUT); 
+    send250ms(noteOUT); 
+    send250ms(poseiOUT); 
+    passGStates[afina2] = true; 
     if (operGStates[ghera1]) send250ms(gheraOUT);
     Serial.println("Ghera level 30 Done, SHIELDs Done");
     sendToSlave(lightConAddr, 0x30); // turn lights off while Ghera speaks
@@ -295,20 +296,19 @@ void Ghera1() // SHIELDS done
 
 void Fire()
 {
-  if ((!digitalRead(firePin) || operGStates[fire]) && !passGStates[fire])
+  if ((!digitalRead(firePin) || operGStates[fire]) && !passGStates[fire])     
   {
-    // turner start
     mp3_play(77);
-    sendToSlave(lightConAddr, 0x41); //turner start  - dim the room light
+    sendToSlave(lightConAddr, 0x41); //turner start  - dim the room light 
     passGStates[fire] = true;
-    Serial.println("Fire Done");
+    Serial.println("Fire Done, turner start...");
   }
 }
 
-void Flower1()
+void Flower1()  // first level of flower
 {
   if ((!digitalRead(flowrIN) || operGStates[flower1]) && !passGStates[flower1])
-  { // first level of flower
+  { 
     mp3_play(6);
     if (operGStates[flower1]) send250ms(flowrOUT);
     passGStates[flower1] = true;
@@ -317,40 +317,43 @@ void Flower1()
   }
 }
 
-void Flower2()
+void Flower2()    // second level of flower
 {
   if ((!digitalRead(flowrIN) || operGStates[flower2]) && !passGStates[flower2] && passGStates[flower1])
-  { // second level of flower
+  { 
     mp3_play(7);
     delay(50);
-    sendToSlave(lightConAddr, 0x42); // turner off, light switch on
+    sendToSlave(lightConAddr, 0x42); // turner off, light switch 
     if (operGStates[flower2]) send250ms(flowrOUT);
     passGStates[flower2] = true;
     Serial.println("Flower-2 part Done");
+    flowerTimer = millis();
   }
 }
 
-void Dionis2()
-{
+void Dionis2()  // dionis(2) cold heart if all done
+{ 
   if ((!digitalRead(dioniIN) || operGStates[dionis2]) && !passGStates[dionis2] && passGStates[ghera1])
-  { // dionis(2) cold heart if all done
+  { 
     if (operGStates[dionis2]) send250ms(dioniOUT);
     passGStates[dionis2] = true;
-    dioni2Delay = 6000;
-    send250ms(dioniOUT); // send final signal  to shut up Dionis
+    send250ms(demetOUT); 
+    send250ms(afinaOUT); 
+    send250ms(noteOUT); 
+    send250ms(poseiOUT); 
+   // send250ms(dioniOUT); // send final signal  to shut up everybody
     Serial.println("Dionis-2 Done");
+    digitalWrite(dioniHD2, LOW);
   }
 }
 
-void Arpha()
+void Arpha()   //  signal from arpha received
 {
   if ((!digitalRead(musesIN) || operGStates[arpha]) && !passGStates[arpha])
-  { //  signal from arpha received
+  { 
     send250ms(musesOUT); // send signal to PLAY 998 AND shut up the muses
-
     if (operGStates[arpha]) send250ms(musesOUT);
     arphaTimer = millis();
-
     passGStates[arpha] = true;
     Serial.println("Arpha Done + siganl to muses sent");
 
@@ -380,8 +383,7 @@ void Ghera2()   // SEALS done
 void BigKey()
 {
   if ((digitalRead(bigKeyIN) || operGStates[bigkey]) && !passGStates[bigkey])
-  { //send to MotorController
-    //if (operGStates[bigkey]) send250ms(bigKeyOUT);
+  { 
     sendToSlave(motorConAddr, 0x51);
     mp3_play(8);
     passGStates[bigkey] = true;
@@ -407,34 +409,35 @@ void Underground()
 void Zodiak()
 {
   if ((!digitalRead(zodiaIN) || operGStates[zodiak]) && !passGStates[zodiak] && passGStates[under])
-  { // if zodia done > players get cryst1
-    // shoud be skippable from master console
-    // click lock
+  { 
     sendToSlave(motorConAddr, 0x55);
     passGStates[zodiak] = true;
     Serial.println("Zodiak Done");
+    digitalWrite(zodiaHD, HIGH);
+    delay(220);
+    digitalWrite(zodiaHD, LOW);
   }
 }
 
 void Minotavr()
 {
   if ((!digitalRead(minotIN) || operGStates[minot]) && !passGStates[minot] && passGStates[under])
-  { // if minotavr done > players get cryst2
-    // shoud be skippable from master console
-    // click lock
+  { 
     passGStates[minot] = true;
     Serial.println("Minot Done");
+    minotTimer = millis();
   }
 }
 
 void Gorgona()
 {
   if ((!digitalRead(gorgoIN) || operGStates[gorgona]) && !passGStates[gorgona] && passGStates[under])
-  { // if gorgona done > players get cryst3
-    // shoud be skippable from master console
-    // click lock
+  { 
     passGStates[gorgona] = true;
     Serial.println("Gorgona Done");
+    digitalWrite(gorgoHD, HIGH);
+    delay(220);
+    digitalWrite(gorgoHD, LOW);
   }
 }
 
@@ -442,33 +445,42 @@ void Crystals()
 {
   if (passGStates[gorgona] && passGStates[minot] && passGStates[zodiak])
   {
-
-    Wire.requestFrom(lightConAddr, 1);
-    byte lightUnsw = Wire.requestFrom(lightConAddr, 1, false);
-    boolean crystSum = true;
-    if (lightUnsw == 1)
-    {
-      byte unswer = Wire.read();
-      Serial.println("CRYST STATES= " + String(unswer, BIN));
-      for (int u = 0; u < 3; u++)
+      Wire.requestFrom(lightConAddr, 1);
+      byte lightUnsw = Wire.requestFrom(lightConAddr, 1, false);
+      boolean crystCheck = true;
+      int cristSum = 0;
+      if (lightUnsw == 1)
       {
-        crystStates[u] = 1 & (unswer >> 2 * u);
-        crystSum &= crystStates[u];
+        byte unswer = Wire.read();
+        Serial.println("CRYST STATES= " + String(unswer, BIN));
+        for (int u = 0; u < 3; u++)
+        {
+          crystStates[u] = 1 & (unswer >> 2 * u);
+          if (crystStates[u]) cristSum++;
+          crystCheck &= crystStates[u];
+        }
+        if (crystCheck) passGStates[crystals] = true;
       }
-      if (crystSum) passGStates[crystals] = true;
-    }
-    if (passGStates[crystals] || operGStates[crystals])
-    {
-      mp3_play(10); //each one (1-2)
-      mp3_play(11); // then all 3
-
-      //level = 100;
-      Serial.println("Crystals Done");
-      sendToSlave(motorConAddr, 0x99);  // game over = stop the underground music
-      send250ms(gheraOUT); // victory signal for Ghera
-      //   sendToSlave(lightConAddr, 0x31); // turn lights off while Ghera speaks
-      if (operGStates[crystals]) passGStates[crystals] = true;
-    }
+      if(cristSum != cristCount)
+      {
+        if(cristSum > 0) mp3_play(10);
+        cristCount = cristSum;
+      }
+      if (passGStates[crystals] || operGStates[crystals])
+       {
+        // mp3_play(10); //each one (1-2)
+         mp3_play(11); // then all 3
+  
+         //level = 100;
+         Serial.println("Crystals Done");
+         sendToSlave(motorConAddr, 0x99);  // game over = stop the underground music
+         send250ms(gheraOUT); // victory signal for Ghera
+          // turn lights off while Ghera speaks
+          if (operGStates[crystals]) 
+           {
+            passGStates[crystals] = true; 
+            sendToSlave(lightConAddr, 0x55); // inform light_controller than we skipping crystals
+           }
+        }
   }
-}
 }

@@ -1,4 +1,4 @@
-// 30.OCT.2018  - 31.OCT.2018 - 11.DEC.2018
+// 30.OCT.2018  - 31.OCT.2018 - 11.DEC.2018 - 12.DEC.2018 12:50pm
 // Rewrote Connection
 // 27.nov.2018 crystalRec removed (now located on light controller as bigKey)
 // 28 .nov.2018 voicePin reversed 
@@ -154,20 +154,19 @@ int vinemOUT = 36;
 
 //DIONIS
 byte dionis1 = 8;
-byte dionis2 = 23;
+byte dionis2 = A9; //23;
 int dioniIN  = 22;   //f.
 int dioniOUT = 34;
 int dioniHD1 = A5;   // piston
-int dioniHD2 = A3;   // safe
+int dioniHD2 = A9;   // safe
 unsigned long dioni1Timer = 0;
 unsigned long dioni2Timer = 0;
-unsigned long dioni2Delay = 5000;
+unsigned long dioni2Delay = 3000;
 
 //HERCULES
 byte hercul  = 9;
 int hercuIN  = 7;
 int hercuHD  = A4;
-unsigned long hercuTimer = 0;
 
 //NARCIS
 byte narcis  = 10;
@@ -206,6 +205,7 @@ int noteOUT  = 39;
 int noteHD   = A6;
 unsigned long noteTimer = 0;
 unsigned long noteHDDelay = 3300;
+
 //WIND
 byte wind = 17;
 boolean windRFWait = true;
@@ -234,9 +234,9 @@ unsigned long flowerDelay = 5550;
 
 //ARPHA
 byte arpha = 22;
-int arphaHD  = A9;
+int arphaHD  = A3; //A9;
 unsigned long arphaTimer = 0;
-unsigned long arphaDelay = 22000;
+unsigned long arphaDelay = 21000;
 
 //BIGKEY         
 byte bigkey = 25;
@@ -258,6 +258,8 @@ byte minot = 28;
 int minotIN  = 29;   // B.
 int minotOUT = 45;
 int minotHD  = A10;
+long minotTimer = 0;
+long minotDelay = 26000;
 
 //GORGONA
 byte gorgona = 29;
@@ -269,13 +271,15 @@ int gorgoHD  = A12;
 byte crystals = 30;
 boolean crystStates[3] = {false, false, false};
 boolean crystDone = false;
+boolean crystReciever = false;
+byte cristCount = 0;
 
 
 byte win = 31;
 
 int totalGadgets = 32;
 
-int spare = A2;  ////////////////////  TIP  controlled spare OUTPUT
+int spare = A2;  // UnderGround light relay
 
 byte level = 10;
 
@@ -287,8 +291,6 @@ boolean bridgeConnected = false;
 unsigned long startHighPin = 0;
 unsigned long lastA9SentTime = 0;
 unsigned long lastRFIDCheck = 0;
-
-unsigned long HDDelay = 3000;
 
 void setup()
 {
@@ -302,7 +304,7 @@ void setup()
   Serial3.begin(9600);  //RS-485 to Bridge
   delay(10);
   Serial.println("SKY Master v2.1");
-  Serial.println("30 OCT 2018   -  11 DEC - 2018");
+  Serial.println("30 OCT 2018   - - 12.DEC.2018 6:59pm");
   Serial.println("RS485 Started.");
   pinSetup(); //from pinWorker
 
@@ -342,6 +344,7 @@ void setup()
   Serial.println("\nInputs Checked");
   delay(10);
   openLocks();
+//  while(digitalRead(noteIN)) {;}
   Serial.println("\nLocks Opened");
   lcd.init();
   lcd.backlight();
@@ -410,12 +413,6 @@ void loop()
       Vine();//#7
       Dionis1();//#8
       Hercules();//#9
-      if(hercuTimer > 0 && (tick - hercuTimer > HDDelay)) 
-      {
-        openHercuHD();
-                         // this lock should be re-unlocked every 3 minutes after this moment
-        hercuTimer = 0;
-      }
       Narcis();//#10
       Thunder();//#11
     }
@@ -432,7 +429,7 @@ void loop()
       TimeG();//#14
       Octopus();//#15
       Note();//#16
-      if(noteTimer > 0 && (tick - noteTimer > noteHDDelay)) 
+      if(noteTimer > 0 && ( (millis() - noteTimer) > noteHDDelay) ) 
       {
         noteTimer = 0;
         digitalWrite(noteHD, LOW); // here note open wind box gives players wind power
@@ -447,19 +444,14 @@ void loop()
       Fire();//#19
       Flower1();//#20
       Flower2();//#21
-      if(flowerTimer > 0 && (tick - flowerTimer > flowerDelay)) 
+      if(flowerTimer > 0 && ((millis() - flowerTimer) > flowerDelay)) 
       {
         flowerTimer = 0;
         digitalWrite(flowrHD, LOW); // players get seal 1
       }
       Dionis2();//#22
-      if(dioni2Timer > 0 && (tick - dioni2Timer > dioni2Delay)) 
-      {
-        digitalWrite(dioniHD2, LOW); // open first dionis vault
-        dioni2Timer = 0;
-      }
       Arpha();//#23
-      if(arphaTimer > 0 && (tick - arphaTimer > arphaDelay))
+      if(arphaTimer > 0 && ((millis() - arphaTimer) > arphaDelay))
       {
         arphaTimer = 0;
         digitalWrite(arphaHD, LOW);  // give players seal 3
@@ -485,10 +477,20 @@ void loop()
       {
         Zodiak();//#26
         Minotavr();//#27
+      if(minotTimer > 0 && ((millis() - minotTimer) > minotDelay))
+      {
+        minotTimer = 0;
+        digitalWrite(minotHD, HIGH);
+        delay(220);
+        digitalWrite(minotHD, LOW);
+      }
+
+
+        
         Gorgona();//#28
         Crystals();//#29
       }
-      if (tick % 35000 == 0) openOpened();  // open (and re-open if closed) underground locks
+      if (millis() % 30000 == 0) openOpened();  // open (and re-open if closed) underground locks
     } // eof_cristals
   } // eof.level_50
 

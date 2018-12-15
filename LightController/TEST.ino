@@ -15,11 +15,9 @@ delay(1000);
 void testA(){
 
 
-if (!digitalRead(crystPins[0]) ) {  digitalWrite(oknoA_G, HIGH); } else  { digitalWrite(oknoA_G, LOW); } 
-
-if (!digitalRead(crystPins[1]) ) {  digitalWrite(oknoB_G, HIGH); }  else { digitalWrite(oknoB_G, LOW); } 
-
-if (!digitalRead(crystPins[2]) ) {  digitalWrite(oknoC_G, HIGH); }  else { digitalWrite(oknoC_G, LOW);}
+if (digitalRead(crystPins[0]) ) {  digitalWrite(oknoA_G, HIGH); } else  { digitalWrite(oknoA_G, LOW); } 
+if (digitalRead(crystPins[1]) ) {  digitalWrite(oknoB_G, HIGH); }  else { digitalWrite(oknoB_G, LOW); } 
+if (digitalRead(crystPins[2]) ) {  digitalWrite(oknoC_G, HIGH); }  else { digitalWrite(oknoC_G, LOW);}
        
 
 delay(300);

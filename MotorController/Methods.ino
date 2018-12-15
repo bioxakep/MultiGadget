@@ -153,11 +153,11 @@ void columnDownCom() {           // position to play since start of the game
 
 
 void poseiVaultOpen() {
- digitalWrite(poseiValv, LOW);    //drain the water
- delay(2000);
+// digitalWrite(poseiValv, LOW);    //drain the water
+// delay(2000);
  digitalWrite(poseiLock, HIGH);     // water drained, open the top cover
- digitalWrite(poseiValv, HIGH);
- //UNLOAD GATE RELAY,OPTIONAL
+// digitalWrite(poseiValv, HIGH);
+//UNLOAD GATE RELAY,OPTIONAL
  digitalWrite(gateUP, LOW);   
 }
 
@@ -202,16 +202,16 @@ digitalWrite(megaColumn, LOW);
 // grapeDownCom();
 }
 
-if (digitalRead(remote2) == LOW ){
-// cloudUpCom();
+if (digitalRead(remote4) == LOW ){
+//   cloudUpCom();
+   digitalWrite(cloudUP, LOW);
     Serial.println("\nRemote control UP");
-   // digitalWrite(cloudUP, LOW);
 
  } else  digitalWrite(cloudUP, HIGH);
  
-if (digitalRead(remote4) == LOW ){
-// cloudDownCom();
-   // digitalWrite(cloudDN, LOW);
+if (digitalRead(remote2) == LOW ){
+   //cloudDownCom();
+   digitalWrite(cloudDN, LOW);
     Serial.println("\nRemote control DOWN");
  } else digitalWrite(cloudDN, HIGH);
 

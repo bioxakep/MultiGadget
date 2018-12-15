@@ -4,34 +4,21 @@ void setLightBri(int value)
   {
     Serial.println("Light set to " + String(value) + " 0-255");
     analogWrite(oknoA_R, value);
-//    delay(50);
     analogWrite(oknoA_G, value);
-//    delay(50);
     analogWrite(oknoA_B, value);
-//    delay(50);
 
     analogWrite(oknoB_R, value);
-//    delay(50);
     analogWrite(oknoB_G, value);
-//    delay(50);
     analogWrite(oknoB_B, value);
-//    delay(50);
 
     analogWrite(oknoC_R, value);
-//    delay(50);
     analogWrite(oknoC_G, value);
-//    delay(50);
     analogWrite(oknoC_B, value);
-//    delay(50);
 
     analogWrite(dvor_W, 255 - value);
-//    delay(50);
     analogWrite(dvor_R, 255 - value);
-//    delay(50);
     analogWrite(dvor_G, 255 - value);
-//    delay(50);
     analogWrite(dvor_B, 255 - value);
-//    delay(50);
   }
 }
 void randWind()

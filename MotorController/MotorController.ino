@@ -1,4 +1,4 @@
-// Motor Comtroller v1
+// Motor Comtroller v1  - 12.DEC.2018 12:50pm
 // 13 AGO 2018
 // 21 AGO 2018 adjusted - I2C enabled - xBee deleted
 // 12 sep 2018 remote control temp sequence created, auto column and auto grape tested
@@ -52,8 +52,8 @@ int uWhiteLite= A11;
 int megaColumn = 22;
 
 int poseiPump = 28;  // SSR relay 110v
-int poseiValv = 26;  // relay 
-int poseiLock = 24;  // relay 
+int poseiValv = 24;  // relay 
+int poseiLock = 26;  // relay 
 
 byte command = 0;
 int  thisI2CAddr = 21;
@@ -161,7 +161,7 @@ void setup() {
   digitalWrite(poseiPump,   LOW);
   digitalWrite(poseiLock,   LOW);   // lock the cover of the vault while if full of water
 
-  Serial.println("Motor Controller \n21_AGO_2018 - 11_DEC_2018 \nHardware  = Mega\n");
+  Serial.println("Motor Controller \n21_AGO_2018 - - 12.DEC.2018 12:50pm \nHardware  = Mega\n");
   checkInputs();
   digitalWrite(led, LOW);
   Serial.println("\nReady.");
@@ -175,7 +175,7 @@ columnUpCom();
 grapeDownCom();
 cloudDownCom();
 
-// mp3_play(999); // test startup sound
+ mp3_play(999); // test startup sound
 
 }
 
@@ -202,7 +202,7 @@ void loop() {
     }
 
 
- remoteControl();
+// remoteControl();
 
   // receives command from master via i2c
   if (command == 0x10) 
@@ -243,45 +243,45 @@ void loop() {
  }
   else if(command == 0x20)
   { // Тайник посейдона
-    digitalWrite(gateUP, HIGH);
-    poseiVaultOpen();
     digitalWrite(gateUP, LOW);
+    poseiVaultOpen();
     mp3_play(999);
     command = 0;
 
   }
-  else if(command == 0x21)
-  {//sendToSlave(motorConAddr, 0x21); // Column Up
+  else if(command == 0x21)   //sendToSlave(motorConAddr, 0x21); // Column Up
+  { 
     columnUpCom();
     Serial.print("\nColumn Up command from master...");
     mp3_play(999);
     Serial.println("Done.");
    command = 0;
   }
-  else if(command == 0x22)
-  { //sendToSlave(motorConAddr, 0x22); // send signal to motor_controller > grapeGrow
+  else if(command == 0x22) //sendToSlave(motorConAddr, 0x22); // send signal to motor_controller > grapeGrow
+  { 
     Serial.print("\nGrape Dn command from master Start");
     grapeDownCom();
     Serial.println("Grape Dn command from master Done.");
     mp3_play(999);
     command = 0;
  }
-  else if (command == 0x31)
-  { //cloudDown
+  else if (command == 0x31)  //cloudDown
+  { 
     Serial.println("\nCloud Down command from master...");
     //mp3_play(2); // wind sound
     mp3_play(999);
     cloudDownCom();
     command = 0;
   }
-  else if (command == 0x51)
-  { //Under doors Open
-   Serial.println("\nunderDoor command from master...");
-   digitalWrite(megaColumn, HIGH);
+  else if (command == 0x51)  //MegaColumns goes up
+  { 
+   Serial.println("\nMegaColumns goes Up command from master...");
+   megaColumnUpCom();
    command = 0;
   }
-  else if (command == 0x53)
-  { //underground open
+  else if (command == 0x53) //underground open
+  {   
+   digitalWrite(underDoor,HIGH);
    mp3_play(1);
    command = 0;
   }

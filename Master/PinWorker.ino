@@ -5,7 +5,7 @@ void openLocks() {
   digitalWrite(demetHD,  LOW);
   digitalWrite(vinemOUT, LOW);
   digitalWrite(dioniOUT, LOW);
-  digitalWrite(dioniHD1, HIGH);
+  digitalWrite(dioniHD1, HIGH);  // HIGH to OPEN
   digitalWrite(dioniHD2, LOW);
   digitalWrite(hercuHD,  HIGH);
   digitalWrite(thundOUT, LOW);
@@ -79,7 +79,7 @@ void openOpened()
   if (passGStates[zodiak])  digitalWrite(zodiaHD, HIGH);
   if (passGStates[minot])   digitalWrite(minotHD, HIGH);
   if (passGStates[gorgona]) digitalWrite(gorgoHD, HIGH);
-  delay(220);
+  delay(170);
   digitalWrite(zodiaHD, LOW);
   digitalWrite(minotHD, LOW);
   digitalWrite(gorgoHD, LOW);
