@@ -1,7 +1,7 @@
 // 30.OCT.2018  - 31.OCT.2018 - 11.DEC.2018 - 12.DEC.2018 12:50pm
 // Rewrote Connection
 // 27.nov.2018 crystalRec removed (now located on light controller as bigKey)
-// 28 .nov.2018 voicePin reversed 
+// 28 .nov.2018 voicePin reversed
 // Master SKY  - Mega
 // I2C master - linked to Motor_Controller & Lights_Controller & World
 // RS-485 interface - Serial1 - link to Admin
@@ -36,9 +36,9 @@ int lightConAddr = 20;
 int motorConAddr = 21;
 
 //Gadget states
-boolean operGStates[32];
-boolean passGStates[32];
-byte voiceHintStates[32];
+boolean operGStates[31];
+boolean passGStates[31];
+byte voiceHintStates[31];
 // lev 0
 //
 /*
@@ -89,15 +89,14 @@ byte voiceHintStates[32];
   END (cmds 0x6x)
   31 WIN
 */
-String gadgetNames[32] = {"Baloon    ", "Press    ", "Gate     ",
+String gadgetNames[31] = {"Baloon    ", "Press    ", "Gate     ",
                           "Poseidon  ", "Trident  ", "Demetra-1", "Rain     ", "Vine     ", "Dionis-1 ", "Hercules ", "Narcis   ", "Thunder  ",
                           "Afina-1   ", "Afina-2  ", "Time     ", "Octopus  ", "Note     ", "Wind     ", "Ghera-1  ",
                           "Fire      ", "Flower-1 ", "Flower-2 ", "Arpha    ", "Dionis-2 ", "Ghera-2  ",
-                          "BigKey    ", "Under    ", "Zodiak   ", "Minot    ", "Gorgona  ", "Cristals ",
-                          "End       "
+                          "BigKey    ", "Under    ", "Zodiak   ", "Minot    ", "Gorgona  ", "Cristals "
                          };
 //Voice pin
-int voicePin = 6;     // HIGH then pressed, normally LOW 
+int voicePin = 6;     // HIGH then pressed, normally LOW
 boolean voiceStates[2] = {HIGH, HIGH};
 //START
 int start = 0;
@@ -238,7 +237,7 @@ int arphaHD  = A3; //A9;
 unsigned long arphaTimer = 0;
 unsigned long arphaDelay = 21000;
 
-//BIGKEY         
+//BIGKEY
 byte bigkey = 25;
 int bigKeyIN = 16;
 
@@ -277,7 +276,7 @@ byte cristCount = 0;
 
 byte win = 31;
 
-int totalGadgets = 32;
+int totalGadgets = 31;
 
 int spare = A2;  // UnderGround light relay
 
@@ -314,7 +313,7 @@ void setup()
   delay(100);
   mp3_set_volume (28);
   delay(100);
-  mp3_stop(); 
+  mp3_stop();
   delay(200);
 
   Serial.println("\nhint mp3 player test");
@@ -344,7 +343,7 @@ void setup()
   Serial.println("\nInputs Checked");
   delay(10);
   openLocks();
-//  while(digitalRead(noteIN)) {;}
+  //  while(digitalRead(noteIN)) {;}
   Serial.println("\nLocks Opened");
   lcd.init();
   lcd.backlight();
@@ -388,23 +387,23 @@ void loop()
       if (windRFWait) windRFWait = !getWindRFID();
       if (rainRFWait) rainRFWait = !getRainRFID();
     }
-    
-//    tick = millis();
-    
+
+    //    tick = millis();
+
     // ==================================== THUNDER ==================================
     if (!thunderDone)
     {
       Poseidon();//#3
       Trident();//#4
-      if(tridentTimer > 0 && ((millis() - tridentTimer) > tridentDelay)) 
+      if (tridentTimer > 0 && ((millis() - tridentTimer) > tridentDelay))
       {
-       sendToSlave(motorConAddr, 0x21); // Column Down ++++ EARTHQUAKE !!!!!!!!!!!!!!!!!!!!!!
-       Serial.println("Trident done "+ String(tick));
-       tridentTimer = 0;
+        sendToSlave(motorConAddr, 0x21); // Column Down ++++ EARTHQUAKE !!!!!!!!!!!!!!!!!!!!!!
+        Serial.println("Trident done " + String(tick));
+        tridentTimer = 0;
       }
 
       Demetra();//#5
-      if(demetTimer > 0 && ((millis() - demetTimer) > demetDelay)) 
+      if (demetTimer > 0 && ((millis() - demetTimer) > demetDelay))
       {
         digitalWrite(demetHD, LOW); // open demetra HD
         demetTimer = 0;
@@ -420,7 +419,7 @@ void loop()
     if (!shieldDone)
     {
       Afina1();//#12
-      if(afinaTimer > 0 && ((millis() - afinaTimer) > afinaHDdelay)) 
+      if (afinaTimer > 0 && ((millis() - afinaTimer) > afinaHDdelay))
       {
         digitalWrite(afinaHD1, LOW);
         afinaTimer = 0;
@@ -429,7 +428,7 @@ void loop()
       TimeG();//#14
       Octopus();//#15
       Note();//#16
-      if(noteTimer > 0 && ( (millis() - noteTimer) > noteHDDelay) ) 
+      if (noteTimer > 0 && ( (millis() - noteTimer) > noteHDDelay) )
       {
         noteTimer = 0;
         digitalWrite(noteHD, LOW); // here note open wind box gives players wind power
@@ -444,14 +443,14 @@ void loop()
       Fire();//#19
       Flower1();//#20
       Flower2();//#21
-      if(flowerTimer > 0 && ((millis() - flowerTimer) > flowerDelay)) 
+      if (flowerTimer > 0 && ((millis() - flowerTimer) > flowerDelay))
       {
         flowerTimer = 0;
         digitalWrite(flowrHD, LOW); // players get seal 1
       }
       Dionis2();//#22
       Arpha();//#23
-      if(arphaTimer > 0 && ((millis() - arphaTimer) > arphaDelay))
+      if (arphaTimer > 0 && ((millis() - arphaTimer) > arphaDelay))
       {
         arphaTimer = 0;
         digitalWrite(arphaHD, LOW);  // give players seal 3
@@ -477,16 +476,14 @@ void loop()
       {
         Zodiak();//#26
         Minotavr();//#27
-      if(minotTimer > 0 && ((millis() - minotTimer) > minotDelay))
-      {
-        minotTimer = 0;
-        digitalWrite(minotHD, HIGH);
-        delay(220);
-        digitalWrite(minotHD, LOW);
-      }
+        if (minotTimer > 0 && ((millis() - minotTimer) > minotDelay))
+        {
+          minotTimer = 0;
+          digitalWrite(minotHD, HIGH);
+          delay(220);
+          digitalWrite(minotHD, LOW);
+        }
 
-
-        
         Gorgona();//#28
         Crystals();//#29
       }
@@ -542,8 +539,8 @@ void skipNextGadget()
   operGStates[curGadget] = true;
   passGStates[curGadget] = false;
   Serial.println("Gadget #(from 0): " + String(curGadget) + " Named: " + String(gadgetNames[curGadget]) + " passed by start button");
-//  lcd.clear();
-  lcd.setCursor(0,1);
+  //  lcd.clear();
+  lcd.setCursor(0, 1);
   lcd.print("Skpd " + String(gadgetNames[curGadget]));
 }
 
@@ -562,10 +559,10 @@ void playVoice(byte vhi)
   Serial.println("Playing " + String(playFile) + ".mp3 file");
   mp3_set_serial(Serial3);
   delay(20);
-  mp3_play(playFile); 
+  mp3_play(playFile);
   delay(20);
   mp3_set_serial(Serial);
   delay(20);
- 
+
   voiceHintStates[vhi] = (voiceHintStates[vhi] + 1) % 3;
 }
