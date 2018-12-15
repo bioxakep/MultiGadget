@@ -15,14 +15,14 @@
 //0xCC from operator
 SoftwareSerial masterSerial(10, 11);
 int serialTXControl = 3;
-boolean passGStates[32];
+boolean passGStates[31];
 boolean monitorConnected = false;
 boolean masterConnected = false;
 unsigned long mConnectTime = 0;
 unsigned long mDisconnectTime = 0;
 unsigned long mLastA9Rec = 0;
 unsigned long masterConnTimeOut = 20000;
-int gadgetCount = 32;
+int gadgetCount = 31;
 void setup() {
   masterSerial.begin(9600);
   Serial.begin(9600);

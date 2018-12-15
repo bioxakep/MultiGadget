@@ -46,13 +46,12 @@ boolean prevMouseState = false;
 boolean currMouseState = false;
 boolean calculated = false;
 
-int[] levGadCount = {3, 9, 7, 6, 6, 1};
-String[] levelNames = {"START", "THUNDER", "SHIELDS", "SEALS", "UNDERGROUND", "END"};
-String[] gadgetNames = {"Baloon", "Press", "Gate", "Poseidon", "Trident", "Demetra-1", "Rain", "Vine", "Dionis-1", "Hercules", "Narcis", "Thunder", "Afina-1", "Afina-2", "Time", "Octopus", "Note", "Wind", "Ghera-1", "Fire", "Flower-1", "Flower-2", "Arpha", "Dionis-2", "Ghera-2", "BigKey", "Under", "Zodiak", "Minot", "Gorgona", "Cristals", "End"};
-boolean[] passedGadgets = new boolean[32];
-boolean[] hintedGadgets = new boolean[32];
-int[] passedTimes = new int[32];
-//int[] gadVoiceHintNum = new int[32];
+int[] levGadCount = {3, 9, 7, 6, 6};
+String[] levelNames = {"START", "THUNDER", "SHIELDS", "SEALS", "UNDERGROUND"};
+String[] gadgetNames = {"Baloon", "Press", "Gate", "Poseidon", "Trident", "Demetra-1", "Rain", "Vine", "Dionis-1", "Hercules", "Narcis", "Thunder", "Afina-1", "Afina-2", "Time", "Octopus", "Note", "Wind", "Ghera-1", "Fire", "Flower-1", "Flower-2", "Arpha", "Dionis-2", "Ghera-2", "BigKey", "Under", "Zodiak", "Minot", "Gorgona", "Cristals"};
+boolean[] passedGadgets = new boolean[31];
+boolean[] hintedGadgets = new boolean[31];
+int[] passedTimes = new int[31];
 int sendVoiceNumber = -1;
 int passTimesIndex = 0;
 
@@ -102,7 +101,7 @@ void setup()
   totalSeconds = t.setStartTime(1, 30, 0);
   arduinoConnect();
   lastVoiceSend = totalSeconds;
-  for (int g = 0; g < 32; g++)
+  for (int g = 0; g < 31; g++)
   {
     passedGadgets[g] = false;
     hintedGadgets[g] = false;
@@ -137,7 +136,7 @@ void draw()
     stroke(textCol);
     int gadCount = 0;
 
-    for (int lev = 0; lev < 6; lev++)
+    for (int lev = 0; lev < 5; lev++)
     {
       textFont(topFont, timerH * 0.35);
       fill(textCol);
@@ -210,7 +209,7 @@ void draw()
 
     if (fromBridge.equals("masterStart"))
     {
-      for (int g = 0; g < 32; g++)
+      for (int g = 0; g < 31; g++)
       {
         passedGadgets[g] = false;
         hintedGadgets[g] = false;
@@ -223,7 +222,7 @@ void draw()
       t = new StopWatchTimer();
       totalSeconds = t.setStartTime(1, 30, 0);
       println("Connecting to Master: true");
-      for (int g = 0; g < 32; g++)
+      for (int g = 0; g < 31; g++)
       {
         passedGadgets[g] = false;
         hintedGadgets[g] = false;
@@ -248,7 +247,7 @@ void draw()
 
     //SEND TO BRIDGE
     boolean sendToBridge = false;
-    for (int i = 0; i < 32; i++)
+    for (int i = 0; i < 31; i++)
     {
       if (hintedGadgets[i] && !passedGadgets[i])
       {
@@ -266,7 +265,7 @@ void draw()
     {
       print("...sending to bridge...");
       arduino.write("CC");
-      for (int s = 0; s < 32; s++)
+      for (int s = 0; s < 31; s++)
       {
         arduino.write(passedGadgets[s]?"5":"1");
       }
@@ -314,27 +313,6 @@ void draw()
       float restartTextWid = textWidth("RESTART");
       fill(color(10, 10, 200));
       text("RESTART", scrW/2 - restartTextWid/2, scrH - marY - 10);
-      /*if (!prevMouseState && currMouseState)
-       {
-       if (allowTouch && mouseX > scrW/2 - (gadButW+gadVoiW)/2 && mouseX < scrW/2 + (gadButW+gadVoiW)/2 && mouseY > scrH - gadButH - marY && mouseY < scrH - marY)
-       {
-       allDone = false;
-       for (int c = 0; c < 15; c++) teamName[c] = ' ';
-       for (int g = 0; g < 32; g++)
-       {
-       passedGadgets[g] = false;
-       hintedGadgets[g] = false;
-       passedTimes[g] = 0;
-       lightUp = false;
-       }
-       t = new StopWatchTimer();
-       totalSeconds = t.setStartTime(1, 30, 0);
-       lastVoiceSend = totalSeconds;
-       arduino.write("ClearStates");//rewrite
-       //RESET GAME
-       }
-       }
-       */
     }
   } else // Enter params to enter the game
   {
