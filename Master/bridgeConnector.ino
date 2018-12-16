@@ -4,7 +4,6 @@ void getOperSkips()
   {
     byte input[31];
     byte inByte = Serial1.read();
-
     if (inByte == 0xBB)
     {
       Serial.print("Operator Skips Recieved:");

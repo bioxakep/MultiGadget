@@ -293,7 +293,6 @@ void Ghera1() // SHIELDS done
   }
 }
 
-
 void Fire()
 {
   if ((!digitalRead(firePin) || operGStates[fire]) && !passGStates[fire])     

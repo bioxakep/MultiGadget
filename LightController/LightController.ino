@@ -340,7 +340,7 @@ void loop() {
       digitalWrite(wind, windState);
     }
   }
-  int cristals = 0;
+  byte cristals = 0;
   for(int c = 0; c < 3; c++)
   {
     if(digitalRead(crystPins[c]) && !crystStates[c])
@@ -355,10 +355,10 @@ void loop() {
       
       //  with every crytal in place lets light up oknos, red for example, if 1  - 30% , if 2  - 60% and then all 100% red    
     }
-    analogWrite(oknoA_R, cristals*33);
-    analogWrite(oknoB_R, cristals*33);
-    analogWrite(oknoC_R, cristals*33);
   }
+  analogWrite(oknoA_R, cristals*33);
+  analogWrite(oknoB_R, cristals*33);
+  analogWrite(oknoC_R, cristals*33);
 }
 
 void lighAnimation() {

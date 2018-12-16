@@ -153,7 +153,8 @@ int vinemOUT = 36;
 
 //DIONIS
 byte dionis1 = 8;
-byte dionis2 = A9; //23;
+byte dionis2 = 22;
+
 int dioniIN  = 22;   //f.
 int dioniOUT = 34;
 int dioniHD1 = A5;   // piston
@@ -232,7 +233,7 @@ unsigned long flowerTimer = 0;
 unsigned long flowerDelay = 5550;
 
 //ARPHA
-byte arpha = 22;
+byte arpha = 23;
 int arphaHD  = A3; //A9;
 unsigned long arphaTimer = 0;
 unsigned long arphaDelay = 21000;
