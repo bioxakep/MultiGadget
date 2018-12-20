@@ -468,6 +468,7 @@ void Crystals()
       if (passGStates[crystals] || operGStates[crystals])
        {
         // mp3_play(10); //each one (1-2)
+         delay(100);
          mp3_play(11); // then all 3
   
          //level = 100;
