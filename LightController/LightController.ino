@@ -34,7 +34,7 @@ int mainLight = A2; //  main light in game, will turn on after ballon
 //int underLight = A7; //  (U light)relay to control underground lighting (not used in game but remotely by operator)
 int extraLight = A7;
 
-int crystPins[3] = {41,39,37}; // {23,25,27};
+int crystPins[3] = {41, 39, 37}; // {23,25,27};
 
 int flowerR   = 53;
 int flowerB   = 51;
@@ -106,7 +106,7 @@ void setup() {
   pinMode(mainLight,  OUTPUT);
 
   pinMode(turner,  INPUT_PULLUP);
-//  pinMode(freeInput,  INPUT_PULLUP);
+  //  pinMode(freeInput,  INPUT_PULLUP);
 
   digitalWrite(extraLight, HIGH);  // LOW = ON
   digitalWrite(mainLight,  HIGH);  // LOW = ON
@@ -120,10 +120,10 @@ void setup() {
 
   Serial.begin(9600);
 
-  for(int c = 0; c < 3; c++)
+  for (int c = 0; c < 3; c++)
   {
     pinMode(crystPins[c], INPUT_PULLUP);
-    Serial.println("Crystal "+String(c)+"  = " + String(digitalRead(crystPins[c])));
+    Serial.println("Crystal " + String(c) + "  = " + String(digitalRead(crystPins[c])));
   }
 
   Serial.println("\nLight Controller v1  \nSep_2018 - 01.dec.2018 - 13.DEC.2018");
@@ -133,19 +133,19 @@ void setup() {
 
   Serial.println("\nturner     = " + String(digitalRead(turner)));
 
-//  while (true) {
-//    testA();
-//  }
-  
-  
+  //  while (true) {
+  //    testA();
+  //  }
+
+
   randomSeed(A0);
 
   Serial.println("\nReady\n");
   setLightBri(250);
-//  analogWrite(dvor_W, 255-0);
-//  digitalWrite(dvor_R, HIGH);
-//  digitalWrite(dvor_G, HIGH);
-//  digitalWrite(dvor_B, HIGH);
+  //  analogWrite(dvor_W, 255-0);
+  //  digitalWrite(dvor_R, HIGH);
+  //  digitalWrite(dvor_G, HIGH);
+  //  digitalWrite(dvor_B, HIGH);
   delay(1000);
   digitalWrite(flowerR,    HIGH);
   digitalWrite(flowerB,    HIGH);
@@ -155,7 +155,7 @@ void setup() {
 }
 
 void loop() {
-  
+
   if (moonSun)
   {
     // считаем число замыканий, делим на 3. если счетчик увеличился
@@ -185,18 +185,18 @@ void loop() {
         int currCol = currPosInds[(p + dir) % 4] - 1; // dir - текущее направление (N,E,W,S), currCol - цвет для конкретного окна в текщем направлении.
         int prevCol = currPosInds[(p + dir - 1) % 4] - 1; // Для будущего написания плавности, цвет для конкретного окна в предыдущем направлении.
 
-        Serial.print(String(places[p]) + " is " + String(colors[currCol+1]));
+        Serial.print(String(places[p]) + " is " + String(colors[currCol + 1]));
         // currCol in (-1,0,1)
         // prevCol in (-1,0,1)
         if (prevCol > currCol) // prev = 0|1, curr = -1, not else
         {
-          if (p < 3) for (int r = 255; r > 0; r = r - lStep) analogWrite(colorPins[p][prevCol], max(r,0)); //light-down prevColorPin in window "p"
-          else for (int r = 0; r < 255; r = r + lStep) analogWrite(colorPins[p][prevCol], min(r,255)); 
+          if (p < 3) for (int r = 255; r > 0; r = r - lStep) analogWrite(colorPins[p][prevCol], max(r, 0)); //light-down prevColorPin in window "p"
+          else for (int r = 0; r < 255; r = r + lStep) analogWrite(colorPins[p][prevCol], min(r, 255));
         }
         else // curr = 0|1, prev = -1, not else
         {
-          if (p < 3) for (int r = 0; r < 255; r = r + lStep) analogWrite(colorPins[p][currCol], min(r,255)); //light-Up currColorPin in window "p"
-          else for (int r = 255; r > 0; r = r - lStep) analogWrite(colorPins[p][currCol], max(r,0)); 
+          if (p < 3) for (int r = 0; r < 255; r = r + lStep) analogWrite(colorPins[p][currCol], min(r, 255)); //light-Up currColorPin in window "p"
+          else for (int r = 255; r > 0; r = r - lStep) analogWrite(colorPins[p][currCol], max(r, 0));
         }
       }
       //Flowers Control
@@ -206,27 +206,27 @@ void loop() {
       Serial.println(", FloweR is " + String(dir == 2));
     }
   } // eof_moonSun
-  
-//-------------------------------------------------------------------------------------------
 
-  if (command > 0) Serial.println("Command = " + String(command,HEX));
-  
-  if (command == 0x10) // PreStart 
-  {  
+  //-------------------------------------------------------------------------------------------
+
+  if (command > 0) Serial.println("Command = " + String(command, HEX));
+
+  if (command == 0x10) // PreStart
+  {
     digitalWrite(wind,    HIGH);
-    digitalWrite(flowerR, LOW); 
+    digitalWrite(flowerR, LOW);
     delay(500);
     digitalWrite(flowerB, LOW);
     digitalWrite(wind,    LOW);
     command = 0;
-    
+
   }
-  else if (command == 0x11) // main start 
-  {  
+  else if (command == 0x11) // main start
+  {
     setLightBri(0); // Выключить весь свет
     randomWind = true;
     digitalWrite(mainLight, HIGH); // HIGH = turn off all the light
-    digitalWrite(extraLight,HIGH); // OFF
+    digitalWrite(extraLight, HIGH); // OFF
     shiftPic();  // move son-moon to black screen
     command = 0;
   }
@@ -235,93 +235,91 @@ void loop() {
     randomWind = false;
     windState = false;
     digitalWrite(wind, windState);
-    digitalWrite(mainLight,  LOW);  //ON 
+    digitalWrite(mainLight,  LOW);  //ON
     digitalWrite(extraLight, HIGH); //OFF
- 
+
     analogWrite(dvor_W, 125);
     analogWrite(dvor_R, 125);
     analogWrite(dvor_G, 125);
     analogWrite(dvor_B, 125);
 
-   command = 0;
+    command = 0;
   }
-  else if(command == 0x14)  // turn ALL light on
+  else if (command == 0x14) // turn ALL light on
   {
     shiftPic();  // lightup the world
     lightTimer = millis();
     lightDelay = 155000;
-    setLightBri(225); 
+    setLightBri(225);
     command = 0;
   }
-  else if(command == 0x23)      // dim the light while Ghera speaks after Thunder
+  else if (command == 0x23)     // dim the light while Ghera speaks after Thunder
   {
     lightTimer = millis();
     lightDelay = 68000;
     digitalWrite(extraLight, HIGH); //OFF
-    setLightBri(10); 
+    setLightBri(10);
     command = 0;
   }
-  else if(command == 0x30)      // dim the light while Ghera speaks after Shields done
+  else if (command == 0x30)     // dim the light while Ghera speaks after Shields done
   {
     lightTimer = millis();
     lightDelay = 90000;
     digitalWrite(extraLight, HIGH);
-    setLightBri(20); 
-   command = 0;
+    setLightBri(20);
+    command = 0;
   }
-  else if(command == 0x31)     // wind for 10-15 secs
+  else if (command == 0x31)    // wind for 10-15 secs
   {
     startWind = millis();
     windState = true;
     digitalWrite(wind, windState);
-   command = 0;
+    command = 0;
   }
-  else if(command == 0x41)      // moon-sun level
+  else if (command == 0x41)     // moon-sun level
   {
-    setLightBri(0); 
+    setLightBri(0);
     moonSun = true;
     shiftPic();  // start sun-moon show
-    digitalWrite(extraLight,HIGH); //dark the room
+    digitalWrite(extraLight, HIGH); //dark the room
     delay(200);
     analogWrite(oknoA_B, 150);
     analogWrite(oknoC_R, 150);
-   command = 0;
+    command = 0;
   }
-  else if(command == 0x42)  // after moon-sun ended
+  else if (command == 0x42) // after moon-sun ended
   {
     // wind for 10-15 secs
     moonSun = false;
-    setLightBri(0); 
+    setLightBri(0);
     lightTimer = millis();
     lightDelay = 4000;
     digitalWrite(flowerB, LOW);
     digitalWrite(flowerR, LOW);
-   command = 0;
+    command = 0;
   }
-  else if(command == 0x45)     // dim the light while Ghera speaks after Seals done
+  else if (command == 0x45)    // dim the light while Ghera speaks after Seals done
   {
     lightTimer = millis();
     lightDelay = 39000;
-    digitalWrite(extraLight,HIGH); //dark the room
+    digitalWrite(extraLight, HIGH); //dark the room
     setLightBri(25); // okna 50 % all
     command = 0;
   }
-  else if(command == 0x55)  // crystals ! lets change the light for this level
+  else if (command == 0x55) // crystals ! lets change the light for this level
   {
-
-
-// lighAnimation();  call LIGHT ANIMATION SCRIPT  !!!!
-
-  //temporal light while animation is missing
-   digitalWrite(extraLight,LOW); //light up the room
-   setLightBri(255); // okna 50 % all
-   command = 0;
+    // lighAnimation();  call LIGHT ANIMATION SCRIPT  !!!!
+    
+    //temporal light while animation is missing
+    digitalWrite(extraLight, LOW); //light up the room
+    setLightBri(255); // okna 50 % all
+    command = 0;
   }
 
-//---------------------------------------------------------------------------------------//
+  //---------------------------------------------------------------------------------------//
 
   //turn the room light off while Ghera speaks (time varies depend on level) sun-mooonshould disable auto on light
-  if (lightTimer > 0) {   
+  if (lightTimer > 0) {
     if ((lightDelay + lightTimer) > millis()) {
       digitalWrite(extraLight, HIGH); //OFF
     } else {
@@ -330,7 +328,7 @@ void loop() {
       setLightBri(155); // okna after speak
     }
   }
-  
+
   if (randomWind) randWind();
   else if (windState) // for stop wind after comand 0x80
   {
@@ -340,31 +338,30 @@ void loop() {
       digitalWrite(wind, windState);
     }
   }
+
   byte cristals = 0;
-  for(int c = 0; c < 3; c++)
+  for (int c = 0; c < 3; c++)
   {
-    if(digitalRead(crystPins[c]) && !crystStates[c])
+    if (!digitalRead(crystPins[c]) && !crystStates[c])
     {
       delay(10);
-      if(digitalRead(crystPins[c])) {
-        crystStates[c] = true; 
+      if (!digitalRead(crystPins[c])) {
+        crystStates[c] = true;
         cristals++;
-        } else {
-          crystStates[c] = false;
-        }
-      
-      //  with every crytal in place lets light up oknos, red for example, if 1  - 30% , if 2  - 60% and then all 100% red    
+      } else {
+        crystStates[c] = false;
+      }
+      //  with every crytal in place lets light up oknos, red for example, if 1  - 30% , if 2  - 60% and then all 100% red
     }
   }
-  analogWrite(oknoA_R, cristals*33);
-  analogWrite(oknoB_R, cristals*33);
-  analogWrite(oknoC_R, cristals*33);
+  analogWrite(oknoA_R, cristals * 75);
+  analogWrite(oknoB_R, cristals * 75);
+  analogWrite(oknoC_R, cristals * 75);
 }
 
 void lighAnimation() {
   // LIGHT ANIMATION SCRIPT HERE  -- ENDING __ synced with sound from master !!!!
 }
-
 
 void receiveEvent(int howMany)
 {
@@ -380,76 +377,76 @@ void requestEvent()
   byte ans = 0x00;
   for (int i = 0; i < 3; i++)
   {
-    if (crystStates[i]) ans |= (1 << i*2);
+    if (crystStates[i]) ans |= (1 << i * 2);
   }
   Wire.write(ans);
 }
 
-  /*
+/*
 
-    bigKey = 1
-    West  = 2
-    South = 3                              1 2 3 4
-    East  = 4                              N W S E
-    //if command == North >   oknoA = blue 1 0 2 0
-    //                        oknoB = dark 0 1 0 2
-    //                        oknoC = red  2 0 1 0
-    //                        dvor  = dark 0 2 0 1
-    //                        flowerB = OFF
+  bigKey = 1
+  West  = 2
+  South = 3                              1 2 3 4
+  East  = 4                              N W S E
+  //if command == North >   oknoA = blue 1 0 2 0
+  //                        oknoB = dark 0 1 0 2
+  //                        oknoC = red  2 0 1 0
+  //                        dvor  = dark 0 2 0 1
+  //                        flowerB = OFF
 
-    //if command == West  >   oknoA = dark 0
-    //                        oknoB = blue 1
-    //                        oknoC = dark 0
-    //                        dvor  = red  2
-    //                        flowerR = ON
-
-    //if command == South >   oknoA = red  2
-    //                        oknoB = dark 0
-    //                        oknoC = blue 1
-    //                        dvor  = dark 0
-    //                        flowerR = OFF
-
-    //if command == East  >   oknoA = dark 0
-    //                        oknoB = red  2
-    //                        oknoC = dark 0
-    //                        dvor  = blue 1
-    //                        flowerB = ON
-  */
-  // wait for command from master via i2c (most commands to control oknoX cames from World (thru Master I think)
-
-  //if command == windRandom > turn on wind randomly until command windStop is recieved from master
-  //if command == windStop   > stop the wind
-  //if command == windBlow   > execute sequence wind_is_blowing for 10 seconds
-  //
-  //if command == light_dark > turn all light off
-  //if command == light_bright > turn all light on
-  //
-  //if command == light_green  > turn all green lights on, everything else is off
-  //
-  //if command == under > toggle underlight on/off
-  //
-  //if command == north >   oknoA = blue
-  //                        oknoB = dark
-  //                        oknoC = red
-  //                        dvor  = dark
-  //
-  //if command == west  >   oknoA = dark
-  //                        oknoB = blue
-  //                        oknoC = dark
-  //                        dvor  = red
+  //if command == West  >   oknoA = dark 0
+  //                        oknoB = blue 1
+  //                        oknoC = dark 0
+  //                        dvor  = red  2
   //                        flowerR = ON
 
-  //if command == south >   oknoA = red
-  //                        oknoB = dark
-  //                        oknoC = blue
-  //                        dvor  = dark
-  //
-  //if command == east  >   oknoA = dark
-  //                        oknoB = red
-  //                        oknoC = dark
-  //                        dvor  = blue
-  //                        flowerB = ON
+  //if command == South >   oknoA = red  2
+  //                        oknoB = dark 0
+  //                        oknoC = blue 1
+  //                        dvor  = dark 0
+  //                        flowerR = OFF
 
-  // final part of the game ---CRYSTALS---
-  //if (!digitalRead(cryst1) && !digitalRead(cryst2) && !digitalRead(cryst3)) send command crystDone to master (GAME OVER)
-  // OBSOLETE
+  //if command == East  >   oknoA = dark 0
+  //                        oknoB = red  2
+  //                        oknoC = dark 0
+  //                        dvor  = blue 1
+  //                        flowerB = ON
+*/
+// wait for command from master via i2c (most commands to control oknoX cames from World (thru Master I think)
+
+//if command == windRandom > turn on wind randomly until command windStop is recieved from master
+//if command == windStop   > stop the wind
+//if command == windBlow   > execute sequence wind_is_blowing for 10 seconds
+//
+//if command == light_dark > turn all light off
+//if command == light_bright > turn all light on
+//
+//if command == light_green  > turn all green lights on, everything else is off
+//
+//if command == under > toggle underlight on/off
+//
+//if command == north >   oknoA = blue
+//                        oknoB = dark
+//                        oknoC = red
+//                        dvor  = dark
+//
+//if command == west  >   oknoA = dark
+//                        oknoB = blue
+//                        oknoC = dark
+//                        dvor  = red
+//                        flowerR = ON
+
+//if command == south >   oknoA = red
+//                        oknoB = dark
+//                        oknoC = blue
+//                        dvor  = dark
+//
+//if command == east  >   oknoA = dark
+//                        oknoB = red
+//                        oknoC = dark
+//                        dvor  = blue
+//                        flowerB = ON
+
+// final part of the game ---CRYSTALS---
+//if (!digitalRead(cryst1) && !digitalRead(cryst2) && !digitalRead(cryst3)) send command crystDone to master (GAME OVER)
+// OBSOLETE
