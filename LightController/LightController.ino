@@ -206,6 +206,28 @@ void loop() {
       Serial.println(", FloweR is " + String(dir == 2));
     }
   } // eof_moonSun
+  else
+  {
+    byte cristals = 0;
+    for (int c = 0; c < 3; c++)
+    {
+      if (!digitalRead(crystPins[c]) && !crystStates[c])
+      {
+        delay(10);
+        if (!digitalRead(crystPins[c])) {
+          crystStates[c] = true;
+          cristals++;
+        } else {
+          crystStates[c] = false;
+        }
+        //  with every crytal in place lets light up oknos, red for example, if 1  - 30% , if 2  - 60% and then all 100% red
+      }
+    }
+    analogWrite(oknoA_R, cristals * 75);
+    analogWrite(oknoB_R, cristals * 75);
+    analogWrite(oknoC_R, cristals * 75);
+  }
+
 
   //-------------------------------------------------------------------------------------------
 
@@ -309,7 +331,7 @@ void loop() {
   else if (command == 0x55) // crystals ! lets change the light for this level
   {
     // lighAnimation();  call LIGHT ANIMATION SCRIPT  !!!!
-    
+
     //temporal light while animation is missing
     digitalWrite(extraLight, LOW); //light up the room
     setLightBri(255); // okna 50 % all
@@ -339,24 +361,7 @@ void loop() {
     }
   }
 
-  byte cristals = 0;
-  for (int c = 0; c < 3; c++)
-  {
-    if (!digitalRead(crystPins[c]) && !crystStates[c])
-    {
-      delay(10);
-      if (!digitalRead(crystPins[c])) {
-        crystStates[c] = true;
-        cristals++;
-      } else {
-        crystStates[c] = false;
-      }
-      //  with every crytal in place lets light up oknos, red for example, if 1  - 30% , if 2  - 60% and then all 100% red
-    }
-  }
-  analogWrite(oknoA_R, cristals * 75);
-  analogWrite(oknoB_R, cristals * 75);
-  analogWrite(oknoC_R, cristals * 75);
+
 }
 
 void lighAnimation() {
