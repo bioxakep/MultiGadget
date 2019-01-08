@@ -72,7 +72,7 @@ String places[4] = {"OknoA", "OknoB", "OknoC", "Dvor"};
 String colors[3] = {"BLK", "BLU", "RED"};
 int lStep = 10;
 long turnMoment = 0;
-bool moonSun = true; // TEST
+//bool moonSun = true; // TEST
 
 long lightTimer = 0;
 long lightDelay = 0;
@@ -221,6 +221,10 @@ void loop() {
           crystStates[c] = false;
         }
         //  with every crytal in place lets light up oknos, red for example, if 1  - 30% , if 2  - 60% and then all 100% red
+      }
+      else
+      {
+        crystStates[c] = false;
       }
     }
     analogWrite(oknoA_R, cristals * 75);
