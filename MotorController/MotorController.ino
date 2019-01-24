@@ -1,4 +1,4 @@
-// Motor Comtroller v1  - 12.DEC.2018 12:50pm
+// Motor Comtroller v1  - 12.DEC.2018 12:50pm - 8.JAN.2019
 // 13 AGO 2018
 // 21 AGO 2018 adjusted - I2C enabled - xBee deleted
 // 12 sep 2018 remote control temp sequence created, auto column and auto grape tested
@@ -9,7 +9,7 @@
 //  5 DEC 2018 remote shifted,  cloud included
 //  7 DEC 2018 remote turned OFF permanently
 // 11 dec 2018  adjusted timing
-
+// 17 dec 2018  adjusted timing
 #include "Wire.h" // I2C
 #include <DFPlayer_Mini_Mp3.h>
 
@@ -133,7 +133,7 @@ void setup() {
   pinMode(poseiValv,  OUTPUT);
   pinMode(poseiLock,  OUTPUT);
 
-  digitalWrite(gateUP,     LOW);
+  digitalWrite(gateUP,     HIGH);
 
   digitalWrite(megaColumn,  LOW);
 
@@ -161,7 +161,7 @@ void setup() {
   digitalWrite(poseiPump,   LOW);
   digitalWrite(poseiLock,   LOW);   // lock the cover of the vault while if full of water
 
-  Serial.println("Motor Controller \n21_AGO_2018 - - 12.DEC.2018 12:50pm \nHardware  = Mega\n");
+  Serial.println("Motor Controller \n21_AGO_2018 - - 12.DEC.2018 12:50pm - 8.JAN.2019 \nHardware  = Mega\n");
   checkInputs();
   digitalWrite(led, LOW);
   Serial.println("\nReady.");
@@ -202,18 +202,20 @@ void loop() {
     }
 
 
-// remoteControl();
+ remoteControl();
 
   // receives command from master via i2c
   if (command == 0x10) 
   { 
     Serial.println("Initial command from master , at first START...");
   // megaColumnUpCom();
+  // digitalWrite(gateUP,LOW);
    grapeUpCom();
    columnDownCom();
    curtainDownCom();
    //cloudUpCom();
    // lock all locks
+   digitalWrite(gateUP,LOW);
     Serial.println("Initialize command Done.");
     mp3_play(999);
    command = 0;

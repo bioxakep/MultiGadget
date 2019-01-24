@@ -1,4 +1,4 @@
-// 30.OCT.2018  - 31.OCT.2018 - 11.DEC.2018 - 12.DEC.2018 12:50pm
+// 30.OCT.2018  - 31.OCT.2018 - 11.DEC.2018 - 12.DEC.2018 12:50pm - 15.JAN.2019 - 23.JAN.2013 (hercules lock changed)
 // Rewrote Connection
 // 27.nov.2018 crystalRec removed (now located on light controller as bigKey)
 // 28 .nov.2018 voicePin reversed
@@ -57,44 +57,47 @@ byte voiceHintStates[32];
   6 Rain 0x22 motor
   7 Vine
   8 Dionis-1
-  9 Hercules
-  10 Narcis
-  11 Thunder
+  9 Narcis
+  10 Thunder
 
   SHIELDS (cmds 0x3x)
-  12 Afina-1
-  13 Afina-2
-  14 Time
-  15 Octopus
-  16 Note
-  17 Wind  0x31 both
-  18 Ghera-1
+  11 Afina-1
+  12 Afina-2
+  13 Time
+  14 Octopus
+  15 Note
+  16 Wind  0x31 both
+  17 Ghera-1
 
   SEALS (cmds 0x4x)
-  19 Fire 0x41 light turner
-  20 Flower-1
-  21 Flower-2 0x42 turner off
-  22 Dionis-2
-  23 Arpha
-  24 Ghera-2
+  18 Fire 0x41 light turner
+  19 Flower-1
+  20 Flower-2 0x42 turner off
+  21 Dionis-2
+  22 Ghera-2
 
   UNDERGROUND (cmds 0x5x)
-  25 Under (RFID wait) 0x51 motor
-  26 Zodiak
-  27 Minot
-  28 Gorgona
-  29 Crystals 0x55 light, 0x99 motor
-  30 Light
+  23 BigKey
+  24 Under (RFID wait) 0x51 motor
+  25 Minot
+  26 Gorgona
+  27 Crystals 0x55 light, 0x99 motor
+  28 Octopus-2
 
+  BONUS
+  29 Hercules
+  30 Arpha
+  31 Zodiak
+  
   END (cmds 0x6x)
-  31 WIN
+  32 WIN
 */
 String gadgetNames[32] = {"Baloon    ", "Press    ", "Gate     ",
                           "Poseidon  ", "Trident  ", "Demetra-1", "Rain     ", "Vine     ", "Dionis-1 ", "Narcis   ", "Thunder  ",
                           "Afina-1   ", "Afina-2  ", "Time     ", "Octopus  ", "Note     ", "Wind     ", "Ghera-1  ",
                           "Fire      ", "Flower-1 ", "Flower-2 ", "Dionis-2 ", "Ghera-2  ",
-                          "BigKey    ", "Under    ", "Minot    ", "Gorgona  ", "Cristals ", "Octopus  "
-                          "Hercules ", "Arpha    ", "Zodiak   "
+                          "BigKey    ", "Under    ", "Minot    ", "Gorgona  ", "Cristals ",
+                           "Hercules ", "Arpha    ", "Zodiak   "
                          };
 //Voice pin
 int voicePin = 6;     // HIGH then pressed, normally LOW
@@ -130,7 +133,7 @@ int poseiHD = 21; // CHOOSE PIN
 //TRIDENT
 byte trident = 4;
 unsigned long tridentTimer = 0;
-unsigned long tridentDelay = 5000;
+unsigned long tridentDelay = 3000;  // was 5000  chgd - 15 jan 2019
 boolean tridentWait = true;
 
 //DEMETRA
@@ -163,8 +166,6 @@ int dioniHD2 = A9;   // safe
 unsigned long dioni1Timer = 0;
 unsigned long dioni2Timer = 0;
 unsigned long dioni2Delay = 3000;
-
-
 
 //NARCIS
 byte narcis  = 9;
@@ -261,23 +262,24 @@ boolean crystDone = false;
 boolean crystReciever = false;
 byte cristCount = 0;
 
+// OCTOPUS-2
+byte octopus2 = 28;
+// ===== BONUS ====== //
 //HERCULES
-byte hercul  = 28;
+byte hercul  = 29;
 int hercuIN  = 7;
 int hercuHD  = A4;
 
 //ARPHA
-byte arpha = 29;
+byte arpha = 30;
 int arphaHD  = A3; //A9;
 unsigned long arphaTimer = 0;
 unsigned long arphaDelay = 21000;
 
 //ZODIAK
-byte zodiak = 30;
+byte zodiak = 31;
 int zodiaIN  = 5;
 int zodiaHD  = A11;
-
-byte octopus2 = 31;
 
 byte win = 32;
 
@@ -308,7 +310,7 @@ void setup()
   Serial3.begin(9600);  //RS-485 to Bridge
   delay(10);
   Serial.println("SKY Master v2.1");
-  Serial.println("30 OCT 2018   - - 12.DEC.2018 6:59pm");
+  Serial.println("30 OCT 2018   - - 12.DEC.2018 6:59pm - 8.JAN.2018 afterCrash - 15.JAN.2019 morning");
   Serial.println("RS485 Started.");
   pinSetup(); //from pinWorker
 
@@ -380,6 +382,7 @@ void loop()
   }
 
   getOperSkips();
+  
   if (level == 10) Start(); // Start button pressing 2 times wait
   else if (level == 12) Baloon(); //#0 if players never finish ballon, operator can skip it here (send signal to ballon)
   else if (level == 13) Press(); //#1 if players never finish press, operator can skip it here (send signal to press)
@@ -416,58 +419,57 @@ void loop()
       Rain();//#6
       Vine();//#7
       Dionis1();//#8
-      Hercules();//#9
-      Narcis();//#10
-      Thunder();//#11
+      Narcis();//#9
+      Thunder();//#10
     }
     // ==================================== SHIELDS ==================================
     if (!shieldDone)
     {
-      Afina1();//#12
+      Afina1();//#11
       if (afinaTimer > 0 && ((millis() - afinaTimer) > afinaHDdelay))
       {
         digitalWrite(afinaHD1, LOW);
         afinaTimer = 0;
       }
-      Afina2();//#13
-      TimeG();//#14
-      Octopus();//#15
-      Note();//#16
+      Afina2();//#12
+      TimeG();//#13
+      Octopus();//#14
+      Note();//#15
       if (noteTimer > 0 && ( (millis() - noteTimer) > noteHDDelay) )
       {
         noteTimer = 0;
         digitalWrite(noteHD, LOW); // here note open wind box gives players wind power
       }
-      Wind();//#17
-      Ghera1();//#18
+      Wind();//#16
+      Ghera1();//#17
     }
 
     // ==================================== SEALS ==================================
     if (!sealsDone)
     {
-      Fire();//#19
-      Flower1();//#20
-      Flower2();//#21
+      Fire();//#18
+      Flower1();//#19
+      Flower2();//#20
       if (flowerTimer > 0 && ((millis() - flowerTimer) > flowerDelay))
       {
         flowerTimer = 0;
         digitalWrite(flowrHD, LOW); // players get seal 1
       }
-      Dionis2();//#22
-      Arpha();//#23
+      Dionis2();//#21
+      
       if (arphaTimer > 0 && ((millis() - arphaTimer) > arphaDelay))
       {
         arphaTimer = 0;
         digitalWrite(arphaHD, LOW);  // give players seal 3
       }
-      Ghera2();//#24
+      Ghera2();//#22
       /*
-         String gadgetNames[32] = {0 "Baloon", 1 "Press", 2 "Gate",
-                          3 "Poseidon", 4 "Trident", 5 "Demetra-1", 6 "Rain", 7 "Vine", 8 "Dionis-1", 9 "Hercules”, 10 “Narcis", 11 "Thunder",
-                          12 "Afina-1", 13 "Afina-2", 14 "Time", 15 "Octopus", 16 "Note", 17 "Wind", 18 "Ghera-1",
-                          19 "Fire", 20 "Flower-1", 21 "Flower-2", 22 "Arpha", 23 "Dionis-2", 24 "Ghera-2",
-                          25 "Under",26 "Zodiak", 27 "Minot", 28 "Gorgona", 29 "Cristals", 30 "Light",
-                          31 "End"
+         gadgetNames[32] = {"Baloon    ", "Press    ", "Gate     ",
+                          "Poseidon  ", "Trident  ", "Demetra-1", "Rain     ", "Vine     ", "Dionis-1 ", "Narcis   ", "Thunder  ",
+                          "Afina-1   ", "Afina-2  ", "Time     ", "Octopus  ", "Note     ", "Wind     ", "Ghera-1  ",
+                          "Fire      ", "Flower-1 ", "Flower-2 ", "Dionis-2 ", "Ghera-2  ",
+                          "BigKey    ", "Under    ", "Minot    ", "Gorgona  ", "Cristals ",
+                           "Hercules ", "Arpha    ", "Zodiak   "
                          };
       */
     }
@@ -475,12 +477,11 @@ void loop()
     if (!passGStates[crystals] && sealsDone)
     { // underground level
       //OPEN UNDER
-      BigKey();
-      if (underRFWait) Underground();//#25
+      BigKey(); //#23
+      if (underRFWait) Underground();//#24
       else
       {
-        Zodiak();//#26
-        Minotavr();//#27
+        Minotavr();//#25
         if (minotTimer > 0 && ((millis() - minotTimer) > minotDelay))
         {
           minotTimer = 0;
@@ -489,17 +490,17 @@ void loop()
           digitalWrite(minotHD, LOW);
         }
 
-        Gorgona();//#28
-        Crystals();//#29
+        Gorgona();//#26
+        Crystals();//#27
+        Octopus2();//#28
       }
       if (millis() % 30000 == 0) openOpened();  // open (and re-open if closed) underground locks
     } // eof_cristals
-
-    if(passGStates[crystals])
-    {
-      Octopus2(); // wait 3 elements from zodiak, arpha, hercules
-    }
   } // eof.level_50
+  
+  Hercules();//#29
+  Arpha();//#30
+  Zodiak();//#31
 
   if (level == 100)
   {
@@ -520,6 +521,8 @@ void loop()
   voiceStates[1] = voiceStates[0];
   startStates[1] = startStates[0];
 } // LOOP END
+
+
 
 
 void sendToSlave(int address, byte data)
@@ -572,5 +575,5 @@ void playVoice(byte vhi)
   mp3_set_serial(Serial);
   delay(20);
 
-  voiceHintStates[vhi] = (voiceHintStates[vhi] + 1) % 3;
+  voiceHintStates[vhi] = (voiceHintStates[vhi] + 1) % 2;
 }

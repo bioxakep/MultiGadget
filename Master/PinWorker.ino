@@ -7,7 +7,7 @@ void openLocks() {
   digitalWrite(dioniOUT, LOW);
   digitalWrite(dioniHD1, HIGH);  // HIGH to OPEN
   digitalWrite(dioniHD2, LOW);
-  digitalWrite(hercuHD,  HIGH);
+  digitalWrite(hercuHD,  LOW);
   digitalWrite(thundOUT, LOW);
   digitalWrite(poseiOUT, LOW);
   digitalWrite(narciOUT, LOW);
@@ -45,7 +45,7 @@ void closeLocks() {
   digitalWrite(dioniOUT, LOW);
   digitalWrite(dioniHD1, LOW);
   digitalWrite(dioniHD2, HIGH);
-  digitalWrite(hercuHD,  LOW);
+  digitalWrite(hercuHD,  HIGH);
   digitalWrite(thundOUT, LOW);
   digitalWrite(poseiOUT, LOW);
   digitalWrite(narciOUT, LOW);
@@ -211,9 +211,6 @@ void pinSetup()
   digitalWrite(SSerialTxControl, LOW);  // Init Recieve RS485
 }
 
-void openHercuHD()
-{
-  digitalWrite(hercuHD,HIGH);
-  delay(180);
+void openHercuHD(){
   digitalWrite(hercuHD,LOW);
 }

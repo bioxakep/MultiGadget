@@ -2,19 +2,19 @@ void megaColumnUpCom(){
    digitalWrite(megaColumn, HIGH);
    delay(30);
    digitalWrite(megaColumn, LOW);
-   delay(1500);
+   delay(300);
    digitalWrite(megaColumn, HIGH);
    delay(40);
    digitalWrite(megaColumn, LOW);
-   delay(2000);
-   digitalWrite(megaColumn, HIGH);
-   delay(50);
-   digitalWrite(megaColumn, LOW);
-   delay(2500);
-   digitalWrite(megaColumn, HIGH);
-   delay(60);
-   digitalWrite(megaColumn, LOW);
-   delay(3000);
+   delay(500);
+//   digitalWrite(megaColumn, HIGH);
+//   delay(50);
+//   digitalWrite(megaColumn, LOW);
+//   delay(2500);
+//   digitalWrite(megaColumn, HIGH);
+//   delay(60);
+//   digitalWrite(megaColumn, LOW);
+//   delay(3000);
    digitalWrite(megaColumn, HIGH);
 
 }
@@ -22,9 +22,9 @@ void megaColumnUpCom(){
 void curtainDownCom() {
  long startTime = millis();
 
-  while ( startTime + 10000 > millis() ) {
+  while ( startTime + 120000 > millis() ) {
    digitalWrite(curtain2DN, LOW);
-     if ( startTime +5000 > millis() ) digitalWrite(curtain1DN, LOW); else digitalWrite(curtain1DN, HIGH);
+     if ( startTime +44000 > millis() ) digitalWrite(curtain1DN, LOW); else digitalWrite(curtain1DN, HIGH);
      if ( startTime  +800 > millis() )  {
         if ( digitalRead(curtain1TOP)) digitalWrite(curtain1DN, HIGH);
         if (!digitalRead(curtain2TOP)) digitalWrite(curtain2DN, HIGH);
@@ -79,7 +79,7 @@ void cloudUpCom() {         //  send the cloud to the sky
 void cloudDownCom() {       // start move cloud to the bottom if its on top
   if (cloudOnTop == true ) {
     digitalWrite(cloudDN, LOW);
-    Serial.println("cloud is movin Down ...");
+    Serial.println("cloud is moving down ...");
     cloudTimer = millis();
   }
 }
@@ -193,26 +193,37 @@ void checkInputs() {
 void remoteControl() {
 
 if (digitalRead(remote3) == LOW ){
-megaColumnUpCom();
-//grapeUpCom();
-}
+//      digitalWrite(curtain2UP, LOW); 
+//megaColumnUpCom();
+grapeUpCom();
+} //else       digitalWrite(curtain2UP, HIGH); 
+
 
 if (digitalRead(remote1) == LOW ){
-digitalWrite(megaColumn, LOW);
-// grapeDownCom();
-}
+
+//digitalWrite(curtain2DN, LOW); 
+//digitalWrite(megaColumn, LOW);
+ grapeDownCom();
+} //else       digitalWrite(curtain2DN, HIGH); 
+
 
 if (digitalRead(remote4) == LOW ){
+      digitalWrite(curtain1UP, LOW); 
+
 //   cloudUpCom();
-   digitalWrite(cloudUP, LOW);
+//   digitalWrite(cloudUP, LOW);
     Serial.println("\nRemote control UP");
 
- } else  digitalWrite(cloudUP, HIGH);
+ } else        digitalWrite(curtain1UP, HIGH); 
+
  
 if (digitalRead(remote2) == LOW ){
+      digitalWrite(curtain1DN, LOW); 
+ 
    //cloudDownCom();
-   digitalWrite(cloudDN, LOW);
+   //digitalWrite(cloudDN, LOW);
     Serial.println("\nRemote control DOWN");
- } else digitalWrite(cloudDN, HIGH);
+ } else       digitalWrite(curtain1DN, HIGH); 
+//digitalWrite(cloudDN, HIGH);
 
 }

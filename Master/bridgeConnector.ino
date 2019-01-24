@@ -2,13 +2,13 @@ void getOperSkips()
 {
   if (Serial1.available() > 0)
   {
-    byte input[31];
+    byte input[32];
     byte inByte = Serial1.read();
     if (inByte == 0xBB)
     {
       Serial.print("Operator Skips Recieved:");
       delay(350);
-      for (int i = 0; i < 31; i++)
+      for (int i = 0; i < 32; i++)
       {
         input[i] = Serial1.read();
         if (input[i] > 0x03) operGStates[i] = true;
@@ -33,7 +33,7 @@ void getOperSkips()
       delay(50);
       byte voiceHintIndex = Serial1.read();
       Serial.println("Recieved voiceHint# "+String(voiceHintIndex,HEX));
-      if(voiceHintIndex >= 0 && voiceHintIndex < 33)
+      if(voiceHintIndex >= 0 && voiceHintIndex < 34)
       {
         Serial.println("Voice hint of gadget " + String(voiceHintIndex) + " number "+ String(voiceHintStates[voiceHintIndex]) + " started");
         mp3_set_serial(Serial3);
@@ -60,7 +60,7 @@ void sendGStates() // Проверяем прошел ли игрок какой
 {
   byte chkSum = 0;
   boolean needSend = false;
-  for (int s = 0; s < 31; s++)
+  for (int s = 0; s < 32; s++)
   {
     if (passGStates[s] && !operGStates[s])
     {
@@ -74,7 +74,7 @@ void sendGStates() // Проверяем прошел ли игрок какой
     Serial.print("Send States to Operator: ");
     Serial1.write(0xAA);
     delay(10);
-    for (int d = 0; d < 31; d++)
+    for (int d = 0; d < 32; d++)
     {
       if (passGStates[d]) Serial1.write(0x05);
       else Serial1.write(0x01);

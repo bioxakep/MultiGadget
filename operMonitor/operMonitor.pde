@@ -63,6 +63,7 @@ int timerHours = 0;
 int timerMinutes = 0;  
 int timerSeconds = 0;
 long totalSeconds = 0;
+long doneTime = 0;
 long lastVoiceSend = 0;
 int startScores = 10000;
 int currScores = 10000;
@@ -98,8 +99,8 @@ void setup()
   timerY = scrH - marY;
 
   t = new StopWatchTimer();
-  totalSeconds = t.setStartTime(1, 10, 0);
-  //arduinoConnect();
+  totalSeconds = t.setStartTime(1, 30, 0);
+  arduinoConnect();
   lastVoiceSend = totalSeconds;
   for (int g = 0; g < 32; g++)
   {
@@ -141,6 +142,16 @@ void draw()
       textFont(topFont, timerH * 0.35);
       fill(textCol);
       text(levelNames[lev], marX, marY + gadMarY*(lev+1) + gadButH*lev - 2); // LEVEL NAME
+      if (lev == 4 && doneTime > 0)
+      {
+        //print time
+        String dTime = "GAME DONE AT: " + getTime(hours(elpsTime), minutes(elpsTime), seconds(elpsTime));
+        textFont(timerFont, timerH/4);
+        float tTextW = textWidth(dTime);
+        fill(textCol);
+        text(dTime, marX + (levGadCount[lev]) * (gadMarX + gadButW + gadVoiW) - gadMarX - tTextW, marY + gadMarY*(lev+1) + gadButH*lev - 2);
+        textFont(timerFont, timerH * 0.35);
+      }
       for (int g = 0; g < levGadCount[lev]; g++)
       {
         if (!prevMouseState && currMouseState) // mouse click detection
@@ -199,17 +210,18 @@ void draw()
       line(marX, marY + gadMarY*(lev+1) + gadButH*lev, marX + (levGadCount[lev]) * (gadMarX + gadButW + gadVoiW) - gadMarX, marY + gadMarY*(lev+1) + gadButH*lev);
       strokeWeight(1);
     }
-    
-    if(allowTouch) fill(color(200,0,0));
-    else fill(color(0,200,0));
-    ellipse(width-25,25,20,20);
-    
+
+    if (allowTouch) fill(color(200, 0, 0));
+    else fill(color(0, 200, 0));
+    ellipse(width-25, 25, 20, 20);
+
+
     //RECIEVE FROM BRIDGE
     String fromBridge = getInput(true);
 
     if (fromBridge.equals("masterStart"))
     {
-      for (int g = 0; g < 31; g++)
+      for (int g = 0; g < 32; g++)
       {
         passedGadgets[g] = false;
         hintedGadgets[g] = false;
@@ -220,9 +232,9 @@ void draw()
     } else if (fromBridge.equals("masterConnected"))
     {
       t = new StopWatchTimer();
-      totalSeconds = t.setStartTime(1, 30, 0);
+      totalSeconds = t.setStartTime(1, 10, 0);
       println("Connecting to Master: true");
-      for (int g = 0; g < 31; g++)
+      for (int g = 0; g < 32; g++)
       {
         passedGadgets[g] = false;
         hintedGadgets[g] = false;
@@ -247,7 +259,7 @@ void draw()
 
     //SEND TO BRIDGE
     boolean sendToBridge = false;
-    for (int i = 0; i < 31; i++)
+    for (int i = 0; i < 32; i++)
     {
       if (hintedGadgets[i] && !passedGadgets[i])
       {
@@ -265,7 +277,7 @@ void draw()
     {
       print("...sending to bridge...");
       arduino.write("CC");
-      for (int s = 0; s < 31; s++)
+      for (int s = 0; s < 32; s++)
       {
         arduino.write(passedGadgets[s]?"5":"1");
       }
@@ -293,27 +305,25 @@ void draw()
       arduino.write("FF");
       println("OK");
       sendLightCmd = false;
-      ;
     }
-
-    boolean allDone = true;
+    boolean baseDone = true;
     for (int g = 0; g < gadCount; g++)
     {
-      if (!hintedGadgets[g] && !passedGadgets[g]) allDone = false;
+      if (!hintedGadgets[g] && !passedGadgets[g]) baseDone = false;
     }
 
-    if (allDone) 
-    {
-      allowTouch = false;
-      if(t.running) t.stop();
-      //sound.play();
+    if (baseDone) doneTime = elpsTime; 
+    //allowTouch = false;
+    //if(t.running) t.stop();
+    //sound.play();
+    /*
       fill(textCol);
-      stroke(0);
-      rect(scrW/2 - (gadButW+gadVoiW)/2, scrH - gadButH - marY, gadButW+gadVoiW, gadButH);
-      float restartTextWid = textWidth("RESTART");
-      fill(color(10, 10, 200));
-      text("RESTART", scrW/2 - restartTextWid/2, scrH - marY - 10);
-    }
+     stroke(0);
+     rect(scrW/2 - (gadButW+gadVoiW)/2, scrH - gadButH - marY, gadButW+gadVoiW, gadButH);
+     float restartTextWid = textWidth("RESTART");
+     fill(color(10, 10, 200));
+     text("RESTART", scrW/2 - restartTextWid/2, scrH - marY - 10);
+     */
   } else // Enter params to enter the game
   {
   }

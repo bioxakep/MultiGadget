@@ -8,7 +8,7 @@
 // 28 NOV 2018 light control while Ghera speaks added
 // 01 DEC 2018 wire speed to 10000
 // 13 DEC 2018 crystals set to new pins, tested, HIGH then crystal present
-//
+//  9 JAN 2018 after crash
 /// PWM color control for windows
 #include "Wire.h" // I2C
 
@@ -72,7 +72,7 @@ String places[4] = {"OknoA", "OknoB", "OknoC", "Dvor"};
 String colors[3] = {"BLK", "BLU", "RED"};
 int lStep = 10;
 long turnMoment = 0;
-//bool moonSun = true; // TEST
+bool moonSun = false; // TEST
 
 long lightTimer = 0;
 long lightDelay = 0;
@@ -126,7 +126,7 @@ void setup() {
     Serial.println("Crystal " + String(c) + "  = " + String(digitalRead(crystPins[c])));
   }
 
-  Serial.println("\nLight Controller v1  \nSep_2018 - 01.dec.2018 - 13.DEC.2018");
+  Serial.println("\nLight Controller v1  \nSep_2018 - 01.dec.2018 - 13.DEC.2018  -  9 JAN 2018");
   Serial.println("Hardware = Mega\n");
 
   testing();
@@ -275,14 +275,14 @@ void loop() {
   {
     shiftPic();  // lightup the world
     lightTimer = millis();
-    lightDelay = 155000;
+    lightDelay = 110000;
     setLightBri(225);
     command = 0;
   }
   else if (command == 0x23)     // dim the light while Ghera speaks after Thunder
   {
     lightTimer = millis();
-    lightDelay = 68000;
+    lightDelay = 45000;
     digitalWrite(extraLight, HIGH); //OFF
     setLightBri(10);
     command = 0;
@@ -290,7 +290,7 @@ void loop() {
   else if (command == 0x30)     // dim the light while Ghera speaks after Shields done
   {
     lightTimer = millis();
-    lightDelay = 90000;
+    lightDelay = 40000;
     digitalWrite(extraLight, HIGH);
     setLightBri(20);
     command = 0;
@@ -319,7 +319,7 @@ void loop() {
     moonSun = false;
     setLightBri(0);
     lightTimer = millis();
-    lightDelay = 4000;
+    lightDelay = 14000;
     digitalWrite(flowerB, LOW);
     digitalWrite(flowerR, LOW);
     command = 0;
@@ -327,24 +327,24 @@ void loop() {
   else if (command == 0x45)    // dim the light while Ghera speaks after Seals done
   {
     lightTimer = millis();
-    lightDelay = 39000;
+    lightDelay = 30000;
     digitalWrite(extraLight, HIGH); //dark the room
     setLightBri(25); // okna 50 % all
     command = 0;
   }
   else if (command == 0x55) // crystals ! lets change the light for this level
   {
-    // lighAnimation();  call LIGHT ANIMATION SCRIPT  !!!!
-
+    // lighAnimation();  
     //temporal light while animation is missing
+
     digitalWrite(extraLight, LOW); //light up the room
-    setLightBri(255); // okna 50 % all
+    setLightBri(10); // okna 5 % all
     command = 0;
   }
 
   //---------------------------------------------------------------------------------------//
 
-  //turn the room light off while Ghera speaks (time varies depend on level) sun-mooonshould disable auto on light
+  //turn the room light off while Ghera speaks (time varies depend on level) sun-mooon should disable auto on light
   if (lightTimer > 0) {
     if ((lightDelay + lightTimer) > millis()) {
       digitalWrite(extraLight, HIGH); //OFF
