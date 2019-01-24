@@ -36,9 +36,9 @@ int lightConAddr = 20;
 int motorConAddr = 21;
 
 //Gadget states
-boolean operGStates[31];
-boolean passGStates[31];
-byte voiceHintStates[31];
+boolean operGStates[32];
+boolean passGStates[32];
+byte voiceHintStates[32];
 // lev 0
 //
 /*
@@ -89,11 +89,12 @@ byte voiceHintStates[31];
   END (cmds 0x6x)
   31 WIN
 */
-String gadgetNames[31] = {"Baloon    ", "Press    ", "Gate     ",
-                          "Poseidon  ", "Trident  ", "Demetra-1", "Rain     ", "Vine     ", "Dionis-1 ", "Hercules ", "Narcis   ", "Thunder  ",
+String gadgetNames[32] = {"Baloon    ", "Press    ", "Gate     ",
+                          "Poseidon  ", "Trident  ", "Demetra-1", "Rain     ", "Vine     ", "Dionis-1 ", "Narcis   ", "Thunder  ",
                           "Afina-1   ", "Afina-2  ", "Time     ", "Octopus  ", "Note     ", "Wind     ", "Ghera-1  ",
-                          "Fire      ", "Flower-1 ", "Flower-2 ", "Arpha    ", "Dionis-2 ", "Ghera-2  ",
-                          "BigKey    ", "Under    ", "Zodiak   ", "Minot    ", "Gorgona  ", "Cristals "
+                          "Fire      ", "Flower-1 ", "Flower-2 ", "Dionis-2 ", "Ghera-2  ",
+                          "BigKey    ", "Under    ", "Minot    ", "Gorgona  ", "Cristals ", "Octopus  "
+                          "Hercules ", "Arpha    ", "Zodiak   "
                          };
 //Voice pin
 int voicePin = 6;     // HIGH then pressed, normally LOW
@@ -153,7 +154,7 @@ int vinemOUT = 36;
 
 //DIONIS
 byte dionis1 = 8;
-byte dionis2 = 22;
+byte dionis2 = 21;
 
 int dioniIN  = 22;   //f.
 int dioniOUT = 34;
@@ -163,24 +164,21 @@ unsigned long dioni1Timer = 0;
 unsigned long dioni2Timer = 0;
 unsigned long dioni2Delay = 3000;
 
-//HERCULES
-byte hercul  = 9;
-int hercuIN  = 7;
-int hercuHD  = A4;
+
 
 //NARCIS
-byte narcis  = 10;
+byte narcis  = 9;
 int narciIN  = 51;   // i.  /// video seen
 int narciOUT = 41;          /// launch video
 
 //THUNDER
-byte thunder = 11;
+byte thunder = 10;
 int thundIN  = 52;   // g.
 int thundOUT = 32;
 
 //AFINA
-byte afina1 = 12;
-byte afina2 = 13;
+byte afina1 = 11;
+byte afina2 = 12;
 int afinaIN  = 27;   // m.
 int afinaOUT = 35;   //
 int afinaHD1 = A7;
@@ -189,17 +187,17 @@ unsigned long afinaHDdelay = 8000;
 int afinaHD2 = A8;
 
 //TIME
-byte Time    = 14;
+byte Time    = 13;
 int timeOUT  = 38;
 int timeIN   = 46;
 
 //OCTOPUS
-byte octopus = 15;
+byte octopus = 14;
 int octopIN  = 47;   // k.
 int octopOUT = 37;
 
 //NOTE
-byte note = 16;
+byte note = 15;
 int noteIN   = 49;   // j.
 int noteOUT  = 39;
 int noteHD   = A6;
@@ -207,7 +205,7 @@ unsigned long noteTimer = 0;
 unsigned long noteHDDelay = 3300;
 
 //WIND
-byte wind = 17;
+byte wind = 16;
 boolean windRFWait = true;
 
 //MUSES
@@ -215,46 +213,35 @@ int musesIN  = 23;   // o. to change their messages
 int musesOUT = 31;   // correct pattern
 
 //GHERA
-byte ghera1 = 18;
-byte ghera2 = 24;
+byte ghera1 = 17;
+byte ghera2 = 22;
 int gheraIN   = 4;
 int gheraOUT  = 2;
 
 //FIRE
-byte fire = 19;
+byte fire = 18;
 
 //FLOWERS
-byte flower1 = 20;
-byte flower2 = 21;
+byte flower1 = 19;
+byte flower2 = 20;
 int flowrIN  = 25;
 int flowrOUT = 33;   //n.
 int flowrHD  = A13;
 unsigned long flowerTimer = 0;
 unsigned long flowerDelay = 5550;
 
-//ARPHA
-byte arpha = 23;
-int arphaHD  = A3; //A9;
-unsigned long arphaTimer = 0;
-unsigned long arphaDelay = 21000;
-
 //BIGKEY
-byte bigkey = 25;
+byte bigkey = 23;
 int bigKeyIN = 16;
 
 //UNDERGROUND
-byte under = 26;
+byte under = 24;
 ArdCPZ *cpz2; //Under
 int underBeacon = 328;
 boolean underRFWait = true;
 
-//ZODIAK
-byte zodiak = 27;
-int zodiaIN  = 5;
-int zodiaHD  = A11;
-
 //MINOT
-byte minot = 28;
+byte minot = 25;
 int minotIN  = 29;   // B.
 int minotOUT = 45;
 int minotHD  = A10;
@@ -262,22 +249,39 @@ long minotTimer = 0;
 long minotDelay = 26000;
 
 //GORGONA
-byte gorgona = 29;
+byte gorgona = 26;
 int gorgoIN  = 28;   // A.
 int gorgoOUT = 30;
 int gorgoHD  = A12;
 
 //CRISTALS
-byte crystals = 30;
+byte crystals = 27;
 boolean crystStates[3] = {false, false, false};
 boolean crystDone = false;
 boolean crystReciever = false;
 byte cristCount = 0;
 
+//HERCULES
+byte hercul  = 28;
+int hercuIN  = 7;
+int hercuHD  = A4;
 
-byte win = 31;
+//ARPHA
+byte arpha = 29;
+int arphaHD  = A3; //A9;
+unsigned long arphaTimer = 0;
+unsigned long arphaDelay = 21000;
 
-int totalGadgets = 31;
+//ZODIAK
+byte zodiak = 30;
+int zodiaIN  = 5;
+int zodiaHD  = A11;
+
+byte octopus2 = 31;
+
+byte win = 32;
+
+int totalGadgets = 32;
 
 int spare = A2;  // UnderGround light relay
 
@@ -490,6 +494,11 @@ void loop()
       }
       if (millis() % 30000 == 0) openOpened();  // open (and re-open if closed) underground locks
     } // eof_cristals
+
+    if(passGStates[crystals])
+    {
+      Octopus2(); // wait 3 elements from zodiak, arpha, hercules
+    }
   } // eof.level_50
 
   if (level == 100)
@@ -511,8 +520,6 @@ void loop()
   voiceStates[1] = voiceStates[0];
   startStates[1] = startStates[0];
 } // LOOP END
-
-
 
 
 void sendToSlave(int address, byte data)

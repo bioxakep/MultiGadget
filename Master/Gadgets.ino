@@ -160,17 +160,6 @@ void Dionis1()
   }
 }
 
-void Hercules()
-{
-  if ((!digitalRead(hercuIN) || operGStates[hercul]) && !passGStates[hercul])
-  { // shoud be skippable from master console
-    // hercu > players gets third part of thunders
-    passGStates[hercul] = true;
-    mp3_play(66);
-    openHercuHD();
-    Serial.println("Hercules Done");
-  }
-}
 
 void Narcis()
 {
@@ -346,19 +335,6 @@ void Dionis2()  // dionis(2) cold heart if all done
   }
 }
 
-void Arpha()   //  signal from arpha received
-{
-  if ((!digitalRead(musesIN) || operGStates[arpha]) && !passGStates[arpha])
-  { 
-    send250ms(musesOUT); // send signal to PLAY 998 AND shut up the muses
-    if (operGStates[arpha]) send250ms(musesOUT);
-    arphaTimer = millis();
-    passGStates[arpha] = true;
-    Serial.println("Arpha Done + siganl to muses sent");
-
-  }
-}
-
 void Ghera2()   // SEALS done
 {
   if (passGStates[flower2] && passGStates[arpha] && passGStates[dionis2])
@@ -405,18 +381,6 @@ void Underground()
   }
 }
 
-void Zodiak()
-{
-  if ((!digitalRead(zodiaIN) || operGStates[zodiak]) && !passGStates[zodiak] && passGStates[under])
-  { 
-    sendToSlave(motorConAddr, 0x55);
-    passGStates[zodiak] = true;
-    Serial.println("Zodiak Done");
-    digitalWrite(zodiaHD, HIGH);
-    delay(220);
-    digitalWrite(zodiaHD, LOW);
-  }
-}
 
 void Minotavr()
 {
@@ -442,7 +406,7 @@ void Gorgona()
 
 void Crystals()
 {
-  if (passGStates[gorgona] && passGStates[minot] && passGStates[zodiak])
+  if (passGStates[gorgona] && passGStates[minot])
   {
       Wire.requestFrom(lightConAddr, 1);
       byte lightUnsw = Wire.requestFrom(lightConAddr, 1, false);
@@ -467,10 +431,8 @@ void Crystals()
       }
       if (passGStates[crystals] || operGStates[crystals])
        {
-        // mp3_play(10); //each one (1-2)
          delay(100);
          mp3_play(11); // then all 3
-  
          //level = 100;
          Serial.println("Crystals Done");
          sendToSlave(motorConAddr, 0x99);  // game over = stop the underground music
@@ -482,5 +444,53 @@ void Crystals()
             sendToSlave(lightConAddr, 0x55); // inform light_controller than we skipping crystals
            }
         }
+  }
+}
+
+void Hercules()
+{
+  if ((!digitalRead(hercuIN) || operGStates[hercul]) && !passGStates[hercul])
+  { // shoud be skippable from master console
+    // hercu > players gets third part of thunders
+    passGStates[hercul] = true;
+    mp3_play(66);
+    openHercuHD();
+    Serial.println("Hercules Done");
+  }
+}
+
+void Zodiak()
+{
+  if ((!digitalRead(zodiaIN) || operGStates[zodiak]) && !passGStates[zodiak])
+  { 
+    sendToSlave(motorConAddr, 0x55);
+    passGStates[zodiak] = true;
+    Serial.println("Zodiak Done");
+    digitalWrite(zodiaHD, HIGH);
+    delay(220);
+    digitalWrite(zodiaHD, LOW);
+  }
+}
+
+void Arpha()   //  signal from arpha received
+{
+  if ((!digitalRead(musesIN) || operGStates[arpha]) && !passGStates[arpha])
+  { 
+    send250ms(musesOUT); // send signal to PLAY 998 AND shut up the muses
+    if (operGStates[arpha]) send250ms(musesOUT);
+    arphaTimer = millis();
+    passGStates[arpha] = true;
+    Serial.println("Arpha Done + siganl to muses sent");
+
+  }
+}
+
+void Octopus2()
+{
+  if ((!digitalRead(octopIN) || operGStates[octopus2]) && !passGStates[octopus2]) // && passGStates[Time])
+  { 
+    if (operGStates[octopus]) send250ms(octopOUT);
+    passGStates[octopus] = true;
+    Serial.println("Octopus 2 Done");
   }
 }

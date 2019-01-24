@@ -211,7 +211,8 @@ void pinSetup()
   digitalWrite(SSerialTxControl, LOW);  // Init Recieve RS485
 }
 
-void openHercuHD(){
+void openHercuHD()
+{
   digitalWrite(hercuHD,HIGH);
   delay(180);
   digitalWrite(hercuHD,LOW);
