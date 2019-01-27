@@ -76,9 +76,9 @@ void closeLocks() {
 
 void openOpened()
 {
-  if (passGStates[zodiak])  digitalWrite(zodiaHD, HIGH);
-  if (passGStates[minot])   digitalWrite(minotHD, HIGH);
-  if (passGStates[gorgona]) digitalWrite(gorgoHD, HIGH);
+  if (gStates[zodiak])  digitalWrite(zodiaHD, HIGH);
+  if (gStates[minot])   digitalWrite(minotHD, HIGH);
+  if (gStates[gorgona]) digitalWrite(gorgoHD, HIGH);
   delay(170);
   digitalWrite(zodiaHD, LOW);
   digitalWrite(minotHD, LOW);
@@ -209,8 +209,4 @@ void pinSetup()
   pinMode(spare, OUTPUT);
   pinMode(SSerialTxControl, OUTPUT);
   digitalWrite(SSerialTxControl, LOW);  // Init Recieve RS485
-}
-
-void openHercuHD(){
-  digitalWrite(hercuHD,LOW);
 }

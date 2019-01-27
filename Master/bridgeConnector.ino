@@ -1,17 +1,17 @@
-void getOperSkips()
+void getBridgeData()
 {
   if (Serial1.available() > 0)
   {
     byte input[32];
     byte inByte = Serial1.read();
-    if (inByte == 0xBB)
+    if (inByte == 0xBD)
     {
       Serial.print("Operator Skips Recieved:");
       delay(350);
       for (int i = 0; i < 32; i++)
       {
         input[i] = Serial1.read();
-        if (input[i] > 0x03) operGStates[i] = true;
+        if (input[i] == 0x03) operSkips[i] = true;
         Serial.print(input[i]);
         Serial.print("|");
       }
@@ -28,14 +28,14 @@ void getOperSkips()
       byte last = Serial1.read();
       if (last == 0xFF) Serial.println("OK");
     }
-    else if (inByte == 0xBD) // if recieved voice-hints
+    else if (inByte == 0xBA) // if recieved voice-hints
     {
       delay(50);
       byte voiceHintIndex = Serial1.read();
       Serial.println("Recieved voiceHint# "+String(voiceHintIndex,HEX));
       if(voiceHintIndex >= 0 && voiceHintIndex < 34)
       {
-        Serial.println("Voice hint of gadget " + String(voiceHintIndex) + " number "+ String(voiceHintStates[voiceHintIndex]) + " started");
+        Serial.println("Voice hint of gadget " + String(voiceHintIndex) + " number "+ String(voiceHints[voiceHintIndex]) + " started");
         mp3_set_serial(Serial3);
         playVoice(voiceHintIndex);
       }
@@ -62,10 +62,10 @@ void sendGStates() // Проверяем прошел ли игрок какой
   boolean needSend = false;
   for (int s = 0; s < 32; s++)
   {
-    if (passGStates[s] && !operGStates[s])
+    if ((playerGDone[s] && !gStates[s]) || operSkips[s]) 
     {
       needSend = true;
-      operGStates[s] = true;
+      gStates[s] = true;
     }
   }
   if (needSend)
@@ -76,10 +76,12 @@ void sendGStates() // Проверяем прошел ли игрок какой
     delay(10);
     for (int d = 0; d < 32; d++)
     {
-      if (passGStates[d]) Serial1.write(0x05);
+      if (gStates[d] && operSkips[d]) Serial1.write(0x03);
+      if (gStates[d] && playerGDone[d]) Serial1.write(0x05);
       else Serial1.write(0x01);
       delay(10);
-      Serial.print(passGStates[d] ? 0x05 : 0x01); // DEBUG
+      operSkips[d] = false;
+      Serial.print(gStates[d] ? 0x05 : 0x01); // DEBUG
     }
     Serial1.write(0xFF);
     delay(10);
@@ -141,9 +143,9 @@ void resetStates()
 {
   for (int g = 0; g < totalGadgets; g++)
   {
-    operGStates[g] = false;
-    passGStates[g] = false;
-    voiceHintStates[g] = 0;
+    operSkips[g] = false;
+    gStates[g] = false;
+    voiceHints[g] = 0;
   }
   level = 10;
   start = 0;

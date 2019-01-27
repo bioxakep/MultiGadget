@@ -36,9 +36,10 @@ int lightConAddr = 20;
 int motorConAddr = 21;
 
 //Gadget states
-boolean operGStates[32];
-boolean passGStates[32];
-byte voiceHintStates[32];
+boolean operSkips[32];
+boolean playerGDone[32];
+boolean gStates[32];
+byte voiceHints[32];
 // lev 0
 //
 /*
@@ -88,7 +89,7 @@ byte voiceHintStates[32];
   29 Hercules
   30 Arpha
   31 Zodiak
-  
+
   END (cmds 0x6x)
   32 WIN
 */
@@ -97,7 +98,7 @@ String gadgetNames[32] = {"Baloon    ", "Press    ", "Gate     ",
                           "Afina-1   ", "Afina-2  ", "Time     ", "Octopus  ", "Note     ", "Wind     ", "Ghera-1  ",
                           "Fire      ", "Flower-1 ", "Flower-2 ", "Dionis-2 ", "Ghera-2  ",
                           "BigKey    ", "Under    ", "Minot    ", "Gorgona  ", "Cristals ",
-                           "Hercules ", "Arpha    ", "Zodiak   "
+                          "Hercules ", "Arpha    ", "Zodiak   ", "Bonus"
                          };
 //Voice pin
 int voicePin = 6;     // HIGH then pressed, normally LOW
@@ -262,24 +263,25 @@ boolean crystDone = false;
 boolean crystReciever = false;
 byte cristCount = 0;
 
-// OCTOPUS-2
-byte octopus2 = 28;
 // ===== BONUS ====== //
 //HERCULES
-byte hercul  = 29;
+byte hercul  = 28;
 int hercuIN  = 7;
 int hercuHD  = A4;
 
 //ARPHA
-byte arpha = 30;
+byte arpha = 29;
 int arphaHD  = A3; //A9;
 unsigned long arphaTimer = 0;
 unsigned long arphaDelay = 21000;
 
 //ZODIAK
-byte zodiak = 31;
+byte zodiak = 30;
 int zodiaIN  = 5;
 int zodiaHD  = A11;
+
+// OCTOPUS-2
+byte bonus = 31;
 
 byte win = 32;
 
@@ -339,9 +341,9 @@ void setup()
 
   for (int g = 0; g < totalGadgets; g++)
   {
-    operGStates[g] = false;
-    passGStates[g] = false;
-    voiceHintStates[g] = 0;
+    operSkips[g] = false;
+    gStates[g] = false;
+    voiceHints[g] = 0;
   }
 
 
@@ -381,8 +383,8 @@ void loop()
     }
   }
 
-  getOperSkips();
-  
+  getBridgeData();
+
   if (level == 10) Start(); // Start button pressing 2 times wait
   else if (level == 12) Baloon(); //#0 if players never finish ballon, operator can skip it here (send signal to ballon)
   else if (level == 13) Press(); //#1 if players never finish press, operator can skip it here (send signal to press)
@@ -456,25 +458,21 @@ void loop()
         digitalWrite(flowrHD, LOW); // players get seal 1
       }
       Dionis2();//#21
-      
-      if (arphaTimer > 0 && ((millis() - arphaTimer) > arphaDelay))
-      {
-        arphaTimer = 0;
-        digitalWrite(arphaHD, LOW);  // give players seal 3
-      }
+
+
       Ghera2();//#22
       /*
-         gadgetNames[32] = {"Baloon    ", "Press    ", "Gate     ",
+         String gadgetNames[32] = {"Baloon    ", "Press    ", "Gate     ",
                           "Poseidon  ", "Trident  ", "Demetra-1", "Rain     ", "Vine     ", "Dionis-1 ", "Narcis   ", "Thunder  ",
                           "Afina-1   ", "Afina-2  ", "Time     ", "Octopus  ", "Note     ", "Wind     ", "Ghera-1  ",
                           "Fire      ", "Flower-1 ", "Flower-2 ", "Dionis-2 ", "Ghera-2  ",
                           "BigKey    ", "Under    ", "Minot    ", "Gorgona  ", "Cristals ",
-                           "Hercules ", "Arpha    ", "Zodiak   "
+                           "Hercules ", "Arpha    ", "Zodiak   ", "Bonus"
                          };
       */
     }
     // ==================================== CRYSTALS ==================================
-    if (!passGStates[crystals] && sealsDone)
+    if (!gStates[crystals] && sealsDone)
     { // underground level
       //OPEN UNDER
       BigKey(); //#23
@@ -485,23 +483,25 @@ void loop()
         if (minotTimer > 0 && ((millis() - minotTimer) > minotDelay))
         {
           minotTimer = 0;
-          digitalWrite(minotHD, HIGH);
-          delay(220);
-          digitalWrite(minotHD, LOW);
+          send250ms(minotHD); //220
         }
 
         Gorgona();//#26
         Crystals();//#27
-        Octopus2();//#28
       }
       if (millis() % 30000 == 0) openOpened();  // open (and re-open if closed) underground locks
     } // eof_cristals
   } // eof.level_50
-  
+
   Hercules();//#29
   Arpha();//#30
+  if (arphaTimer > 0 && ((millis() - arphaTimer) > arphaDelay))
+  {
+    arphaTimer = 0;
+    digitalWrite(arphaHD, LOW);  // give players seal 3
+  }
   Zodiak();//#31
-
+  Bonus();
   if (level == 100)
   {
     Serial.println("WIN");
@@ -523,8 +523,6 @@ void loop()
 } // LOOP END
 
 
-
-
 void sendToSlave(int address, byte data)
 {
   Wire.beginTransmission(address); // transmit to device #8
@@ -542,13 +540,10 @@ void send250ms(int pin)
 void skipNextGadget()
 {
   int curGadget = 0;
-  while (passGStates[curGadget]) {
+  while (gStates[curGadget]) {
     curGadget++;
   }
-  passGStates[curGadget] = true;
-  sendGStates();
-  operGStates[curGadget] = true;
-  passGStates[curGadget] = false;
+  operSkips[curGadget] = true;
   Serial.println("Gadget #(from 0): " + String(curGadget) + " Named: " + String(gadgetNames[curGadget]) + " passed by start button");
   //  lcd.clear();
   lcd.setCursor(0, 1);
@@ -558,7 +553,7 @@ void skipNextGadget()
 void voiceCurGadget()
 {
   int curGadget = 0;
-  while (passGStates[curGadget]) {
+  while (gStates[curGadget]) {
     curGadget++;
   }
   playVoice(++curGadget);
@@ -566,7 +561,7 @@ void voiceCurGadget()
 
 void playVoice(byte vhi)
 {
-  int playFile = (int)(vhi * 10) + voiceHintStates[vhi];
+  int playFile = (int)(vhi * 10) + voiceHints[vhi];
   Serial.println("Playing " + String(playFile) + ".mp3 file");
   mp3_set_serial(Serial3);
   delay(20);
@@ -574,6 +569,5 @@ void playVoice(byte vhi)
   delay(20);
   mp3_set_serial(Serial);
   delay(20);
-
-  voiceHintStates[vhi] = (voiceHintStates[vhi] + 1) % 2;
+  voiceHints[vhi] = (voiceHints[vhi] + 1) % 2;
 }

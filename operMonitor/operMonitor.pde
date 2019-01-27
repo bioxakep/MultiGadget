@@ -8,7 +8,8 @@ boolean recieved = false;
 PrintWriter data;
 
 boolean game;
-boolean endGame = false;
+boolean endMainGame = false;
+boolean endBonusGame = false;
 boolean connected;
 boolean allowTouch = true;
 boolean lightUp = false;
@@ -46,11 +47,13 @@ boolean prevMouseState = false;
 boolean currMouseState = false;
 boolean calculated = false;
 
-int[] levGadCount = {3, 8, 7, 5, 6, 3};
+int[] levGadCount = {3, 8, 7, 5, 5, 4};
 String[] levelNames = {"START", "THUNDER", "SHIELDS", "SEALS", "UNDERGROUND", "BONUS"};
-String[] gadgetNames = {"Baloon", "Press", "Gate", "Poseidon", "Trident", "Demetra-1", "Rain", "Vine", "Dionis-1", "Narcis", "Thunder", "Afina-1", "Afina-2", "Time", "Octopus", "Note", "Wind", "Ghera-1", "Fire", "Flower-1", "Flower-2", "Dionis-2", "Ghera-2", "BigKey", "Under", "Minot", "Gorgona", "Cristals", "Octopus 2", "Hercules", "Arpha", "Zodiak"};
-boolean[] passedGadgets = new boolean[32];
-boolean[] hintedGadgets = new boolean[32];
+String[] gadgetNames = {"Baloon", "Press", "Gate", "Poseidon", "Trident", "Demetra-1", "Rain", "Vine", "Dionis-1", "Narcis", "Thunder", "Afina-1", "Afina-2", "Time", "Octopus", "Note", "Wind", "Ghera-1", "Fire", "Flower-1", "Flower-2", "Dionis-2", "Ghera-2", "BigKey", "Under", "Minot", "Gorgona", "Cristals", "Hercules", "Arpha", "Zodiak", "Bonus"};
+
+byte[] passedGadgets = new byte[32];
+boolean[] operPressed = new boolean[32];
+
 int[] passedTimes = new int[32];
 int sendVoiceNumber = -1;
 int passTimesIndex = 0;
@@ -104,8 +107,7 @@ void setup()
   lastVoiceSend = totalSeconds;
   for (int g = 0; g < 32; g++)
   {
-    passedGadgets[g] = false;
-    hintedGadgets[g] = false;
+    passedGadgets[g] = 0;
     passedTimes[g] = 0;
   }
   //sound = new SoundFile(this, "sample.mp3"); // Должен лежать в папке с именем "data", папка должна лежать рядом с программой Monitor.exe
@@ -116,6 +118,7 @@ void draw()
   currMouseState = mousePressed;
   if (game)
   {
+    boolean sendToBridge = false;
     background(background);
     //Timer
     strokeWeight(1);
@@ -156,11 +159,15 @@ void draw()
       {
         if (!prevMouseState && currMouseState) // mouse click detection
         {
-          if (allowTouch && !hintedGadgets[gadCount] && !passedGadgets[gadCount] && mouseX > marX + g * (gadMarX + gadButW + gadVoiW) && mouseX < marX + g * (gadMarX + gadButW + gadVoiW) + gadButW && mouseY > marY + gadMarY*(lev+1) + gadButH*lev && mouseY < marY + (gadButH + gadMarY)*(lev+1))
+          if (allowTouch && mouseX > marX + g * (gadMarX + gadButW + gadVoiW) && mouseX < marX + g * (gadMarX + gadButW + gadVoiW) + gadButW && mouseY > marY + gadMarY*(lev+1) + gadButH*lev && mouseY < marY + (gadButH + gadMarY)*(lev+1))
           { 
-            hintedGadgets[gadCount] = true;
-            passedTimes[gadCount] = int((totalSeconds-t.getElapsedTime())/1000);
-            println("mouse touch button "+str(gadCount) + " MX="+str(mouseX)+" and MY="+str(mouseY));
+            if (passedGadgets[gadCount] < 1) 
+            {
+              passedGadgets[gadCount] = 3;
+              passedTimes[gadCount] = int((totalSeconds-t.getElapsedTime())/1000);
+            }
+            operPressed[gadCount] = true;
+            sendToBridge = true;
           }
           if (allowTouch && mouseX > marX + (g+1)*gadButW + (gadVoiW+gadMarX)*g && mouseX < marX + (g+1)*(gadButW+gadVoiW) + gadMarX*g  && mouseY > marY + gadMarY*(lev+1) + gadButH*lev && mouseY < marY + (gadButH + gadMarY)*(lev+1))
           {
@@ -174,9 +181,9 @@ void draw()
           }
         }
         fill(butCol);
-        if (passedGadgets[gadCount]) fill(color(0, 200, 100, 60));
-        else fill(color(100, 100, 100, 60));
-        if (hintedGadgets[gadCount]) fill(color(255, 180, 130, 60));
+        if (passedGadgets[gadCount] == 5) fill(color(0, 200, 100, 60));
+        else if (passedGadgets[gadCount] == 3) fill(color(100, 100, 100, 60));
+        else fill(color(255, 180, 130, 60));
         rect(marX + g * (gadMarX + gadButW + gadVoiW), marY + gadMarY*(lev+1) + gadButH*lev, gadButW, gadButH); // Level-Rects
         fill(color(20, 20, 200, 60));
         textFont(topFont, timerH * 0.24);
@@ -223,8 +230,8 @@ void draw()
     {
       for (int g = 0; g < 32; g++)
       {
-        passedGadgets[g] = false;
-        hintedGadgets[g] = false;
+        passedGadgets[g] = 0;
+        operPressed[g] = false;
       }
       t.start();
       allowTouch = true;
@@ -234,11 +241,7 @@ void draw()
       t = new StopWatchTimer();
       totalSeconds = t.setStartTime(1, 10, 0);
       println("Connecting to Master: true");
-      for (int g = 0; g < 32; g++)
-      {
-        passedGadgets[g] = false;
-        hintedGadgets[g] = false;
-      }
+      for (int g = 0; g < 32; g++) passedGadgets[g] = 0;
     } else if (fromBridge.startsWith("BB") && fromBridge.endsWith("FF"))
     {
       println(fromBridge);
@@ -246,40 +249,27 @@ void draw()
       {
         //print(fromBridge.charAt(i));
         int data = Integer.parseInt(String.valueOf(fromBridge.charAt(i+2)));
-        if (data > 3)
+        if (data == 5)
         {
-          passedGadgets[i] = true;
-          print("Gadget "); 
+          passedGadgets[i] = 5;
+          print("Gadget ");
           print(i);
-          println(" passed by player");
+          println(" done by player");
           passedTimes[i] = int((totalSeconds-t.getElapsedTime())/1000);
         }
       }
     }
 
     //SEND TO BRIDGE
-    boolean sendToBridge = false;
-    for (int i = 0; i < 32; i++)
-    {
-      if (hintedGadgets[i] && !passedGadgets[i])
-      {
-        //print("gadget"); print(i+1); println(" hinted, sending...");
-        sendToBridge = true;
-        passedGadgets[i] = true;
-        print("Hint "); 
-        print(i+1); 
-        print(" Gadget");
-        //print("Hinted state:"); print(hintedGadgets[i]); print(" Passed:"); println(passedGadgets[i]);
-      }
-    }
 
     if (sendToBridge)
     {
       print("...sending to bridge...");
-      arduino.write("CC");
+      arduino.write("CD");
       for (int s = 0; s < 32; s++)
       {
-        arduino.write(passedGadgets[s]?"5":"1");
+        arduino.write(operPressed[s]?"3":"1");
+        operPressed[s] = false;
       }
       arduino.write("FF\n");
       println("OK");
@@ -289,7 +279,7 @@ void draw()
     if (sendVoiceNumber >= 0)
     {
       print("sending voice hint...");
-      arduino.write("CD");
+      arduino.write("CA");
       arduino.write(str(sendVoiceNumber+1));
       arduino.write("FF");
       println("OK");
@@ -307,12 +297,16 @@ void draw()
       sendLightCmd = false;
     }
     boolean baseDone = true;
-    for (int g = 0; g < gadCount; g++)
+    for (int g = 0; g < gadCount-4; g++)
     {
-      if (!hintedGadgets[g] && !passedGadgets[g]) baseDone = false;
+      if (passedGadgets[g] == 0) baseDone = false;
     }
 
-    if (baseDone) doneTime = elpsTime; 
+    if (baseDone && !endMainGame) 
+    {
+      doneTime = elpsTime;
+      endMainGame = true;
+    }
     //allowTouch = false;
     //if(t.running) t.stop();
     //sound.play();
