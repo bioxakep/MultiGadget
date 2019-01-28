@@ -173,7 +173,7 @@ void draw()
           {
           println("ELT="+str(elpsTime)+" lastST="+str(lastVoiceSend));
               sendVoiceNumber = gadCount;
-              lastVoiceSend = elTime;
+              lastVoiceSend = elpsTime;
             
           }
         }
