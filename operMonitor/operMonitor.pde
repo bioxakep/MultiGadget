@@ -169,7 +169,7 @@ void draw()
             operPressed[gadCount] = true;
             sendToBridge = true;
           }
-          if (allowTouch && elpsTime  - lastVoiceSend > 500 && mouseX > marX + (g+1)*gadButW + (gadVoiW+gadMarX)*g && mouseX < marX + (g+1)*(gadButW+gadVoiW) + gadMarX*g  && mouseY > marY + gadMarY*(lev+1) + gadButH*lev && mouseY < marY + (gadButH + gadMarY)*(lev+1))
+          if (allowTouch && lastVoiceSend - elpsTime > 500 && mouseX > marX + (g+1)*gadButW + (gadVoiW+gadMarX)*g && mouseX < marX + (g+1)*(gadButW+gadVoiW) + gadMarX*g  && mouseY > marY + gadMarY*(lev+1) + gadButH*lev && mouseY < marY + (gadButH + gadMarY)*(lev+1))
           {
           println("ELT="+str(elpsTime)+" lastST="+str(lastVoiceSend));
               sendVoiceNumber = gadCount;
