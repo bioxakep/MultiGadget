@@ -11,7 +11,7 @@ boolean game;
 boolean endMainGame = false;
 boolean endBonusGame = false;
 boolean connected;
-boolean allowTouch = true;
+boolean allowTouch = false;
 boolean lightUp = false;
 boolean sendLightCmd = false;
 boolean rec = false;
@@ -36,12 +36,13 @@ float triH, triW; // for Triangle of up and down hit count. Remove if unused...
 int enterTextSize = 0;
 int textSize = 0;
 
-color green = color(0, 200, 0);
+color green = color(0, 200, 0, 40);
 color red = color(200, 0, 0);
 color background = color(230);
 color textCol = color(100, 2, 111, 80);
 color redTextCol = color(100, 2, 50, 80);
 color butCol = color(100, 2, 111, 40);
+color orange = color(240, 100, 0, 40);
 
 boolean prevMouseState = false;
 boolean currMouseState = false;
@@ -148,7 +149,7 @@ void draw()
       if (lev == 4 && doneTime > 0)
       {
         //print time
-        String dTime = "GAME DONE AT: " + getTime(hours(elpsTime), minutes(elpsTime), seconds(elpsTime));
+        String dTime = "GAME DONE AT: " + getTime(hours(doneTime), minutes(doneTime), seconds(doneTime));
         textFont(timerFont, timerH/4);
         float tTextW = textWidth(dTime);
         fill(textCol);
@@ -181,9 +182,9 @@ void draw()
           }
         }
         fill(butCol);
-        if (passedGadgets[gadCount] == 5) fill(color(0, 200, 100, 60));
-        else if (passedGadgets[gadCount] == 3) fill(color(100, 100, 100, 60));
-        else fill(color(255, 180, 130, 60));
+        if (passedGadgets[gadCount] == 5) fill(green);
+        else if (passedGadgets[gadCount] == 3) fill(orange);
+        else fill(butCol);
         rect(marX + g * (gadMarX + gadButW + gadVoiW), marY + gadMarY*(lev+1) + gadButH*lev, gadButW, gadButH); // Level-Rects
         fill(color(20, 20, 200, 60));
         textFont(topFont, timerH * 0.24);
@@ -197,7 +198,7 @@ void draw()
       {
         //Draw light button
         String lightState = lightUp? "Light is On":"Light is Off";
-        if (lightUp) fill(color(10, 10, 150));
+        if (lightUp) fill(orange);
         else fill(butCol);
         rect(scrW - (marX + gadButW + gadVoiW), marY + gadMarY*(lev+1) + gadButH*lev, gadButW+gadVoiW, gadButH); // light rect
         fill(textCol);
@@ -218,10 +219,9 @@ void draw()
       strokeWeight(1);
     }
 
-    if (allowTouch) fill(color(200, 0, 0));
-    else fill(color(0, 200, 0));
+    if (allowTouch) fill(color(0, 200, 0));
+    else fill(color(200, 0, 0));
     ellipse(width-25, 25, 20, 20);
-
 
     //RECIEVE FROM BRIDGE
     String fromBridge = getInput(true);
@@ -241,8 +241,12 @@ void draw()
       t = new StopWatchTimer();
       totalSeconds = t.setStartTime(1, 10, 0);
       println("Connecting to Master: true");
-      for (int g = 0; g < 32; g++) passedGadgets[g] = 0;
-    } else if (fromBridge.startsWith("BB") && fromBridge.endsWith("FF"))
+      for (int g = 0; g < 32; g++) 
+      {
+        passedGadgets[g] = 0;
+        operPressed[g] = false;
+      }
+    } else if (fromBridge.startsWith("BD") && fromBridge.endsWith("FF"))
     {
       println(fromBridge);
       for (int i = 0; i < fromBridge.length()-4; i++)
@@ -259,9 +263,7 @@ void draw()
         }
       }
     }
-
     //SEND TO BRIDGE
-
     if (sendToBridge)
     {
       print("...sending to bridge...");
@@ -296,16 +298,30 @@ void draw()
       println("OK");
       sendLightCmd = false;
     }
-    boolean baseDone = true;
+    boolean mainLevelsDone = true;
     for (int g = 0; g < gadCount-4; g++)
     {
-      if (passedGadgets[g] == 0) baseDone = false;
+      if (passedGadgets[g] == 0) mainLevelsDone = false;
     }
 
-    if (baseDone && !endMainGame) 
+    if (mainLevelsDone && !endMainGame) 
     {
       doneTime = elpsTime;
       endMainGame = true;
+    }
+    
+    if (endMainGame && !endBonusGame)
+    {
+      boolean fullLevelsDone = true;
+      for (int g = gadCount-4; g < gadCount; g++)
+      {
+        if (passedGadgets[g] == 0) fullLevelsDone = false;
+      }
+      if (fullLevelsDone) 
+      {
+        endBonusGame = true;
+        t.stop();
+      }
     }
     //allowTouch = false;
     //if(t.running) t.stop();

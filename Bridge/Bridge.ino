@@ -173,7 +173,7 @@ void loop()
       }
       else Serial.flush();
     }
-
+    // =========== КОМАНДЫ ОТ МАСТЕРА ===========
     if (masterSerial.available() > 0) //прием команд от мастера
     {
       byte input[gadgetCount];
@@ -202,7 +202,7 @@ void loop()
         for (int i = 0; i < gadgetCount; i++)
         {
           input[i] = masterSerial.read();
-          //Serial.print("|" + String(input[i]));
+          //Serial.print("|" + String(input[i])); // DEBUG
           gStates[i] = input[i];
         }
         if (!monitorConnected) Serial.println();
@@ -211,7 +211,7 @@ void loop()
         if (last == 0xFF)
         {
           if (!monitorConnected) Serial.print("Send to operator: "); // Отправляем информацию о гаджетах оператору
-          Serial.write("BB");
+          Serial.write("BD");
           for (int d = 0; d < gadgetCount; d++)
           {
             if (gStates[d] == 0x05) Serial.write("5");

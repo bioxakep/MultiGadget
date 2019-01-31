@@ -7,7 +7,7 @@ void getBridgeData()
     if (inByte == 0xBD)
     {
       Serial.print("Operator Skips Recieved:");
-      delay(350);
+      delay(380);
       for (int i = 0; i < 32; i++)
       {
         input[i] = Serial1.read();
@@ -62,26 +62,29 @@ void sendGStates() // Проверяем прошел ли игрок какой
   boolean needSend = false;
   for (int s = 0; s < 32; s++)
   {
-    if ((playerGDone[s] && !gStates[s]) || operSkips[s]) 
+    if ((playerGDone[s] || operSkips[s]) && !gStates[s]) 
     {
-      needSend = true;
+      if (playerGDone[s]) needSend = true;
       gStates[s] = true;
+      operSkips[s] = false;
     }
   }
   if (needSend)
   {
     digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
     Serial.print("Send States to Operator: ");
-    Serial1.write(0xAA);
+    Serial1.write(0xAD);
     delay(10);
     for (int d = 0; d < 32; d++)
     {
-      if (gStates[d] && operSkips[d]) Serial1.write(0x03);
-      if (gStates[d] && playerGDone[d]) Serial1.write(0x05);
+      if (gStates[d] && !playerGDone[d]) Serial1.write(0x03);
+      else if (gStates[d] && playerGDone[d]) Serial1.write(0x05);
       else Serial1.write(0x01);
       delay(10);
       operSkips[d] = false;
-      Serial.print(gStates[d] ? 0x05 : 0x01); // DEBUG
+      if (gStates[d] && !playerGDone[d]) Serial.print('3');
+      else if (gStates[d] && playerGDone[d]) Serial.print('5');
+      else Serial.print('1');
     }
     Serial1.write(0xFF);
     delay(10);
@@ -144,6 +147,7 @@ void resetStates()
   for (int g = 0; g < totalGadgets; g++)
   {
     operSkips[g] = false;
+    playerGDone[g] = false;
     gStates[g] = false;
     voiceHints[g] = 0;
   }

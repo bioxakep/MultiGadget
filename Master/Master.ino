@@ -16,7 +16,7 @@
 //I2C PINS: 20-21
 #define SSerialTxControl 17   //RS485 Direction control
 
-LiquidCrystal_I2C lcd(0x3F, 16, 2); // set the LCD address to 0x27 for a 16 chars and 2 line display
+LiquidCrystal_I2C lcd(0x3F, 16, 2); // set the lcd address to 0x27 for a 16 chars and 2 line display
 
 int windRFPin  = A0;    // RFID key to start
 int underRFPin  = 9;    // RFID key to the underground door
@@ -372,7 +372,7 @@ void loop()
 
   startStates[0] = debounce(startStates[1], startPin); // READ START BUTTON
   voiceStates[0] = debounce(voiceStates[1], voicePin);
-  if (level > 10 && !startStates[0] && startStates[1]) skipNextGadget(); // SKIP BY START BUTTON
+  //if (level > 10 && !startStates[0] && startStates[1]) skipNextGadget(); // SKIP BY START BUTTON
   if (level > 10 && voiceStates[0] && !voiceStates[1]) voiceCurGadget();
   if (curHighPin > 0) // WATCH FOR ACTIVE PIN
   {
@@ -485,7 +485,6 @@ void loop()
           minotTimer = 0;
           send250ms(minotHD); //220
         }
-
         Gorgona();//#26
         Crystals();//#27
       }
@@ -537,19 +536,6 @@ void send250ms(int pin)
   digitalWrite(pin, LOW);
 }
 
-void skipNextGadget()
-{
-  int curGadget = 0;
-  while (gStates[curGadget]) {
-    curGadget++;
-  }
-  operSkips[curGadget] = true;
-  Serial.println("Gadget #(from 0): " + String(curGadget) + " Named: " + String(gadgetNames[curGadget]) + " passed by start button");
-  //  lcd.clear();
-  lcd.setCursor(0, 1);
-  lcd.print("Skpd " + String(gadgetNames[curGadget]));
-}
-
 void voiceCurGadget()
 {
   int curGadget = 0;
@@ -562,10 +548,10 @@ void voiceCurGadget()
 void playVoice(byte vhi)
 {
   int playFile = (int)(vhi * 10) + voiceHints[vhi];
-  Serial.println("Playing " + String(playFile) + ".mp3 file");
+  Serial.println("Playing " + String(playFile + 1) + ".mp3 file");
   mp3_set_serial(Serial3);
   delay(20);
-  mp3_play(playFile);
+  mp3_play(playFile + 1);
   delay(20);
   mp3_set_serial(Serial);
   delay(20);
