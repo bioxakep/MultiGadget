@@ -170,15 +170,12 @@ void draw()
             operPressed[gadCount] = true;
             sendToBridge = true;
           }
-          if (allowTouch && mouseX > marX + (g+1)*gadButW + (gadVoiW+gadMarX)*g && mouseX < marX + (g+1)*(gadButW+gadVoiW) + gadMarX*g  && mouseY > marY + gadMarY*(lev+1) + gadButH*lev && mouseY < marY + (gadButH + gadMarY)*(lev+1))
+          if (allowTouch && lastVoiceSend - elpsTime > 500 && mouseX > marX + (g+1)*gadButW + (gadVoiW+gadMarX)*g && mouseX < marX + (g+1)*(gadButW+gadVoiW) + gadMarX*g  && mouseY > marY + gadMarY*(lev+1) + gadButH*lev && mouseY < marY + (gadButH + gadMarY)*(lev+1))
           {
-            long elTime = t.getElapsedTime();
-            println("ELT="+str(elTime)+" lastST="+str(lastVoiceSend));
-            if (lastVoiceSend - elTime > 500)
-            {
+          println("ELT="+str(elpsTime)+" lastST="+str(lastVoiceSend));
               sendVoiceNumber = gadCount;
-              lastVoiceSend = elTime;
-            }
+              lastVoiceSend = elpsTime;
+            
           }
         }
         fill(butCol);
