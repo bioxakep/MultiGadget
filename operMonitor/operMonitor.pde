@@ -175,7 +175,6 @@ void draw()
           println("ELT="+str(elpsTime)+" lastST="+str(lastVoiceSend));
               sendVoiceNumber = gadCount;
               lastVoiceSend = elpsTime;
-            
           }
         }
         fill(butCol);
@@ -229,6 +228,8 @@ void draw()
       {
         passedGadgets[g] = 0;
         operPressed[g] = false;
+        sendVoiceNumber = -1;
+        lastVoiceSend = 0;
       }
       t.start();
       allowTouch = true;
