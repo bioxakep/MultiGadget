@@ -1,7 +1,7 @@
-// 30.OCT.2018  - 31.OCT.2018 - 11.DEC.2018 - 12.DEC.2018 12:50pm - 15.JAN.2019 - 23.JAN.2013 (hercules lock changed)
+// 30.OCT.2018  - 31.OCT.2018 - 11.DEC.2018 - 12.DEC.2018 12:50pm - 15.JAN.2019 - 31.JAN.2013
 // Rewrote Connection
-// 27.nov.2018 crystalRec removed (now located on light controller as bigKey)
-// 28 .nov.2018 voicePin reversed
+// ArphaHD works after Ghera1 complete
+// 
 // Master SKY  - Mega
 // I2C master - linked to Motor_Controller & Lights_Controller & World
 // RS-485 interface - Serial1 - link to Admin
@@ -220,6 +220,9 @@ byte ghera2 = 22;
 int gheraIN   = 4;
 int gheraOUT  = 2;
 
+unsigned long Ghera1Timer = 0;
+unsigned long Ghera1Delay = 39000;
+
 //FIRE
 byte fire = 18;
 
@@ -312,7 +315,7 @@ void setup()
   Serial3.begin(9600);  //RS-485 to Bridge
   delay(10);
   Serial.println("SKY Master v2.1");
-  Serial.println("30 OCT 2018   - - 12.DEC.2018 6:59pm - 8.JAN.2018 afterCrash - 15.JAN.2019 morning");
+  Serial.println("30 OCT 2018   - - 12.DEC.2018 6:59pm - 8.JAN.2018 afterCrash - 31.JAN.2019 morning");
   Serial.println("RS485 Started.");
   pinSetup(); //from pinWorker
 
@@ -322,6 +325,7 @@ void setup()
   delay(100);
   mp3_set_volume (28);
   delay(100);
+  //mp3_play(800);
   mp3_stop();
   delay(200);
 
@@ -444,6 +448,11 @@ void loop()
       }
       Wind();//#16
       Ghera1();//#17
+      if (Ghera1Timer > 0 && ((millis() - Ghera1Timer) > Ghera1Delay))
+        {
+        Ghera1Timer = 0;
+        digitalWrite(arphaHD, LOW);  // update JAN 31 (arhpa not control this HD anymore)
+        }
     }
 
     // ==================================== SEALS ==================================
@@ -494,11 +503,6 @@ void loop()
 
   Hercules();//#29
   Arpha();//#30
-  if (arphaTimer > 0 && ((millis() - arphaTimer) > arphaDelay))
-  {
-    arphaTimer = 0;
-    digitalWrite(arphaHD, LOW);  // give players seal 3
-  }
   Zodiak();//#31
   Bonus();
   if (level == 100)

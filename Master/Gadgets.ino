@@ -184,9 +184,12 @@ void Dionis1()
     else playerGDone[dionis1] = true;
     // mp3 FILE
     digitalWrite(dioniHD1, HIGH); // open first dionis vault
+    delay(100);
+    digitalWrite(dioniHD1, LOW);  // reapeat if piston frozen
+    delay(100);
+    digitalWrite(dioniHD1, HIGH);
     Serial.println("Dionis-1 Done");
-    delay(300);  //rem on dec 3 to test - bad
-    // delay while finish first command from dionis
+    delay(350);  //rem on dec 3 to test - bad
   }
 }
 
@@ -317,7 +320,8 @@ void Ghera1() // SHIELDS done
     playerGDone[afina2] = true;
     Serial.println("Ghera level 30 Done, SHIELDs Done");
     sendToSlave(lightConAddr, 0x30); // turn lights off while Ghera speaks
-  }
+    Ghera1Timer = 39000;
+}
   // Не стал писать повторное срабатывание по хинту, если надо напишу.
 }
 
@@ -505,6 +509,7 @@ void Crystals()
       sendToSlave(motorConAddr, 0x99);  // game over = stop the underground music
       send250ms(gheraOUT); // victory signal for Ghera
       send250ms(octopOUT); // 250 ms to Octopus when crystals done.
+      send250ms(narciOUT);  //  Narcis to hahahaha level
       // turn lights off while Ghera speaks
       if (operSkips[crystals])
       {
@@ -563,6 +568,8 @@ void Bonus()
   }
   if ((!digitalRead(octopIN) || operSkips[bonus]) && !gStates[bonus] && gStates[crystals])
   {
+    mp3_play(800);
+    send250ms(narciOUT);  //  Narcis won !!!
     if (operSkips[bonus]) send250ms(octopOUT);
     else playerGDone[bonus] = true;
     Serial.println("Octopus-2 Done");

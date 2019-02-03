@@ -1,5 +1,5 @@
-int gateBeaconA  = 513;
-int gateBeaconB  = 626;
+int gateBeaconA   = 513;
+int gateBeaconB   = 626;
 int underBeaconA  = 396;
 int underBeaconB  = 385;
 
