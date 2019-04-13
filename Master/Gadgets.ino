@@ -117,6 +117,7 @@ void Trident()
     operSkips[trident] = false;
     Serial.println("Trident operator skipping one else");
   }
+  
   if ((!digitalRead(triPin) || operSkips[trident]) && !gStates[trident] && gStates[poseidon])
   {
     mp3_play(4); // START mp3 - FILE
