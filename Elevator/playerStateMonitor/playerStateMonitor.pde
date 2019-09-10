@@ -40,11 +40,13 @@ int bFreq1 = 90;
 int bFreq2 = 100;
 int br1Data = 0;
 int br1Min = 0;
-int br1Max = 0;
+int br1Max = 100;
+int br1Offset = 1;
 boolean pl1BrDanger = false;
 int br2Data = 0;
 int br2Min = 0;
-int br2Max = 0;
+int br2Max = 100;
+int br2Offset = 1;
 boolean pl2BrDanger = false;
 int hr1State = 1;
 int hr2State = 1;
@@ -59,6 +61,7 @@ color blackColor = color(0, 0, 0);
 color currColor = blackColor;
 int level = 1;
 int mainStart = 0;
+
 void setup()
 {
   //size(1200, 800);
@@ -148,15 +151,21 @@ void draw()
   //HR1=90 HR2=60 BD1=250 BD1Min=100 BD1Max=900 BD2=100 BD2Min=90 BD2Max=200
   if (inData.indexOf("vel=") > 0) { 
     if (inData.indexOf("level=") > -1) level = Integer.parseInt(inData.substring(6, inData.length()-1).trim());
-    if (level == 2) level = 1;
+    if (level == 2) 
+    {
+      level = 1;
+      pl1BrDanger = true;
+      pl2BrDanger = true;
+    }
     if (level == 5) level = 4;
   }
   if (level == 1)
   {
     background(33, 34, 36);
     drawPlayerWindows();
+    /*    
     String[] matches;
-    /*if (inData.indexOf("HR1") >= 0 && inData.length() > 10)
+    if (inData.indexOf("HR1") >= 0 && inData.length() > 10)
     {
       String[] dataHR1 = split(inData,' ');
       if(dataHR1.length > 3)
@@ -191,7 +200,7 @@ void draw()
         }
       }
     }
-    */
+    
     if (inData.indexOf("BD1State") >= 0 && inData.length() > 10)
     {
       String[] dataBD1 = split(inData,' ');
@@ -265,6 +274,15 @@ void draw()
         pl2BrDanger = split(dataBD2[4],'=')[1].trim().equals("RED");
       }
     }
+    */
+    br1Data = br1Data + br1Offset;
+    if (br1Data > br1Max) br1Offset = -1;
+    if (br1Data < 1) br1Offset = 1;
+    
+    br2Data = br2Data + br2Offset;
+    if (br2Data > br2Max) br2Offset = -1;
+    if (br2Data < 1) br2Offset = 1;
+    
     if (inData.indexOf("Main") >= 0 && inData.length() > 7)
     {
       int mainInd = inData.indexOf("MainStart=");

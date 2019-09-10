@@ -1,4 +1,4 @@
-/*void pulseMeasure() //считываем пульс
+void pulseMeasure() //считываем пульс
 {
   if (AFEXBEE.available() > 0)
   {
@@ -39,4 +39,3 @@
     
   }
 }
-*/

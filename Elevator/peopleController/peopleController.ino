@@ -1,4 +1,6 @@
 /*
+  Updated June 13 2018 to RFID
+  Updated June 12 2018
   People Controller 03/01/2018
   Connected to:
   A0, A1 pressSensors
@@ -7,7 +9,7 @@
   added BreatheData sending to processing with min and max values
   add Breathe Min-Max and Current values calculating and sending to processing.
   02/jan/2018  up down buttons swaped
-  03/01/2018 
+  03/01/2018
   added sliced sending info of player states
   new algorithm of over-radius adaptation of dot
   08.01.2018 rewrite sending data to processing: each player separated sending
@@ -17,17 +19,31 @@
 */
 #include <Wire.h>
 #include "SoftwareSerial.h"
+//#include <OneWire.h>
+//#include <ArdCPZ.h>
 
-#define HALL1PIN  11 
-#define HALL2PIN   8 
-#define HALL3PIN  A0 
-#define HALL4PIN  10 
-#define HALL5PIN  12 
-#define HALL6PIN   9 
+//#define PIN_CPZ1 11
+//#define PIN_CPZ2 12
+//#define PIN_CPZ3 A0
+
+#define RFID  8
+
+/*
+  #define HALL1PIN  11
+  #define HALL2PIN   8
+  #define HALL3PIN  A0
+  #define HALL4PIN  10
+  #define HALL5PIN  12
+  #define HALL6PIN   9
+*/
+
 
 #define HRLOW 60
 #define HRMID 100
 #define HRHIGH 160
+
+#define AFEXBEERX 3
+#define AFEXBEETX 2
 
 #define BRE1PIN A7
 #define BRE2PIN A6
@@ -46,7 +62,7 @@ int delta2Array[3] = {0, 0, 0};
 int breatheMinMax1[2] = {1024, 0};
 int breatheMinMax2[2] = {1024, 0};
 int breatheOffset = 8;   // 12 used for two week - release too soon
-                          // better
+// better
 boolean noBreatheMode1 = false;
 boolean noBreatheMode2 = false;
 boolean player1BreatheStoped = false;
@@ -90,7 +106,7 @@ boolean upGameDone = false;
 //============== FLOOR PINS ======================//
 int floorButtonPins[4] = {5, 6, 4, 7}; // !!!!!!!!!!Left, Right, Down, Up!!!!!!!!!!!!
 //============ COMMUNICATIONS =================//
-//SoftwareSerial AFEXBEE(AFEXBEERX, AFEXBEETX); // RX, TX
+SoftwareSerial AFEXBEE(AFEXBEERX, AFEXBEETX); // RX, TX
 boolean visOnly = true;
 unsigned long sendHBTime = 0;
 unsigned long tick = 0;
@@ -98,32 +114,17 @@ unsigned long sendXYTime = 0;
 
 void setup()
 {
+
   Serial.begin(9600);
-  //AFEXBEE.begin(9600);
+  AFEXBEE.begin(9600);
   Wire.begin(i2cPCAddress);
   Wire.onReceive(receiveMethod);
   Wire.onRequest(requestMethod);
   for (int k = 0; k < 4; k++) pinMode(floorButtonPins[k], INPUT_PULLUP);
-  pinMode(HALL1PIN, INPUT_PULLUP);
-  pinMode(HALL2PIN, INPUT_PULLUP);
-  pinMode(HALL3PIN, INPUT_PULLUP);
-  pinMode(HALL4PIN, INPUT_PULLUP);
-  pinMode(HALL5PIN, INPUT_PULLUP);
-  pinMode(HALL6PIN, INPUT_PULLUP);
   pinMode(BRE1PIN, INPUT);
   pinMode(BRE2PIN, INPUT);
-  /*
-while (true) {
-  if (!digitalRead(HALL1PIN)) Serial.println("hall 111");
-  if (!digitalRead(HALL2PIN)) Serial.println("hall    222");
-  if (!digitalRead(HALL3PIN)) Serial.println("hall       333");
-  if (!digitalRead(HALL4PIN)) Serial.println("hall          444");
-  if (!digitalRead(HALL5PIN)) Serial.println("hall             555");
-  if (!digitalRead(HALL6PIN)) Serial.println("hall                666");
-delay(500);
-}
- */
-  
+  pinMode(RFID, INPUT_PULLUP);
+
   floorDelay = 1000 / freqOfMath;
   totalprogress = 100 * maxVelocity * freqOfMath;
   progressLift = totalprogress * 0.2;
@@ -131,15 +132,15 @@ delay(500);
   noBreatheMode2 = false;
   randomSeed(A0);
   Serial.println("Wait for letsgame");
-/*
-while(automotion == false) {
-  if (digitalRead(floorButtonPins[0]) == LOW) Serial.println (" button 0000");
-  if (digitalRead(floorButtonPins[1]) == LOW) Serial.println (" button     1111");
-  if (digitalRead(floorButtonPins[2]) == LOW) Serial.println (" button         2222");
-  if (digitalRead(floorButtonPins[3]) == LOW) Serial.println (" button             3333");
-  delay(300);
-}
-*/  
+  /*
+    while(automotion == false) {
+    if (digitalRead(floorButtonPins[0]) == LOW) Serial.println (" button 0000");
+    if (digitalRead(floorButtonPins[1]) == LOW) Serial.println (" button     1111");
+    if (digitalRead(floorButtonPins[2]) == LOW) Serial.println (" button         2222");
+    if (digitalRead(floorButtonPins[3]) == LOW) Serial.println (" button             3333");
+    delay(300);
+    }
+  */
   connectToMonitor();
   breathePrevData1 = analogRead(BRE1PIN);
   breathePrevData2 = analogRead(BRE2PIN);
@@ -149,9 +150,8 @@ while(automotion == false) {
   breatheMinMax2[1] = breathePrevData2;
   sendHBTime = millis();
   sendXYTime = millis();
-
-  
 }
+
 void loop()
 {
   tick = millis();
@@ -163,36 +163,41 @@ void loop()
       //sendHrData(heartRate1, heartRate2);
       sendHBTime = tick;
     }
-    //pulseMeasure();
-    /*if (!visOnly)
+    pulseMeasure();
+    if (!visOnly)
     {
       if (!HR1State && player1BreatheStoped) player1State = true;
       if (!HR2State && player2BreatheStoped) player2State = true;
     }
-    */
   }
   else if (level == 2) // HOLL STAGE
   {
     delay(500);
-    Serial.println("level 2, waiting for magnet");
-    /*if (!digitalRead(HALL3PIN) || !digitalRead(HALL4PIN))
+    Serial.println("level 2, waiting for magnet/RFID");
+
+    if (digitalRead(RFID)) 
     {
+      hallDone = true;
+      Serial.println("Hall/RFID Sensor Done!");
+    }
+    /*if (!digitalRead(HALL3PIN) || !digitalRead(HALL4PIN))
+      {
       if(hallSensorCount == 0) sendHrData(heartRate1, HRLOW);  // HRHIGH
       hallSensorCount++;
       Serial.println("hallSensorCount increased and = " + String(hallSensorCount));
-    }
-    else 
-    {
+      }
+      else
+      {
       sendHrData(0, 0);
       hallSensorCount = 0;
       Serial.println("hallSensorCount = 0");
-    }
-    
-    if(hallSensorCount >= 6) 
-    {
+      }
+
+      if(hallSensorCount >= 6)
+      {
       hallDone = true;
       Serial.println("Hall Sensor Done!");
-    }*/
+      }*/
   }
   else if (level == 4) // FLOOR STAGE
   {
@@ -228,7 +233,7 @@ void loop()
       else curPoint[1] += dy / (5 * freqOfMath);
       //Serial.println("cP-tP (X) = "+String(curPoint[0] - tarPoint[0]));
       //Serial.println("cP-tP (Y) = "+String(curPoint[1] - tarPoint[1]));
-      
+
       if (abs(curPoint[0] - tarPoint[0]) < abs(dx) / (5 * freqOfMath)) {
         curPoint[0] = tarPoint[0];
         automotion = false;
@@ -246,30 +251,42 @@ void loop()
       if (tapped)
       {
         automotion = false;
-        if (b/2 == 0) // X
+        if (b / 2 == 0) // X
         {
-          if (b % 2 == 0 && hypoLength(curPoint[0] - 3, curPoint[1]) <= Radius) { curPoint[b / 2] -= 3; tarPoint[b / 2] = curPoint[b / 2]; }
-          if (b % 2 == 1 && hypoLength(curPoint[0] + 3, curPoint[1]) <= Radius) { curPoint[b / 2] += 3; tarPoint[b / 2] = curPoint[b / 2]; }
+          if (b % 2 == 0 && hypoLength(curPoint[0] - 3, curPoint[1]) <= Radius) {
+            curPoint[b / 2] -= 3;
+            tarPoint[b / 2] = curPoint[b / 2];
+          }
+          if (b % 2 == 1 && hypoLength(curPoint[0] + 3, curPoint[1]) <= Radius) {
+            curPoint[b / 2] += 3;
+            tarPoint[b / 2] = curPoint[b / 2];
+          }
         }
-        if (b/2 == 1) // Y
+        if (b / 2 == 1) // Y
         {
-           if (b % 2 == 0 && hypoLength(curPoint[0], curPoint[1] - 3) <= Radius) { curPoint[b / 2] -= 3; tarPoint[b / 2] = curPoint[b / 2]; }
-           if (b % 2 == 1 && hypoLength(curPoint[0], curPoint[1] + 3) <= Radius) { curPoint[b / 2] += 3; tarPoint[b / 2] = curPoint[b / 2]; }
+          if (b % 2 == 0 && hypoLength(curPoint[0], curPoint[1] - 3) <= Radius) {
+            curPoint[b / 2] -= 3;
+            tarPoint[b / 2] = curPoint[b / 2];
+          }
+          if (b % 2 == 1 && hypoLength(curPoint[0], curPoint[1] + 3) <= Radius) {
+            curPoint[b / 2] += 3;
+            tarPoint[b / 2] = curPoint[b / 2];
+          }
         }
       }
     }
 
     //Расчет данных для процессинга и отправка.
     long currRadius = hypoLength(curPoint[0], curPoint[1]);
-    if(currRadius > 333) currColor = "RED";
+    if (currRadius > 333) currColor = "RED";
     else currColor = "BLACK";
     //Serial.println("cR="+String(currRadius)+" cR/R="+String((float)currRadius / Radius));
     progressLift += (maxVelocity - (maxVelocity * currRadius / Radius));
-    
-    if(tick - sendXYTime > 700)
+
+    if (tick - sendXYTime > 700)
     {
       long percent = 100 * progressLift / totalprogress;
-      Serial.println("NormProgressBar = " + String(percent) + " % X=" + String(curPoint[0]) + " Y=" + String(curPoint[1]) + " COL="+currColor);
+      Serial.println("NormProgressBar = " + String(percent) + " % X=" + String(curPoint[0]) + " Y=" + String(curPoint[1]) + " COL=" + currColor);
       sendXYTime = tick;
     }
 
@@ -293,7 +310,7 @@ long hypoLength(long _x, long _y)
 {
   long x2 = (_x - Radius) * (_x - Radius);
   long y2 = (_y - Radius) * (_y - Radius);
-  long ret = sqrt(x2+y2);
+  long ret = sqrt(x2 + y2);
   //Serial.println("X2="+String(x2) + " Y2="+String(y2) + " SQ=" + String(ret));
   return ret;
 }
@@ -303,7 +320,7 @@ void receiveMethod(int howMany)
   if (Wire.available() > 0)
   {
     byte cmd = Wire.read();
-    if (cmd == 0xFF) 
+    if (cmd == 0xFF)
     {
       visOnly = false;
       Serial.println("MainStart=" + String(!visOnly));

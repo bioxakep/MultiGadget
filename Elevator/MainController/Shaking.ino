@@ -1,7 +1,5 @@
 void Shaking(int hard) 
 {
-
- 
  isTime2shake = millis() - start2shake;
 
  if (level != 60 ) // OUT OF OCTOPUS level 
@@ -79,4 +77,3 @@ void Shaking(int hard)
   } 
   
 }
-

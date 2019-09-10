@@ -492,14 +492,8 @@ if (tick - startCount >= 60000 && !gameWin && elapsedTime > 0)
     startCount = tick;
   }
 
-
-
 }
   
-  
-  
- 
-
 
 void chargePower()
 {

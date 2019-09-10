@@ -49,7 +49,7 @@ void breatheMeasure()
     }
   }
 
-  if (breatheStopCount1 > 20)
+  if (breatheStopCount1 > 25)
   {
     //Serial.println("Player 1 stop breathe");
     player1BreatheStoped = true;
@@ -98,7 +98,7 @@ void breatheMeasure()
     }
   }
 
-  if (breatheStopCount2 > 20)
+  if (breatheStopCount2 > 25)
   {
     //Serial.println("Player 2 stop breathe");
     player2BreatheStoped = true;
@@ -112,6 +112,7 @@ void breatheMeasure()
     player2BreatheStoped = true;
     breatheStopCount2 = 0;
   }
+  /*
   if(pla1Ejected || breatheStopCount1 > 10 || player1BreatheStoped)
   {
     Serial.println("BD1State=" + String(!player1BreatheStoped) + " BD1=" + String(breathePrevData1)
@@ -126,4 +127,5 @@ void breatheMeasure()
   }
   else Serial.println("BD2State=" + String(!player2BreatheStoped) + " BD2=" + String(breatheData2)
                                         + " BD2Min=" + String(breatheMinMax2[0]) + " BD2Max=" + String(breatheMinMax2[1]) + " COL2=NORM");
+*/
 }

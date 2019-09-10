@@ -35,7 +35,6 @@ void loop()
           Serial.println("#S|UNLOCK1|[]#");
         }
       }
-
     }
 
     if ((p1State && p2State) || skipLevel)
@@ -510,9 +509,6 @@ void loop()
 //      pnDN(700);
 //      pnUP(1200);
 
-
-
-    
     level = 101;
   }
 
