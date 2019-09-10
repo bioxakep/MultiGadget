@@ -63,6 +63,7 @@ int breatheMinMax1[2] = {1024, 0};
 int breatheMinMax2[2] = {1024, 0};
 int breatheOffset = 8;   // 12 used for two week - release too soon
 // better
+boolean update_level = false;
 boolean noBreatheMode1 = false;
 boolean noBreatheMode2 = false;
 boolean player1BreatheStoped = false;
@@ -154,6 +155,11 @@ void setup()
 
 void loop()
 {
+  if(update_level)
+  {
+    Serial.println("level=" + String(level));
+    update_level = false;
+  }
   tick = millis();
   if (level == 1) // HR and Breathe STAGE
   {
@@ -328,7 +334,7 @@ void receiveMethod(int howMany)
     else
     {
       level = (int)cmd;
-      Serial.println("level=" + String(level));
+      update_level = true;
     }
   }
 }
