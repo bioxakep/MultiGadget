@@ -1,8 +1,9 @@
 // operMonitor of ZGame
 import processing.serial.*;
-//import processing.sound.*;
+import processing.sound.*;
 //SoundFile sound;
 Serial arduino;
+SoundFile level_done, gadget_done;
 boolean recieved = false;
 PrintWriter data;
 boolean game;
@@ -47,6 +48,7 @@ boolean currMouseState = false;
 boolean calculated = false;
 
 int[] levGadCount = {3, 8, 7, 5, 5, 4};
+boolean[] levelSoundCalled;
 String[] levelNames = {"START", "THUNDER", "SHIELDS", "SEALS", "UNDERGROUND", "BONUS"};
 String[] gadgetNames = {"Baloon", "Press", "Gate", "Poseidon", "Trident", "Demetra-1", "Rain", "Vine", "Dionis-1", "Narcis", "Thunder", "Afina-1", "Afina-2", "Time", "Octopus", "Note", "Wind", "Ghera-1", "Fire", "Flower-1", "Flower-2", "Dionis-2", "Ghera-2", "BigKey", "Under", "Minot", "Gorgona", "Cristals", "Hercules", "Arpha", "Zodiak", "Bonus"};
 
@@ -85,6 +87,8 @@ void setup()
   topFont = createFont("MyanmarMN", 14);
   enterFont = createFont("MyanmarMN", 14);
   gadgetFont = createFont("Silom", 16);
+  level_done = new SoundFile(this, "Level.mp3");
+  gadget_done = new SoundFile(this, "Gadget.mp3");
   scrW = width;
   scrH = height;
   marX = scrW/50;
@@ -109,6 +113,7 @@ void setup()
     passedGadgets[g] = 0;
     passedTimes[g] = 0;
   }
+  for (int l = 0; l < 6; l++) levelSoundCalled[l] = false;
   //sound = new SoundFile(this, "sample.mp3"); // Должен лежать в папке с именем "data", папка должна лежать рядом с программой Monitor.exe
 }
 
@@ -154,6 +159,7 @@ void draw()
         text(dTime, marX + (levGadCount[lev]) * (gadMarX + gadButW + gadVoiW) - gadMarX - tTextW, marY + gadMarY*(lev+1) + gadButH*lev - 2);
         textFont(timerFont, timerH * 0.35);
       }
+      boolean level_passed = true;
       for (int g = 0; g < levGadCount[lev]; g++)
       {
         if (!prevMouseState && currMouseState) // mouse click detection
@@ -164,21 +170,30 @@ void draw()
             {
               passedGadgets[gadCount] = 3;
               passedTimes[gadCount] = int((totalSeconds-t.getElapsedTime())/1000);
+              if (gadget_done.isPlaying())
+              {
+                gadget_done.stop();
+                gadget_done.play();
+              } else gadget_done.play();
             }
             operPressed[gadCount] = true;
             sendToBridge = true;
           }
           if (allowTouch && lastVoiceSend - elpsTime > 500 && mouseX > marX + (g+1)*gadButW + (gadVoiW+gadMarX)*g && mouseX < marX + (g+1)*(gadButW+gadVoiW) + gadMarX*g  && mouseY > marY + gadMarY*(lev+1) + gadButH*lev && mouseY < marY + (gadButH + gadMarY)*(lev+1))
           {
-          println("ELT="+str(elpsTime)+" lastST="+str(lastVoiceSend));
-              sendVoiceNumber = gadCount;
-              lastVoiceSend = elpsTime;
+            println("ELT="+str(elpsTime)+" lastST="+str(lastVoiceSend));
+            sendVoiceNumber = gadCount;
+            lastVoiceSend = elpsTime;
           }
         }
         fill(butCol);
         if (passedGadgets[gadCount] == 5) fill(green);
         else if (passedGadgets[gadCount] == 3) fill(orange);
-        else fill(butCol);
+        else 
+        {
+          level_passed = false; // Проверяем если хоть один гаджет из уровня не пройден то false
+          fill(butCol);
+        }
         rect(marX + g * (gadMarX + gadButW + gadVoiW), marY + gadMarY*(lev+1) + gadButH*lev, gadButW, gadButH); // Level-Rects
         fill(color(20, 20, 200, 60));
         textFont(topFont, timerH * 0.24);
@@ -187,6 +202,15 @@ void draw()
         text(gadgetNames[gadCount], marX + g * (gadMarX + gadButW + gadVoiW) + gadButW/2 - gtxtW/2, marY + gadMarY*(lev+1) + gadButH*(lev+0.6) - 2); // Gadget Names
         rect(marX + (g+1) * gadButW + (gadVoiW+gadMarX)*g, marY + gadMarY*(lev+1) + gadButH*lev, gadVoiW, gadButH); //Voice rect
         gadCount++;
+      }
+      if (level_passed && !levelSoundCalled[lev])
+      {
+        if (level_done.isPlaying())
+        {
+          level_done.stop();
+          level_done.play();
+        } else level_done.play();
+        levelSoundCalled[lev] = true;
       }
       if (lev == 4)
       {
@@ -255,6 +279,11 @@ void draw()
           print("Gadget ");
           print(i);
           println(" done by player");
+          if (gadget_done.isPlaying())
+          {
+            gadget_done.stop();
+            gadget_done.play();
+          } else gadget_done.play();
           passedTimes[i] = int((totalSeconds-t.getElapsedTime())/1000);
         }
       }
@@ -305,7 +334,7 @@ void draw()
       doneTime = elpsTime;
       endMainGame = true;
     }
-    
+
     if (endMainGame && !endBonusGame)
     {
       boolean fullLevelsDone = true;

@@ -72,9 +72,10 @@ void sendGStates() // Проверяем прошел ли игрок какой
   if (needSend)
   {
     digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
-    Serial.print("Send States to Operator: ");
+    delay(10);
     Serial1.write(0xAD);
     delay(10);
+    Serial.print("Send States to Operator: ");
     for (int d = 0; d < 32; d++)
     {
       if (gStates[d] && !playerGDone[d]) Serial1.write(0x03);

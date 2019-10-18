@@ -12,6 +12,7 @@ void Start()
       // поднимает колонну[column up],
       // поднимают виноград [grape up],
       // шторки спускает
+      delay(10);
       sendToSlave(lightConAddr, 0x10);
       Serial.println("\nFirst START pressed, all locks closed...3");
       closeLocks();
@@ -21,26 +22,34 @@ void Start()
       Serial.println("\nFirst START pressed, all locks closed...5");
       send250ms(gorgoOUT);  // activate gorgona
       Serial.println("\nFirst START pressed, all locks closed...6");
+      delay(10);
       mp3_set_serial(Serial);
+      delay(10);
       mp3_play(100); // prestart message
+      delay(10);
       Serial.println("\nFirst START pressed, all locks closed...7");
+      delay(10);
     }
     else if (start == 2)       //start game
     {
       mp3_set_serial(Serial);
       Serial.println("Go to level 12");
+      delay(10);
       mp3_play(111); // First Soundtrack (last for master)
       delay(200);
       sendToSlave(lightConAddr, 0x11); // send random wind to lightController
+      delay(10);
       sendToSlave(motorConAddr, 0x11); // lift the cloud
       Serial.println("Go to level 12");
       level = 12;
       digitalWrite(SSerialTxControl, HIGH);  // Init Transmitter
+      delay(10);
       Serial1.write(0xAC);
       delay(10);
-      lcd.clear();
-      lcd.print("Timer started     Ballon level");
       digitalWrite(SSerialTxControl, LOW);  // Stop Transmitter
+      delay(10);
+      lcd.clear();
+      lcd.print(" Game started ");
       Serial.println("\n*************************************** Game STARTed ******************************************\n");
     }
   }
@@ -59,7 +68,7 @@ void Baloon()
     send250ms(gheraOUT);  // moves ghera to level 10
     level = 13;
     Serial.println("Go to level 13");
-    sendToSlave(motorConAddr, 0x12);  // turn on the lights
+    sendToSlave(motorConAddr, 0x12);
     delay(1000);
     mp3_stop();
   }
@@ -71,9 +80,11 @@ void Press()
   {
     if (operSkips[presss]) send250ms(pressOUT);
     else playerGDone[presss] = true;
-    Serial.println("Press signal recieved. Press gave players the RFID key to the gate ");
+    Serial.println("Press signal recieved.");
     level = 14;
     Serial.println("Go to level 14");
+      lcd.clear();
+      lcd.print("Press done.");
   }
 }
 
@@ -87,25 +98,27 @@ void Gate()
     sendToSlave(lightConAddr, 0x14); // send signal to light_controller >turnOnTheLights
     mp3_play(1);
     send250ms(gheraOUT);  // ghera start speaking, shift Ghera forward - 'thunder' level
+    delay(10);
     Serial.println("Gate Done, command 0x14 sent to motor and light , Go to level 90");
     level = 90;
+    lcd.clear();
+    lcd.print("Gate done.");
+
   }
 }
 
 void Poseidon()
 {
   if ((!digitalRead(poseiIN) || operSkips[poseidon]) && !gStates[poseidon])
-  { // signal from poseidon
-    // posei > command via (i2c) to motor_controller activate falling column > players get first part thundi
-    // shoud be skippable from master console
-    
-    sendToSlave(motorConAddr, 0x20); // Открываем тайник Посейдона, даем игрокам трезубец
+  { sendToSlave(motorConAddr, 0x20); // Открываем тайник Посейдона, даем игрокам трезубец
     if (operSkips[poseidon]) send250ms(poseiOUT);
     else playerGDone[poseidon] = true;
     mp3_play(5);
     delay(100);
     sendToSlave(motorConAddr, 0x20); // Открываем тайник Посейдона, даем игрокам трезубец -- REPEAT
     Serial.println("Poseidon Done");
+      lcd.clear();
+      lcd.print("Poseidon done.");
   }
 }
 
@@ -117,14 +130,16 @@ void Trident()
     operSkips[trident] = false;
     Serial.println("Trident operator skipping one else");
   }
-  
   if ((!digitalRead(triPin) || operSkips[trident]) && !gStates[trident] && gStates[poseidon])
   {
+    delay(10);
     mp3_play(4); // START mp3 - FILE
     sendToSlave(motorConAddr, 0x21);
     if (!operSkips[trident]) playerGDone[trident] = true;
     tridentTimer = millis();
     Serial.println("Trident started " + String(millis()));
+      lcd.clear();
+      lcd.print("Trident done.");
   }
 }
 
@@ -136,6 +151,8 @@ void Demetra()
     else playerGDone[demetra] = true;
     demetTimer = millis();
     Serial.println("Demetra 1 part Done");
+    lcd.clear();
+    lcd.print("Demet-1 done.");
   }
 }
 
@@ -151,7 +168,10 @@ void Rain()
     if (!operSkips[rain]) playerGDone[rain] = true;
     sendToSlave(motorConAddr, 0x22); // send signal to motor_controller > grapeGrow
     mp3_play(3);// mp3 FILE rain
+    delay(10);
     Serial.println("Rain Done");
+    lcd.clear();
+    lcd.print("Rain done.");
   }
 }
 
@@ -164,6 +184,8 @@ void Vine()
     else playerGDone[vine] = true;
     send250ms(dioniOUT);  // inform Dionis the vine in done
     Serial.println("Vine Done");
+    lcd.clear();
+    lcd.print("Rain done.");
   }
 }
 
@@ -174,23 +196,22 @@ void Dionis1()
     digitalWrite(dioniHD1, LOW);
     delay(200);
     digitalWrite(dioniHD1, HIGH);
+    delay(100);
     operSkips[dionis1] = false;
   }
   if ((!digitalRead(dioniIN) || operSkips[dionis1]) && !gStates[dionis1]) //&& gStates[vine])
-  { // if players gives dionis empty bottle
-    // he will tell them that he dont like empty bottles
-    // if signal from full bottle is received >
-    // dioniHD1 opens > players gets another thunder
-    if (operSkips[dionis1]) send250ms(dioniOUT);
+  { if (operSkips[dionis1]) send250ms(dioniOUT);
     else playerGDone[dionis1] = true;
-    // mp3 FILE
     digitalWrite(dioniHD1, HIGH); // open first dionis vault
     delay(100);
-    digitalWrite(dioniHD1, LOW);  // reapeat if piston frozen
+    digitalWrite(dioniHD1, LOW);  // repeat if piston frozen
     delay(100);
     digitalWrite(dioniHD1, HIGH);
     Serial.println("Dionis-1 Done");
+    lcd.clear();
+    lcd.print("Dionis-1 done.");
     delay(350);  //rem on dec 3 to test - bad
+
   }
 }
 
@@ -201,21 +222,24 @@ void Narcis()
     if (operSkips[narcis]) send250ms(narciOUT);
     else playerGDone[narcis] = true;
     Serial.println("Narcis Done");
+    lcd.clear();
+    lcd.print("Narcis done.");
   }
 }
 
 void Thunder()
 {
   if ((!digitalRead(thundIN) || operSkips[thunder]) && !gStates[thunder])
-  { // shoud be triggerable from master console
-    // may add some extra storm effects thru light_controller
-    //if all thunders are done >   // gheraLevel = 2 >  speaks > opend HD2 (shields)
-    send250ms(gheraOUT);  // moves ghera to 'shields' level, ALWAYS OR BY OPERATOR?
+  { send250ms(gheraOUT);  // moves ghera to 'shields' level, ALWAYS OR BY OPERATOR?
     sendToSlave(lightConAddr, 0x23); // send signal to light_controller > GheraSpeaks, dim the light
     if (!operSkips[thunder]) playerGDone[thunder] = true;
     thunderDone = true;
     mp3_play(88);     // play mp3 thunder
+    delay(10);
     Serial.println("Thunder Done");
+    lcd.clear();
+    lcd.print("thunder done.");
+
   }
 }
 
@@ -226,7 +250,9 @@ void Afina1()
     if (operSkips[afina1]) send250ms(afinaOUT);
     else playerGDone[afina1] = true;
     afinaTimer = millis();
-    Serial.println("Afina 1 part Done > small vault open");
+    Serial.println("Athena 1 part Done > small vault open");
+    lcd.clear();
+    lcd.print("athena-1 done.");
     delay(350);
     // here afina gives players a key to open next vault
   }
@@ -235,12 +261,13 @@ void Afina1()
 void Afina2()
 {
   if ((!digitalRead(afinaIN) || operSkips[afina2]) && !gStates[afina2]) //(!digitalRead(afinaIN) ||
-  { // afina second signal opens afinaHD2
-    //if (operSkips[afina2]) send250ms(afinaOUT);
+  { 
     if (!operSkips[afina2]) playerGDone[afina2] = true;
     digitalWrite(afinaHD2, LOW);
-    Serial.println("Afina 2 part Done > Large vault open");
-    delay(200);
+    Serial.println("Athena 2 part Done > Large vault open");
+    lcd.clear();
+    lcd.print("athena-2 done.");
+    delay(250);
   }
 }
 
@@ -251,6 +278,11 @@ void TimeG()
     if (operSkips[Time]) send250ms(timeOUT);
     else playerGDone[Time] = true;
     Serial.println("Time part Done");
+    lcd.clear();
+    lcd.print("time done.");
+    timeDone = millis();
+    delay(250);
+  
   }
 }
 
@@ -261,6 +293,9 @@ void Octopus()
     if (operSkips[octopus]) send250ms(octopOUT);
     else playerGDone[octopus] = true;
     Serial.println("Octopus Done");
+    lcd.clear();
+    lcd.print("Octop done.");
+    delay(250);
   }
 }
 
@@ -268,11 +303,13 @@ void Note()
 {
   if ((!digitalRead(noteIN) || operSkips[note]) && !gStates[note])
   {
-    // note > players get wind amulet
     if (operSkips[note]) send250ms(noteOUT);
     else playerGDone[note] = true;
     digitalWrite(noteHD, LOW);
     Serial.println("Note Done");
+    lcd.clear();
+    lcd.print("Notus done.");
+    delay(10);
   }
 }
 
@@ -285,15 +322,16 @@ void Wind()
     operSkips[wind] = false;
   }
   if ((!windRFWait || operSkips[wind]) && !gStates[wind]) //&& gStates[note]) //disc
-  { //Из тайника игроки получают рфид ветра.и когда вставляют его в приемник рфида ветра то включаем ветер на 10-15 секунд,
-    //мр3 файл и спускаем облакоИз тайника игроки получают рфид ветра.и когда вставляют его в приемник рфида
-    //ветра то включаем ветер на 10-15 секунд, мр3 файл и спускаем облако
+  { 
     if (!operSkips[wind]) playerGDone[wind] = true;
     Serial.println("Wind RFID Recieved");
     sendToSlave(motorConAddr, 0x31); // CloudDown - отдать 3 часть щита
     delay(50);
     sendToSlave(lightConAddr, 0x31); // windBlow 10-15 secs
     mp3_play(2);    // Wind mp3 FILE
+    lcd.clear();
+    lcd.print("Wind done.");
+
   }
 }
 
@@ -330,10 +368,15 @@ void Fire()
 {
   if ((!digitalRead(firePin) || operSkips[fire]) && !gStates[fire])
   {
-    if (!operSkips[fire]) playerGDone[fire] = true;
+    if (!operSkips[fire]) { playerGDone[fire] = true;  }
     mp3_play(77);
+    send250ms(flowrOUT);
     sendToSlave(lightConAddr, 0x41); //turner start  - dim the room light
+    delay(10);
     Serial.println("Fire Done, turner start...");
+    lcd.clear();
+    lcd.print("fire done.");
+    delay(200);
   }
 }
 
@@ -344,7 +387,11 @@ void Flower1()  // first level of flower
     if (operSkips[flower1]) send250ms(flowrOUT);
     else playerGDone[flower1] = true;
     mp3_play(6);
+    delay(10);
     Serial.println("Flower-1 Blue part Done");
+    lcd.clear();
+    lcd.print("FlowBlue done.");
+
     delay(300);
   }
 }
@@ -359,6 +406,8 @@ void Flower2()    // second level of flower
     delay(50);
     sendToSlave(lightConAddr, 0x42); // turner off, light switch
     Serial.println("Flower-2 RED part Done");
+    lcd.clear();
+    lcd.print("FlowRed done.");
     flowerTimer = millis();
   }
 }
@@ -522,7 +571,7 @@ void Crystals()
 
 void Hercules()
 {
-  if ((!digitalRead(hercuIN) || operSkips[hercul]) && !gStates[hercul])
+  if ((!digitalRead(hercuIN) || operSkips[hercul]) && !gStates[hercul] && (timeDone !=0 && ((timeDone + 15000) < millis())))
   {
     // hercu > players gets third part of thunders
     if (!operSkips[hercul]) playerGDone[hercul] = true;
@@ -567,9 +616,12 @@ void Bonus()
     send250ms(octopOUT);
     operSkips[bonus] = false;
   }
+  
   if ((!digitalRead(octopIN) || operSkips[bonus]) && !gStates[bonus] && gStates[crystals])
   {
+    delay(20);
     mp3_play(800);
+    delay(20);
     send250ms(narciOUT);  //  Narcis won !!!
     if (operSkips[bonus]) send250ms(octopOUT);
     else playerGDone[bonus] = true;

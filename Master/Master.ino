@@ -1,6 +1,6 @@
-// 30.OCT.2018  - 31.OCT.2018 - 11.DEC.2018 - 12.DEC.2018 12:50pm - 15.JAN.2019 - 31.JAN.2013
+// 30.OCT.2018  - 31.OCT.2018 - 11.DEC.2018 - 12.DEC.2018 12:50pm - 15.JAN.2019 - 31.JAN.2013 10/apr/19 30/apr/19
 // Rewrote Connection
-// ArphaHD works after Ghera1 complete
+// 05AUG2019  delay is added to avoid hercules triggering after time puzzle
 // 
 // Master SKY  - Mega
 // I2C master - linked to Motor_Controller & Lights_Controller & World
@@ -192,6 +192,7 @@ int afinaHD2 = A8;
 byte Time    = 13;
 int timeOUT  = 38;
 int timeIN   = 46;
+long timeDone = 0;
 
 //OCTOPUS
 byte octopus = 14;
@@ -283,7 +284,7 @@ byte zodiak = 30;
 int zodiaIN  = 5;
 int zodiaHD  = A11;
 
-// OCTOPUS-2
+// OCTOPUS-2 / BONUS
 byte bonus = 31;
 
 byte win = 32;
@@ -315,8 +316,8 @@ void setup()
   Serial3.begin(9600);  //RS-485 to Bridge
   delay(10);
   Serial.println("SKY Master v2.1");
-  Serial.println("30 OCT 2018   - - 12.DEC.2018 6:59pm - 8.JAN.2018 afterCrash - 31.JAN.2019 morning");
-  Serial.println("RS485 Started.");
+  Serial.println("30 OCT 2018   - - 12.DEC.2018 - 8.JAN.2018 afterCrash - 31.JAN.2019 - 10/apr/19 - 24/APR/19- 30/APR/19");
+  Serial.println("RS485 Started.   05AUG19 = delay for hercules is added");
   pinSetup(); //from pinWorker
 
   Serial.println("\nmain mp3 player test");
@@ -437,16 +438,22 @@ void loop()
         digitalWrite(afinaHD1, LOW);
         afinaTimer = 0;
       }
+      
       Afina2();//#12
+      
       TimeG();//#13
+      
       Octopus();//#14
+      
       Note();//#15
       if (noteTimer > 0 && ( (millis() - noteTimer) > noteHDDelay) )
       {
         noteTimer = 0;
         digitalWrite(noteHD, LOW); // here note open wind box gives players wind power
       }
+ 
       Wind();//#16
+      
       Ghera1();//#17
       if (Ghera1Timer > 0 && ((millis() - Ghera1Timer) > Ghera1Delay))
         {
@@ -459,13 +466,16 @@ void loop()
     if (!sealsDone)
     {
       Fire();//#18
+      
       Flower1();//#19
+      
       Flower2();//#20
       if (flowerTimer > 0 && ((millis() - flowerTimer) > flowerDelay))
       {
         flowerTimer = 0;
         digitalWrite(flowrHD, LOW); // players get seal 1
       }
+      
       Dionis2();//#21
 
 
@@ -502,12 +512,16 @@ void loop()
   } // eof.level_50
 
   Hercules();//#29
+
   Arpha();//#30
+  
   Zodiak();//#31
+  
   Bonus();
   if (level == 100)
   {
     Serial.println("WIN");
+    level = 999;
   }
 
   sendGStates(); // if need
@@ -515,6 +529,7 @@ void loop()
   if (tick - lastA9SentTime > 10000) // send sync signal to confirm connection to bridge
   {
     digitalWrite(SSerialTxControl, HIGH);
+    delay(10);
     Serial1.write(0xA9);
     delay(10);
     digitalWrite(SSerialTxControl, LOW);
