@@ -48,7 +48,7 @@ boolean currMouseState = false;
 boolean calculated = false;
 
 int[] levGadCount = {3, 8, 7, 5, 5, 4};
-boolean[] levelSoundCalled;
+boolean[] levelSoundCalled = new boolean[6];
 String[] levelNames = {"START", "THUNDER", "SHIELDS", "SEALS", "UNDERGROUND", "BONUS"};
 String[] gadgetNames = {"Baloon", "Press", "Gate", "Poseidon", "Trident", "Demetra-1", "Rain", "Vine", "Dionis-1", "Narcis", "Thunder", "Afina-1", "Afina-2", "Time", "Octopus", "Note", "Wind", "Ghera-1", "Fire", "Flower-1", "Flower-2", "Dionis-2", "Ghera-2", "BigKey", "Under", "Minot", "Gorgona", "Cristals", "Hercules", "Arpha", "Zodiak", "Bonus"};
 
@@ -242,6 +242,7 @@ void draw()
     ellipse(width-25, 25, 20, 20);
 
     //RECIEVE FROM BRIDGE
+    
     String fromBridge = getInput(true);
 
     if (fromBridge.equals("masterStart"))
@@ -288,6 +289,7 @@ void draw()
         }
       }
     }
+    
     //SEND TO BRIDGE
     if (sendToBridge)
     {
